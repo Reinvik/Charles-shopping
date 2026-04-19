@@ -8,12 +8,17 @@ import {
   Image as ImageIcon, 
   Type,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Lock,
+  KeyRound
 } from 'lucide-react';
 
 const AdminSettings = () => {
   const { settings, refreshTheme } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [uploading, setUploading] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     primaryColor: settings.primaryColor,
@@ -98,6 +103,35 @@ const AdminSettings = () => {
       toast.error('Error al guardar: ' + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success('Contraseña actualizada exitosamente');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      toast.error('Error al actualizar contraseña: ' + error.message);
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -226,6 +260,54 @@ const AdminSettings = () => {
             {loading ? <Loader2 className="spin" /> : 'Guardar Cambios'}
           </button>
         </div>
+        {/* Password Change Section */}
+        <section className="settings-card">
+          <div className="card-header">
+            <Lock size={20} />
+            <h3>Seguridad y Contraseña</h3>
+          </div>
+          
+          <div className="security-form-container">
+            <div className="form-group">
+              <label>Nueva Contraseña</label>
+              <div className="input-with-icon">
+                <KeyRound size={18} />
+                <input 
+                  type="password" 
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Escribe la nueva contraseña"
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Confirmar Nueva Contraseña</label>
+              <div className="input-with-icon">
+                <KeyRound size={18} />
+                <input 
+                  type="password" 
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repite la contraseña"
+                />
+              </div>
+            </div>
+
+            <div className="form-actions" style={{ justifyContent: 'flex-start', marginTop: '0' }}>
+              <button 
+                type="button" 
+                className="save-btn" 
+                onClick={handlePasswordChange}
+                disabled={passwordLoading || !newPassword || !confirmPassword}
+                style={{ background: '#eab308', color: '#000' }}
+              >
+                {passwordLoading ? <Loader2 className="spin" /> : 'Actualizar Contraseña'}
+              </button>
+            </div>
+          </div>
+        </section>
+
       </form>
 
       <style>{`
