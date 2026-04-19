@@ -91,130 +91,186 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         .admin-layout {
           display: flex;
           min-height: 100vh;
-          background: #f8f9fa;
+          background: #f4f6f8;
           color: #1a1a1a;
+          font-family: 'Inter', system-ui, sans-serif;
         }
 
         .admin-sidebar {
           width: 280px;
-          background: #ffffff;
-          border-right: 1px solid #e9ecef;
+          background: #0a0a0a;
+          border-right: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           flex-direction: column;
           position: sticky;
           top: 0;
           height: 100vh;
           z-index: 1000;
-          transition: transform 0.3s ease;
+          transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          color: #fff;
         }
 
         .sidebar-header {
-          padding: 2rem;
+          padding: 2.5rem 1.5rem 1.5rem;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center;
+          position: relative;
+        }
+
+        /* Subtle top glow */
+        .sidebar-header::before {
+          content: '';
+          position: absolute;
+          top: -50px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 150px;
+          height: 150px;
+          background: radial-gradient(circle, rgba(230, 0, 0, 0.15) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .sidebar-logo {
+          position: relative;
+          z-index: 2;
         }
 
         .sidebar-logo img {
-          height: 40px;
+          height: 60px;
+          filter: drop-shadow(0 0 15px rgba(230, 0, 0, 0.15));
         }
 
         .mobile-close {
           display: none;
           background: none;
           border: none;
+          color: rgba(255, 255, 255, 0.6);
           cursor: pointer;
+          position: absolute;
+          right: 15px;
+          top: 20px;
         }
 
         .sidebar-nav {
-          padding: 1rem;
+          padding: 1.5rem 1rem;
           flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
         }
 
         .nav-item {
           display: flex;
           align-items: center;
           gap: 1rem;
-          padding: 0.85rem 1rem;
-          color: #495057;
+          padding: 0.85rem 1.2rem;
+          color: rgba(255, 255, 255, 0.5);
           text-decoration: none;
-          border-radius: 0.75rem;
-          margin-bottom: 0.5rem;
+          border-radius: 12px;
           font-weight: 500;
-          transition: all 0.2s;
+          font-size: 14px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          border: 1px solid transparent;
         }
 
         .nav-item:hover {
-          background: #f1f3f5;
-          color: #1a1a1a;
+          background: rgba(255, 255, 255, 0.04);
+          color: white;
+          transform: translateX(4px);
         }
 
         .nav-item.active {
-          background: #fff0f0;
-          color: var(--primary-red);
+          background: linear-gradient(90deg, rgba(230, 0, 0, 0.1) 0%, rgba(230, 0, 0, 0.02) 100%);
+          color: #ff4d4d;
+          border: 1px solid rgba(230, 0, 0, 0.2);
+          box-shadow: inset 2px 0 0 #ff4d4d;
         }
 
         .active-indicator {
           margin-left: auto;
+          opacity: 0;
+          transform: translateX(-10px);
+          transition: all 0.3s ease;
+        }
+
+        .nav-item.active .active-indicator {
+          opacity: 1;
+          transform: translateX(0);
         }
 
         .sidebar-footer {
           padding: 1.5rem;
-          border-top: 1px solid #e9ecef;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(0, 0, 0, 0.2);
         }
 
         .user-info {
-          margin-bottom: 1rem;
+          margin-bottom: 1.25rem;
         }
 
         .user-email {
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           font-weight: 600;
-          color: #1a1a1a;
+          color: rgba(255, 255, 255, 0.9);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          margin-bottom: 4px;
         }
 
         .user-role {
-          font-size: 0.75rem;
-          color: #adb5bd;
+          font-size: 0.7rem;
+          color: rgba(255, 255, 255, 0.4);
           text-transform: uppercase;
-          letter-spacing: 0.05em;
+          letter-spacing: 0.08em;
+          font-weight: 700;
         }
 
         .sign-out-btn {
           width: 100%;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 0.75rem;
-          padding: 0.75rem;
-          background: #fff5f5;
-          color: #e03131;
-          border: 1px solid #ffa8a8;
-          border-radius: 0.5rem;
+          padding: 0.85rem;
+          background: rgba(230, 0, 0, 0.08);
+          color: #ff4d4d;
+          border: 1px solid rgba(230, 0, 0, 0.2);
+          border-radius: 12px;
           cursor: pointer;
           font-weight: 600;
-          transition: all 0.2s;
+          font-size: 14px;
+          transition: all 0.3s ease;
         }
 
         .sign-out-btn:hover {
-          background: #ffe3e3;
+          background: #E60000;
+          color: white;
+          box-shadow: 0 4px 15px rgba(230, 0, 0, 0.3);
+          transform: translateY(-2px);
         }
 
         .admin-main {
           flex: 1;
           display: flex;
           flex-direction: column;
+          /* If there's a scroll area needed inside main */
+          overflow-y: auto;
+          height: 100vh;
         }
 
         .admin-header {
-          background: white;
-          padding: 1rem 2rem;
-          border-bottom: 1px solid #e9ecef;
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(12px);
+          padding: 1.25rem 2.5rem;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
           display: flex;
           align-items: center;
-          gap: 1rem;
+          gap: 1.5rem;
+          position: sticky;
+          top: 0;
+          z-index: 10;
         }
 
         .mobile-menu-btn {
@@ -222,23 +278,30 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           background: none;
           border: none;
           cursor: pointer;
+          color: #1a1a1a;
         }
 
         .header-title h1 {
-          font-size: 1.25rem;
-          font-weight: 700;
+          font-size: 1.5rem;
+          font-weight: 800;
           margin: 0;
+          color: #111;
+          letter-spacing: -0.02em;
         }
 
         .admin-content {
-          padding: 2rem;
+          padding: 2.5rem;
           flex: 1;
+          max-width: 1400px;
+          width: 100%;
+          margin: 0 auto;
         }
 
         @media (max-width: 768px) {
           .admin-sidebar {
             position: fixed;
             transform: translateX(-100%);
+            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
           }
 
           .admin-sidebar.open {
@@ -247,6 +310,14 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
           .mobile-close, .mobile-menu-btn {
             display: block;
+          }
+          
+          .admin-header {
+            padding: 1rem 1.5rem;
+          }
+          
+          .admin-content {
+            padding: 1.5rem;
           }
         }
       `}</style>
