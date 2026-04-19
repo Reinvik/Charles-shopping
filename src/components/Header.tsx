@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import logoImg from '../assets/logo.png';
 import { useTheme } from '../context/ThemeContext';

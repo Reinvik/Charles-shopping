@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   Plus, Pencil, Trash2, Loader2, Save, X, 
-  Image as ImageIcon, Filter, Search, Check, AlertCircle 
+  Image as ImageIcon 
 } from 'lucide-react';
 import { toast } from 'sonner';
 

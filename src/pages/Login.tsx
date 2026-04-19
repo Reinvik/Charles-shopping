@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { LogIn, Mail, Lock, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import logoImg from '../assets/logo.png';
 

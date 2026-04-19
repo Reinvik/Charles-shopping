@@ -6,7 +6,6 @@ import {
   Palette, 
   Upload, 
   Image as ImageIcon, 
-  MousePointer2, 
   Type,
   Loader2,
   CheckCircle2

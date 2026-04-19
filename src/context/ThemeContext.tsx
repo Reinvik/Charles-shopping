@@ -60,7 +60,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const fetchTheme = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('site_settings')
         .select('value')
         .eq('key', 'theme')
