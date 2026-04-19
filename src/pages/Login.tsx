@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, Loader2, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Toaster, toast } from 'sonner';
+import { toast } from 'sonner';
 import logoImg from '../assets/logo.png';
 
 export const Login: React.FC = () => {
@@ -35,7 +35,6 @@ export const Login: React.FC = () => {
 
   return (
     <div className="login-wrapper">
-      <Toaster position="top-center" richColors />
       
       {/* Dynamic Background */}
       <div className="bg-glow-1"></div>
