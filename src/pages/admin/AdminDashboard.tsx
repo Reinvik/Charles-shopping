@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { Link } from 'react-router-dom';
 import { ShoppingBag, Tag, Users, ArrowUpRight, Loader2, Package } from 'lucide-react';
 
 export const AdminDashboard = () => {
@@ -119,14 +120,14 @@ export const AdminDashboard = () => {
             Acciones Rápidas
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            <a href="/admin/products" className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all group">
+            <Link to="/admin/products" className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all group">
               <p className="font-bold text-sm group-hover:text-primary">Agregar Producto</p>
               <p className="text-xs text-slate-400 mt-1">Sube nuevas ofertas</p>
-            </a>
-            <a href="/admin/categories" className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all group">
+            </Link>
+            <Link to="/admin/categories" className="p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all group">
               <p className="font-bold text-sm group-hover:text-primary">Nueva Categoría</p>
               <p className="text-xs text-slate-400 mt-1">Organiza tu catálogo</p>
-            </a>
+            </Link>
           </div>
         </div>
 
