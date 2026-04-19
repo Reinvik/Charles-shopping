@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { Mail, Lock, Loader2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader2, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import logoImg from '../assets/logo.png';
 
@@ -40,6 +40,14 @@ export const Login: React.FC = () => {
       {/* Dynamic Background */}
       <div className="bg-glow-1"></div>
       <div className="bg-glow-2"></div>
+
+      <button 
+        onClick={() => navigate('/')}
+        className="back-to-store-btn"
+      >
+        <ArrowLeft size={18} />
+        Volver a la tienda
+      </button>
 
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
@@ -369,6 +377,32 @@ export const Login: React.FC = () => {
           color: rgba(255, 255, 255, 0.3);
           font-size: 11px;
           letter-spacing: 0.02em;
+        }
+
+        .back-to-store-btn {
+          position: absolute;
+          top: 30px;
+          left: 30px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.8);
+          padding: 10px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+          z-index: 10;
+        }
+
+        .back-to-store-btn:hover {
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+          transform: translateY(-2px);
         }
 
         @media (max-width: 480px) {
