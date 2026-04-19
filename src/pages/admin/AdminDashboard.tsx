@@ -6,24 +6,45 @@ export const AdminDashboard = () => {
   const [stats, setStats] = useState({
     products: 0,
     categories: 0,
-    activeProducts: 0
+    activeProducts: 0,
+    visitors: 0,
+    recentVisitors: 0,
+    conversionRate: 0
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [prodRes, catRes] = await Promise.all([
-        supabase.from('products').select('*'),
-        supabase.from('categories').select('*')
+      // Hace las consultas reales a Supabase
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const [prodRes, catRes, visitorsRes, recentVisitorsRes, ordersRes] = await Promise.all([
+        supabase.from('products').select('id, is_active'),
+        supabase.from('categories').select('id'),
+        supabase.from('store_visits').select('id', { count: 'exact', head: true }),
+        supabase.from('store_visits').select('id', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'pagado')
       ]);
 
-      if (!prodRes.error && !catRes.error) {
-        setStats({
-          products: prodRes.data?.length || 0,
-          categories: catRes.data?.length || 0,
-          activeProducts: prodRes.data?.filter(p => p.is_active).length || 0
-        });
+      const totalVisitors = visitorsRes.count || 0;
+      const recentVisitors = recentVisitorsRes.count || 0;
+      const totalOrders = ordersRes.count || 0;
+      
+      let conversionRate = 0;
+      if (totalVisitors > 0) {
+        conversionRate = (totalOrders / totalVisitors) * 100;
       }
+
+      setStats({
+        products: prodRes.data?.length || 0,
+        categories: catRes.data?.length || 0,
+        activeProducts: prodRes.data?.filter(p => p.is_active).length || 0,
+        visitors: totalVisitors,
+        recentVisitors: recentVisitors,
+        conversionRate: Number(conversionRate.toFixed(2))
+      });
+      
       setLoading(false);
     };
 
@@ -54,18 +75,18 @@ export const AdminDashboard = () => {
       detail: 'En catálogo' 
     },
     { 
-      label: 'Visitantes (Simulado)', 
-      value: '1.2k', 
+      label: 'Visitantes', 
+      value: stats.visitors, 
       icon: Users, 
       color: 'bg-green-500', 
-      detail: '+15% esta semana' 
+      detail: `+${stats.recentVisitors} esta semana` 
     },
     { 
-      label: 'Conversión (Simulado)', 
-      value: '3.2%', 
+      label: 'Conversión', 
+      value: `${stats.conversionRate}%`, 
       icon: ArrowUpRight, 
       color: 'bg-orange-500', 
-      detail: 'Promedio mensual' 
+      detail: 'Ventas sobre visitas' 
     },
   ];
 

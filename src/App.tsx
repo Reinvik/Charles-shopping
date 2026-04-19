@@ -172,6 +172,26 @@ import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
 
 function App() {
+  React.useEffect(() => {
+    const trackVisit = async () => {
+      let sessionId = sessionStorage.getItem('shop_session_id');
+      
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        sessionStorage.setItem('shop_session_id', sessionId);
+        
+        // Registrar la visita silenciosamente
+        try {
+          await supabase.from('store_visits').insert([{ session_id: sessionId }]);
+        } catch (err) {
+          console.error("No se pudo registrar la visita", err);
+        }
+      }
+    };
+    
+    trackVisit();
+  }, []);
+
   return (
     <CartProvider>
       <Router>
