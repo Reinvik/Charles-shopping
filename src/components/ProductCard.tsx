@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductProps {
   id: string | number;
@@ -16,6 +17,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
+  const navigate = useNavigate();
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,6 +40,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
 
   return (
     <motion.div 
+      onClick={() => navigate(`/product/${id}`)}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -52,7 +55,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
         gap: '12px',
         border: '1px solid #f0f0f0',
         transition: 'var(--transition)',
-        cursor: 'default'
+        cursor: 'pointer'
       }}
       whileHover={{ scale: 1.02, boxShadow: 'var(--shadow)' }}
     >

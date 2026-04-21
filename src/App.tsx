@@ -170,6 +170,7 @@ import { AdminCategories } from './pages/admin/AdminCategories';
 import AdminSettings from './pages/admin/AdminSettings';
 import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
+import { ProductDetail } from './pages/ProductDetail';
 
 function App() {
   React.useEffect(() => {
@@ -201,6 +202,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/failure" element={<CheckoutFailure />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route 
             path="/admin/*" 
             element={
