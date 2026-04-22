@@ -15,6 +15,7 @@ interface Product {
   discount_badge?: string;
   image_url: string;
   is_active: boolean;
+  stock: number;
   categories?: { name: string };
 }
 
@@ -39,7 +40,8 @@ export const AdminProducts = () => {
     original_price: 0,
     discount_badge: '',
     image_url: '',
-    is_active: true
+    is_active: true,
+    stock: 0
   });
 
   const fetchData = async () => {
@@ -78,7 +80,8 @@ export const AdminProducts = () => {
         original_price: 0,
         discount_badge: '',
         image_url: '',
-        is_active: true
+        is_active: true,
+        stock: 0
       });
     }
     setIsModalOpen(true);
@@ -101,7 +104,8 @@ export const AdminProducts = () => {
         original_price: formData.original_price ? Number(formData.original_price) : null,
         discount_badge: formData.discount_badge || null,
         image_url: formData.image_url,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        stock: Number(formData.stock) || 0
       };
 
       let query;
@@ -224,11 +228,20 @@ export const AdminProducts = () => {
 
               <h3 className="font-semibold text-sm line-clamp-2 h-10">{product.name}</h3>
               
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg font-bold">${product.price.toLocaleString()}</span>
-                {product.original_price && (
-                  <span className="text-xs text-slate-400 line-through">${product.original_price.toLocaleString()}</span>
-                )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold">${product.price.toLocaleString()}</span>
+                  {product.original_price && (
+                    <span className="text-xs text-slate-400 line-through">${product.original_price.toLocaleString()}</span>
+                  )}
+                </div>
+                <div className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  product.stock > 10 ? 'bg-green-50 text-green-600' :
+                  product.stock > 0 ? 'bg-amber-50 text-amber-600' :
+                  'bg-red-50 text-red-600'
+                }`}>
+                  {product.stock === 0 ? 'Agotado' : `${product.stock} un.`}
+                </div>
               </div>
 
               <button
@@ -358,22 +371,36 @@ export const AdminProducts = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1.5">URL de la Imagen</label>
-                <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5">URL de la Imagen</label>
+                  <div className="flex gap-2">
+                    <input
+                      required
+                      type="url"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      placeholder="https://ejemplo.com/imagen.jpg"
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    {formData.image_url && (
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-white">
+                        <img src={formData.image_url} className="w-full h-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5">Inventario / Stock</label>
                   <input
                     required
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                    className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    type="number"
+                    min="0"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                    placeholder="0"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
                   />
-                  {formData.image_url && (
-                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-white">
-                      <img src={formData.image_url} className="w-full h-full object-contain" />
-                    </div>
-                  )}
                 </div>
               </div>
 

@@ -28,7 +28,8 @@ const HomePage: React.FC = () => {
           *,
           categories(id, name)
         `)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .gt('stock', 0);
       
       if (selectedCategoryId) {
         query = query.eq('category_id', selectedCategoryId);

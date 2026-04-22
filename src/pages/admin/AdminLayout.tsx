@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Menu,
   X,
-  Palette
+  Palette,
+  Globe
 } from 'lucide-react';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -29,6 +30,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'Productos', icon: Package, path: '/admin/products' },
     { label: 'Categorías', icon: Tags, path: '/admin/categories' },
     { label: 'Ajustes', icon: Palette, path: '/admin/settings' },
+    { label: 'Ver Tienda', icon: Globe, path: '/' },
   ];
 
   return (

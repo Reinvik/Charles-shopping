@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const FLOW_API_KEY = "1F08E0EB-247B-4FC2-8EB0-2ALE5B9AFE26"
-const FLOW_SECRET = "41b5cb9e47e03875b6d8b043c3b234afad3f9a6c"
-const FLOW_URL = "https://sandbox.flow.cl/api"
+const FLOW_API_KEY = Deno.env.get('FLOW_API_KEY')
+const FLOW_SECRET = Deno.env.get('FLOW_SECRET')
+const FLOW_URL = Deno.env.get('FLOW_URL') || "https://sandbox.flow.cl/api"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
