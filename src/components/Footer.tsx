@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const Footer = () => {
   const [categories, setCategories] = useState<any[]>([]);
+  const [email, setEmail] = useState('');
+  const [loadingNewsletter, setLoadingNewsletter] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -16,6 +20,33 @@ const Footer = () => {
     };
     fetchCategories();
   }, []);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setLoadingNewsletter(true);
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscribers')
+        .insert([{ email }]);
+
+      if (error) {
+        if (error.code === '23505') { // Postgres unique violation code
+          toast.info('Este correo ya está suscrito.');
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success('¡Gracias por suscribirte!');
+        setEmail('');
+      }
+    } catch (err: any) {
+      toast.error('Error al suscribirse: ' + err.message);
+    } finally {
+      setLoadingNewsletter(false);
+    }
+  };
 
   return (
     <footer style={{ backgroundColor: '#fff', borderTop: '1px solid var(--border)', padding: '60px 0 30px' }}>
@@ -61,10 +92,13 @@ const Footer = () => {
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '15px' }}>
             Suscríbete para recibir ofertas exclusivas.
           </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: '8px' }}>
             <input 
               type="email" 
               placeholder="Email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
               style={{
                 flex: 1,
                 padding: '10px',
@@ -74,8 +108,15 @@ const Footer = () => {
                 fontSize: '13px'
               }}
             />
-            <button className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>Unirse</button>
-          </div>
+            <button 
+              type="submit" 
+              className="btn-primary" 
+              disabled={loadingNewsletter}
+              style={{ padding: '8px 16px', fontSize: '13px', minWidth: '80px', display: 'flex', justifyContent: 'center' }}
+            >
+              {loadingNewsletter ? <Loader2 size={16} className="animate-spin" /> : 'Unirse'}
+            </button>
+          </form>
         </div>
       </div>
       
