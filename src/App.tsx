@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import Footer from './components/Footer';
@@ -12,12 +12,13 @@ import { CartProvider } from './context/CartContext';
 import CartDrawer from './components/CartDrawer';
 import { Toaster } from 'sonner';
 
-
 const HomePage: React.FC = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<any>(null);
+  const { isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const fetchProducts = async () => {
@@ -120,6 +121,38 @@ const HomePage: React.FC = () => {
             gridTemplateColumns: 'repeat(4, 1fr)', 
             gap: '24px' 
           }}>
+            {isAdmin && (
+              <div 
+                onClick={() => navigate('/product/new')}
+                style={{
+                  border: '2px dashed var(--primary)',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '300px',
+                  cursor: 'pointer',
+                  backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(var(--primary-rgb), 0.05)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(var(--primary-rgb), 0.02)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                <div style={{
+                  width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'var(--primary)',
+                  color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px',
+                  fontSize: '32px'
+                }}>+</div>
+                <span style={{ fontWeight: '700', color: 'var(--primary)' }}>Añadir Producto</span>
+              </div>
+            )}
             {products.map(product => (
               <ProductCard 
                 key={product.id} 
@@ -172,6 +205,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
 import { ProductDetail } from './pages/ProductDetail';
+import { DynamicPage } from './pages/DynamicPage';
 
 function App() {
   React.useEffect(() => {
@@ -204,6 +238,7 @@ function App() {
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/failure" element={<CheckoutFailure />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/p/:slug" element={<DynamicPage />} />
           <Route 
             path="/admin/*" 
             element={

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const [categories, setCategories] = useState<any[]>([]);
@@ -48,10 +49,10 @@ const Footer = () => {
         <div>
           <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>Ayuda</h4>
           <ul style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <li>Seguimiento de Pedido</li>
-            <li>Políticas de Envío</li>
-            <li>Preguntas Frecuentes</li>
-            <li>Contacto</li>
+            <li><Link to="/p/seguimiento-de-pedido" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:text-primary transition-colors">Seguimiento de Pedido</Link></li>
+            <li><Link to="/p/politicas-de-envio" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:text-primary transition-colors">Políticas de Envío</Link></li>
+            <li><Link to="/p/preguntas-frecuentes" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:text-primary transition-colors">Preguntas Frecuentes</Link></li>
+            <li><Link to="/p/contacto" style={{ color: 'inherit', textDecoration: 'none' }} className="hover:text-primary transition-colors">Contacto</Link></li>
           </ul>
         </div>
 

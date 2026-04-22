@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Check, Loader2, Pencil, Save, X, Camera } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, Check, Loader2, Pencil, Save, X, Trash2, Camera, Link as LinkIcon, Upload, Image as ImageIcon, GripVertical, Star } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { toast } from 'sonner';
+import logoImg from '../assets/logo.png';
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ export const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>('');
 
   // Edit states
   const [isEditing, setIsEditing] = useState(false);
@@ -24,14 +26,45 @@ export const ProductDetail = () => {
   const [editPrice, setEditPrice] = useState<number>(0);
   const [editStock, setEditStock] = useState<number>(0);
   const [editDescription, setEditDescription] = useState('');
+  const [editImageUrl, setEditImageUrl] = useState('');
+  const [editImages, setEditImages] = useState<string[]>([]);
+  const [imageSourceMode, setImageSourceMode] = useState<'link' | 'upload'>('link');
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Default placeholder image
+  const PLACEHOLDER_IMAGE = logoImg;
+
   useEffect(() => {
     const fetchProduct = async () => {
+      if (id === 'new') {
+        const defaultProduct = {
+          id: 'new',
+          name: 'Nuevo Producto',
+          price: 1000,
+          stock: 10,
+          description: 'Descripción del nuevo producto...',
+          image_url: PLACEHOLDER_IMAGE,
+          images: [PLACEHOLDER_IMAGE],
+          category_id: null
+        };
+        setProduct(defaultProduct);
+        setEditName(defaultProduct.name);
+        setEditPrice(defaultProduct.price);
+        setEditStock(defaultProduct.stock);
+        setEditDescription(defaultProduct.description);
+        setEditImageUrl(defaultProduct.image_url);
+        setEditImages(defaultProduct.images);
+        setSelectedImage(defaultProduct.image_url);
+        setIsEditing(true);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const { data, error } = await supabase
+
         .from('products')
         .select('*')
         .eq('id', id)
@@ -43,6 +76,11 @@ export const ProductDetail = () => {
         setEditPrice(data.price || 0);
         setEditStock(data.stock || 0);
         setEditDescription(data.description || '');
+        setEditImageUrl(data.image_url || '');
+        const initialImages = data.images && data.images.length > 0 ? data.images : [data.image_url];
+        // Ensure uniqueness to prevent Reorder component from crashing/duplicating
+        setEditImages(Array.from(new Set(initialImages.filter(Boolean))));
+        setSelectedImage(data.image_url || '');
       }
       setLoading(false);
     };
@@ -73,13 +111,40 @@ export const ProductDetail = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      if (id === 'new') {
+        // Create new product
+        const { data: newProductData, error: insertError } = await supabase
+          .from('products')
+          .insert([{
+            name: editName,
+            price: editPrice,
+            stock: editStock,
+            description: editDescription,
+            image_url: editImages.length > 0 ? editImages[0] : PLACEHOLDER_IMAGE,
+            images: editImages,
+            is_active: true
+          }])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        toast.success('Producto creado exitosamente');
+        setIsEditing(false);
+        setSaving(false);
+        navigate(`/product/${newProductData.id}`, { replace: true });
+        return;
+      }
+
+      // Update existing
       const { error } = await supabase
         .from('products')
         .update({ 
           name: editName,
           price: editPrice,
           stock: editStock,
-          description: editDescription 
+          description: editDescription,
+          image_url: editImages.length > 0 ? editImages[0] : editImageUrl,
+          images: editImages
         })
         .eq('id', id);
 
@@ -90,7 +155,9 @@ export const ProductDetail = () => {
         name: editName, 
         price: editPrice, 
         stock: editStock,
-        description: editDescription 
+        description: editDescription,
+        image_url: editImages.length > 0 ? editImages[0] : editImageUrl,
+        images: editImages
       });
       setIsEditing(false);
       toast.success('Producto actualizado correctamente');
@@ -127,15 +194,30 @@ export const ProductDetail = () => {
         .from('products')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ image_url: publicUrl })
-        .eq('id', id);
+      if (id !== 'new') {
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ image_url: publicUrl })
+          .eq('id', id);
 
-      if (updateError) throw updateError;
+        if (updateError) throw updateError;
+      }
 
-      setProduct({ ...product, image_url: publicUrl });
-      toast.success('Imagen actualizada');
+      // Find the index of the image we are replacing
+      const newImages = [...editImages];
+      const currentIndex = editImages.indexOf(selectedImage);
+      
+      if (currentIndex !== -1) {
+        newImages[currentIndex] = publicUrl;
+      } else {
+        newImages.push(publicUrl);
+      }
+
+      const uniqueImages = Array.from(new Set(newImages));
+      setEditImages(uniqueImages);
+      setSelectedImage(publicUrl);
+      setEditImageUrl(publicUrl);
+      toast.success('Imagen actualizada en la galería');
     } catch (err: any) {
       toast.error('Error al subir imagen: ' + err.message);
     } finally {
@@ -173,7 +255,10 @@ export const ProductDetail = () => {
       }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button 
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (id === 'new') navigate('/');
+              else navigate(-1);
+            }}
             style={{ 
               display: 'flex', 
               alignItems: 'center', 
@@ -191,18 +276,19 @@ export const ProductDetail = () => {
 
           {isAdmin && (
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button 
-                onClick={() => {
-                  if (isEditing) {
-                    setIsEditing(false);
-                    setEditName(product.name || '');
-                    setEditPrice(product.price || 0);
-                    setEditStock(product.stock || 0);
-                    setEditDescription(product.description || '');
-                  } else {
-                    setIsEditing(true);
-                  }
-                }}
+              {id !== 'new' && (
+                <button 
+                  onClick={() => {
+                    if (isEditing) {
+                      setIsEditing(false);
+                      setEditName(product.name || '');
+                      setEditPrice(product.price || 0);
+                      setEditStock(product.stock || 0);
+                      setEditDescription(product.description || '');
+                    } else {
+                      setIsEditing(true);
+                    }
+                  }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -229,6 +315,7 @@ export const ProductDetail = () => {
                   </>
                 )}
               </button>
+              )}
               
               {isEditing && (
                 <button 
@@ -261,45 +348,175 @@ export const ProductDetail = () => {
       <div className="container" style={{ padding: '40px 20px' }}>
         <div className="product-detail-layout">
           {/* Left Column: Image */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className={`product-image-container ${isEditing ? 'editable' : ''}`}
-            onClick={handleImageClick}
-          >
-            {product.discount_badge && (
-              <div className="detail-badge-sale">{product.discount_badge}</div>
-            )}
-            
-            <AnimatePresence>
+          <div className="product-gallery-layout">
+            {/* Thumbnails list with Drag & Drop */}
+            <Reorder.Group 
+              axis="y" 
+              values={Array.from(new Set(isEditing ? editImages : (product.images && product.images.length > 0 ? product.images : [product.image_url]).filter(Boolean)))} 
+              onReorder={setEditImages}
+              className="product-thumbnails"
+            >
+              {Array.from(new Set(isEditing ? editImages : (product.images && product.images.length > 0 ? product.images : [product.image_url]).filter(Boolean))).map((img: string, idx: number) => (
+                <Reorder.Item 
+                  key={`${img}-${idx}`} 
+                  value={img}
+                  className="relative flex flex-col items-center gap-1 mb-4"
+                  style={{ zIndex: selectedImage === img ? 10 : 1 }}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    {isEditing && (
+                      <div className="text-slate-400 cursor-grab active:cursor-grabbing p-1">
+                        <GripVertical size={18} />
+                      </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        setSelectedImage(img);
+                        setEditImageUrl(img);
+                      }}
+                      className={`thumbnail-btn ${selectedImage === img ? 'active' : ''}`}
+                    >
+                      <img src={img || PLACEHOLDER_IMAGE} alt="" style={{ borderRadius: '8px' }} onError={(e: any) => e.target.src = PLACEHOLDER_IMAGE} />
+                    </button>
+                  </div>
+
+                  {isEditing && (
+                    <div className="flex gap-1 w-full mt-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newImages = [...editImages];
+                          const [item] = newImages.splice(idx, 1);
+                          newImages.unshift(item);
+                          setEditImages(newImages);
+                          setSelectedImage(item);
+                          setEditImageUrl(item);
+                        }}
+                        className={`text-[9px] font-bold px-1 py-1.5 rounded flex items-center justify-center gap-1 transition-all flex-1 ${
+                          idx === 0 
+                            ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' 
+                            : 'bg-slate-100 text-slate-500 hover:bg-primary hover:text-white border border-transparent'
+                        }`}
+                      >
+                        {idx === 0 ? '⭐ PRINCIPAL' : '⬆️ PORTADA'}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newImages = editImages.filter((_, i) => i !== idx);
+                          setEditImages(newImages);
+                          if (selectedImage === img && newImages.length > 0) {
+                            setSelectedImage(newImages[0]);
+                            setEditImageUrl(newImages[0]);
+                          }
+                        }}
+                        className="bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded px-2 flex items-center justify-center transition-colors"
+                        title="Eliminar foto"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
+                </Reorder.Item>
+              ))}
+              
               {isEditing && (
-                <motion.div 
+                <button
+                  onClick={() => {
+                    if (imageSourceMode === 'upload') {
+                      fileInputRef.current?.click();
+                    } else {
+                      const url = prompt('Pega el enlace de la imagen:');
+                      if (url) {
+                        setEditImages([...editImages, url]);
+                        setSelectedImage(url);
+                        setEditImageUrl(url);
+                      }
+                    }
+                  }}
+                  className="thumbnail-btn add-new-btn shrink-0"
+                  style={{ marginTop: '10px' }}
+                >
+                  <Plus size={24} className="text-slate-400" />
+                </button>
+              )}
+            </Reorder.Group>
+
+            {/* Main Image Viewer */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className={`product-image-viewer ${isEditing ? 'editable' : ''}`}
+              onClick={handleImageClick}
+            >
+              {product.discount_badge && (
+                <div className="detail-badge-sale">{product.discount_badge}</div>
+              )}
+              
+              <AnimatePresence mode="wait">
+                <motion.img 
+                  key={isEditing ? editImageUrl : selectedImage}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="image-overlay"
-                >
+                  transition={{ duration: 0.2 }}
+                  src={isEditing ? editImageUrl : selectedImage} 
+                  alt={product.name} 
+                  className="main-display-image"
+                />
+              </AnimatePresence>
+
+              {isEditing && (
+                <div className="image-overlay">
                   {uploadingImage ? (
                     <Loader2 size={32} className="animate-spin text-white" />
                   ) : (
-                    <div style={{ textAlign: 'center', color: '#fff' }}>
-                      <Camera size={32} style={{ marginBottom: '8px' }} />
-                      <p style={{ fontWeight: '700', fontSize: '14px' }}>Cambiar Imagen</p>
+                    <div className="flex flex-col gap-3">
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          fileInputRef.current?.click();
+                        }}
+                        className="bg-white text-primary px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-xl"
+                      >
+                        <Camera size={18} />
+                        Reemplazar esta foto
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = prompt('Nuevo enlace de imagen:');
+                          if (url) {
+                            const newImages = [...editImages];
+                            const idx = editImages.indexOf(selectedImage);
+                            if (idx !== -1) newImages[idx] = url;
+                            else newImages.push(url);
+                            setEditImages(Array.from(new Set(newImages)));
+                            setSelectedImage(url);
+                            setEditImageUrl(url);
+                          }
+                        }}
+                        className="bg-primary text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-opacity-90 transition-all shadow-xl"
+                      >
+                        <LinkIcon size={18} />
+                        Cambiar por Link
+                      </button>
                     </div>
                   )}
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
 
-            <img src={product.image_url} alt={product.name} />
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-              accept="image/*" 
-              style={{ display: 'none' }} 
-            />
-          </motion.div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept="image/*" 
+                style={{ display: 'none' }} 
+              />
+            </motion.div>
+          </div>
 
           {/* Right Column: Info */}
           <motion.div 
@@ -308,13 +525,66 @@ export const ProductDetail = () => {
             className="product-info-container"
           >
             {isEditing ? (
-              <input 
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="edit-input-title"
-                placeholder="Nombre del producto"
-              />
+              <div className="space-y-4 mb-6">
+                <input 
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="edit-input-title"
+                  placeholder="Nombre del producto"
+                />
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <label className="text-sm font-bold text-slate-600">Fuente de Imagen</label>
+                  <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setImageSourceMode('link')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                        imageSourceMode === 'link' ? 'bg-white shadow-sm text-primary' : 'text-slate-500'
+                      }`}
+                    >
+                      <LinkIcon size={12} />
+                      Enlace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageSourceMode('upload')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                        imageSourceMode === 'upload' ? 'bg-white shadow-sm text-primary' : 'text-slate-500'
+                      }`}
+                    >
+                      <Upload size={12} />
+                      Archivo
+                    </button>
+                  </div>
+                </div>
+
+                {imageSourceMode === 'link' ? (
+                  <div className="flex gap-2">
+                    <input 
+                      type="url"
+                      value={editImageUrl}
+                      onChange={(e) => setEditImageUrl(e.target.value)}
+                      className="edit-input-standard"
+                      placeholder="Pega el enlace de la imagen..."
+                      style={{ flex: 1 }}
+                    />
+                    <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-white shrink-0">
+                      <img src={editImageUrl} className="w-full h-full object-contain" onError={(e: any) => e.target.src = PLACEHOLDER_IMAGE} />
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImage}
+                    className="w-full py-3 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all font-bold text-slate-600 border-2 border-dashed border-slate-300"
+                  >
+                    {uploadingImage ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                    {uploadingImage ? 'Subiendo...' : 'Subir Archivo desde PC'}
+                  </button>
+                )}
+              </div>
             ) : (
               <h1 className="product-title">{product.name}</h1>
             )}
@@ -436,27 +706,98 @@ export const ProductDetail = () => {
           }
         }
 
-        .product-image-container {
+        .product-gallery-layout {
+          display: flex;
+          gap: 20px;
+          height: 600px;
+        }
+
+        .product-thumbnails {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          width: 130px;
+          overflow-y: auto;
+          overflow-x: visible;
+          padding: 20px 10px;
+        }
+
+        .product-thumbnails::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .product-thumbnails::-webkit-scrollbar-thumb {
+          background: #e5e7eb;
+          border-radius: 10px;
+        }
+
+        .thumbnail-btn {
+          width: 80px;
+          height: 80px;
+          border-radius: 12px;
+          border: 2px solid transparent;
           background: #fff;
-          border-radius: 16px;
+          padding: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+          flex-shrink: 0;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .thumbnail-btn img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .thumbnail-btn:hover {
+          border-color: #e5e7eb;
+          transform: translateY(-2px);
+        }
+
+        .thumbnail-btn.active {
+          border-color: var(--primary);
+          box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);
+        }
+
+        .thumbnail-btn.add-new-btn {
+          border: 2px dashed #e5e7eb;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f9fafb;
+        }
+
+        .thumbnail-btn.add-new-btn:hover {
+          border-color: var(--primary);
+          background: #fff;
+        }
+
+        .product-image-viewer {
+          flex: 1;
+          background: #fff;
+          border-radius: 24px;
           padding: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
           position: relative;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-          aspect-ratio: 1;
-          transition: all 0.3s;
+          box-shadow: 0 4px 30px rgba(0,0,0,0.03);
           overflow: hidden;
         }
 
-        .product-image-container.editable {
+        .main-display-image {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+
+        .product-image-viewer.editable {
           cursor: pointer;
         }
 
-        .product-image-container.editable:hover {
-          transform: scale(1.02);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        .product-image-viewer.editable:hover {
+          box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         }
 
         .image-overlay {
@@ -645,10 +986,24 @@ export const ProductDetail = () => {
           100% { opacity: 0.8; transform: scale(1); }
         }
 
-        .edit-textarea:focus, .edit-input-title:focus, .edit-input-price:focus {
+        .edit-input-title:focus, .edit-input-price:focus, .edit-input-standard:focus {
           border-color: var(--primary);
           box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.15);
           background: #fff;
+        }
+
+        .edit-input-standard {
+          width: 100%;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 10px 14px;
+          font-size: 14px;
+          outline: none;
+          transition: all 0.2s;
+        }
+
+        .space-y-4 > * + * {
+          margin-top: 1rem;
         }
 
         .product-actions-box {

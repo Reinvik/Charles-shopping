@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   Plus, Pencil, Trash2, Loader2, Save, X, 
-  Image as ImageIcon 
+  Image as ImageIcon, Upload, Link as LinkIcon
 } from 'lucide-react';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface Product {
@@ -14,6 +15,7 @@ interface Product {
   original_price?: number;
   discount_badge?: string;
   image_url: string;
+  images: string[];
   is_active: boolean;
   stock: number;
   categories?: { name: string };
@@ -31,6 +33,8 @@ export const AdminProducts = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageSourceMode, setImageSourceMode] = useState<'link' | 'upload'>('link');
 
   // Form state
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -40,6 +44,7 @@ export const AdminProducts = () => {
     original_price: 0,
     discount_badge: '',
     image_url: '',
+    images: [],
     is_active: true,
     stock: 0
   });
@@ -80,6 +85,7 @@ export const AdminProducts = () => {
         original_price: 0,
         discount_badge: '',
         image_url: '',
+        images: [],
         is_active: true,
         stock: 0
       });
@@ -90,6 +96,54 @@ export const AdminProducts = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingProduct(null);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploadingImage(true);
+    const newUrls: string[] = [];
+
+    try {
+      for (const file of files) {
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error(`"${file.name}" es demasiado grande. Máximo 2MB.`);
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `product-images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+        
+        newUrls.push(publicUrl);
+      }
+
+      const updatedImages = [...(formData.images || []), ...newUrls];
+      setFormData(prev => ({ 
+        ...prev, 
+        images: updatedImages,
+        image_url: prev.image_url || updatedImages[0]
+      }));
+      
+      toast.success(newUrls.length > 1 ? `${newUrls.length} imágenes añadidas` : 'Imagen añadida');
+    } catch (error: any) {
+      console.error('Error uploading images:', error);
+      toast.error('Error al subir: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setUploadingImage(false);
+      if (e.target) e.target.value = ''; 
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -103,7 +157,8 @@ export const AdminProducts = () => {
         price: Number(formData.price),
         original_price: formData.original_price ? Number(formData.original_price) : null,
         discount_badge: formData.discount_badge || null,
-        image_url: formData.image_url,
+        image_url: formData.images && formData.images.length > 0 ? formData.images[0] : (formData.image_url || ''),
+        images: formData.images || [],
         is_active: formData.is_active,
         stock: Number(formData.stock) || 0
       };
@@ -371,25 +426,132 @@ export const AdminProducts = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">URL de la Imagen</label>
-                  <div className="flex gap-2">
-                    <input
-                      required
-                      type="url"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      placeholder="https://ejemplo.com/imagen.jpg"
-                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                    {formData.image_url && (
-                      <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-white">
-                        <img src={formData.image_url} className="w-full h-full object-contain" />
-                      </div>
-                    )}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-semibold">Galería de Imágenes</label>
+                  <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+                    <button
+                      type="button"
+                      onClick={() => setImageSourceMode('link')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                        imageSourceMode === 'link' ? 'bg-white shadow-sm text-primary' : 'text-slate-50'
+                      }`}
+                    >
+                      <LinkIcon size={12} />
+                      Enlace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageSourceMode('upload')}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                        imageSourceMode === 'upload' ? 'bg-white shadow-sm text-primary' : 'text-slate-50'
+                      }`}
+                    >
+                      <Upload size={12} />
+                      Subir
+                    </button>
                   </div>
                 </div>
+
+                {/* Images Grid */}
+                <Reorder.Group 
+                  axis="x" 
+                  values={formData.images || []} 
+                  onReorder={(newImages) => setFormData({ ...formData, images: newImages })}
+                  className="grid grid-cols-4 gap-2"
+                >
+                  {(formData.images || []).map((img, idx) => (
+                    <Reorder.Item 
+                      key={img} 
+                      value={img}
+                      className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-white group shadow-sm cursor-grab active:cursor-grabbing"
+                    >
+                      <img src={img} className="w-full h-full object-contain p-1" alt={`Gallery ${idx}`} />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                        {idx === 0 ? (
+                          <span className="text-[8px] bg-primary text-white px-2 py-0.5 rounded font-bold">PORTADA</span>
+                        ) : (
+                          <span className="text-[8px] bg-white text-slate-900 px-2 py-0.5 rounded font-bold">ARRASTRAR</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const newImages = formData.images?.filter((_, i) => i !== idx);
+                            setFormData({ ...formData, images: newImages });
+                          }}
+                          className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                      {idx === 0 && (
+                        <div className="absolute top-0 left-0 bg-primary text-white text-[8px] px-1.5 py-0.5 font-bold rounded-br-lg shadow-sm">P</div>
+                      )}
+                    </Reorder.Item>
+                  ))}
+                  
+                  {imageSourceMode === 'upload' && (
+                    <div className="aspect-square">
+                      <label className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all group">
+                        {uploadingImage ? (
+                          <Loader2 size={16} className="animate-spin text-primary" />
+                        ) : (
+                          <>
+                            <Plus size={20} className="text-slate-300 group-hover:text-primary transition-colors" />
+                            <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase group-hover:text-primary">Añadir</span>
+                          </>
+                        )}
+                        <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageUpload} disabled={uploadingImage} />
+                      </label>
+                    </div>
+                  )}
+                </Reorder.Group>
+
+                {imageSourceMode === 'link' && (
+                  <div className="flex gap-2">
+                    <input
+                      id="new-image-link"
+                      type="url"
+                      placeholder="Pegar link de imagen y pulsar (+)"
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const input = e.target as HTMLInputElement;
+                          if (input.value) {
+                            setFormData(prev => ({ 
+                              ...prev, 
+                              images: [...(prev.images || []), input.value],
+                              image_url: prev.image_url || input.value
+                            }));
+                            input.value = '';
+                            toast.success('Link añadido');
+                          }
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById('new-image-link') as HTMLInputElement;
+                        if (input.value) {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            images: [...(prev.images || []), input.value],
+                            image_url: prev.image_url || input.value
+                          }));
+                          input.value = '';
+                          toast.success('Link añadido');
+                        }
+                      }}
+                      className="p-2.5 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-md shadow-primary/20"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-semibold mb-1.5">Inventario / Stock</label>
                   <input
