@@ -201,6 +201,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
 import { AdminCategories } from './pages/admin/AdminCategories';
+import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import AdminSettings from './pages/admin/AdminSettings';
 import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
@@ -247,6 +248,7 @@ function App() {
                   <Route path="/" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                   <Route path="/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
                   <Route path="/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
+                  <Route path="/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
                   <Route path="/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
                 </Routes>
               </ProtectedRoute>
