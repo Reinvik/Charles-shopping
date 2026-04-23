@@ -7,6 +7,8 @@ interface ThemeSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   siteName: string;
+  announcementText: string;
+  freeDeliveryThreshold: number;
 }
 
 interface ThemeContextType {
@@ -20,7 +22,9 @@ const defaultSettings: ThemeSettings = {
   borderRadius: '8',
   logoUrl: null,
   faviconUrl: null,
-  siteName: 'Charles Shopping'
+  siteName: 'Charles Shopping',
+  announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
+  freeDeliveryThreshold: 30000
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

@@ -4,16 +4,18 @@ import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Loader2, Mail } from '
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTheme } from '../context/ThemeContext';
 
 const CartDrawer: React.FC = () => {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
   const { user } = useAuth();
+  const { settings } = useTheme();
   
   const [email, setEmail] = useState(user?.email || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const freeShippingThreshold = 30000;
+  const freeShippingThreshold = settings.freeDeliveryThreshold || 30000;
   const progress = Math.min((totalPrice / freeShippingThreshold) * 100, 100);
   const remaining = freeShippingThreshold - totalPrice;
 

@@ -8,18 +8,24 @@ import { useEffect, useState } from 'react';
 import logoImg from '../assets/logo.png';
 import { useTheme } from '../context/ThemeContext';
 
-const AnnouncementBar = () => (
-  <div style={{
-    backgroundColor: '#000',
-    color: '#fff',
-    padding: '8px 0',
-    fontSize: '12px',
-    textAlign: 'center',
-    fontWeight: '500'
-  }}>
-    DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO
-  </div>
-);
+const AnnouncementBar = () => {
+  const { settings } = useTheme();
+  
+  if (!settings.announcementText) return null;
+  
+  return (
+    <div style={{
+      backgroundColor: '#000',
+      color: '#fff',
+      padding: '8px 0',
+      fontSize: '12px',
+      textAlign: 'center',
+      fontWeight: '500'
+    }}>
+      {settings.announcementText}
+    </div>
+  );
+};
 
 interface HeaderProps {
   selectedCategoryId?: string | null;

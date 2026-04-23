@@ -25,7 +25,9 @@ const AdminSettings = () => {
     borderRadius: settings.borderRadius,
     siteName: settings.siteName,
     logoUrl: settings.logoUrl,
-    faviconUrl: settings.faviconUrl
+    faviconUrl: settings.faviconUrl,
+    announcementText: settings.announcementText || 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
+    freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000
   });
 
   useEffect(() => {
@@ -34,7 +36,9 @@ const AdminSettings = () => {
       borderRadius: settings.borderRadius,
       siteName: settings.siteName,
       logoUrl: settings.logoUrl,
-      faviconUrl: settings.faviconUrl
+      faviconUrl: settings.faviconUrl,
+      announcementText: settings.announcementText || 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
+      freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000
     });
   }, [settings]);
 
@@ -199,9 +203,35 @@ const AdminSettings = () => {
               </label>
             </div>
           </div>
+
+          <div className="form-group" style={{ marginTop: '20px' }}>
+            <label>Texto del Anuncio Superior (Franja Negra)</label>
+            <input 
+              type="text" 
+              name="announcementText" 
+              value={formData.announcementText} 
+              onChange={handleInputChange}
+              className="settings-input"
+              placeholder="Ej: ENVÍOS GRATIS POR COMPRAS SOBRE $30.000"
+            />
+            <small className="help-text">Este texto aparecerá en la barra negra superior de la tienda.</small>
+          </div>
+
+          <div className="form-group" style={{ marginTop: '20px' }}>
+            <label>Monto para Envío Gratis ($)</label>
+            <input 
+              type="number" 
+              name="freeDeliveryThreshold" 
+              value={formData.freeDeliveryThreshold} 
+              onChange={handleInputChange}
+              className="settings-input"
+              placeholder="Ej: 30000"
+            />
+            <small className="help-text">El monto en pesos a partir del cual el envío es gratuito.</small>
+          </div>
         </section>
 
-        {/* Style & Colors Section */}
+        {/* Global Styles Section */}
         <section className="settings-card">
           <div className="card-header">
             <Palette size={20} />
