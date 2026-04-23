@@ -9,6 +9,7 @@ interface ThemeSettings {
   siteName: string;
   announcementText: string;
   freeDeliveryThreshold: number;
+  deliveryCost: number;
 }
 
 interface ThemeContextType {
@@ -24,7 +25,8 @@ const defaultSettings: ThemeSettings = {
   faviconUrl: null,
   siteName: 'Charles Shopping',
   announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
-  freeDeliveryThreshold: 30000
+  freeDeliveryThreshold: 30000,
+  deliveryCost: 3500
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
