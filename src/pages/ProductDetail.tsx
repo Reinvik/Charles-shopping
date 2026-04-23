@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Check, Loader2, Pencil, Save, X, Trash2, Camera, Link as LinkIcon, Upload, Image as ImageIcon, GripVertical, Star } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, Check, Loader2, Pencil, Save, X, Trash2, Camera, Link as LinkIcon, Upload, GripVertical } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
@@ -352,11 +352,11 @@ export const ProductDetail = () => {
             {/* Thumbnails list with Drag & Drop */}
             <Reorder.Group 
               axis="y" 
-              values={Array.from(new Set(isEditing ? editImages : (product.images && product.images.length > 0 ? product.images : [product.image_url]).filter(Boolean)))} 
+              values={Array.from(new Set(isEditing ? editImages : (product?.images && product.images.length > 0 ? product.images : [product?.image_url]).filter(Boolean))) as string[]} 
               onReorder={setEditImages}
               className="product-thumbnails"
             >
-              {Array.from(new Set(isEditing ? editImages : (product.images && product.images.length > 0 ? product.images : [product.image_url]).filter(Boolean))).map((img: string, idx: number) => (
+              {(Array.from(new Set(isEditing ? editImages : (product?.images && product.images.length > 0 ? product.images : [product?.image_url]).filter(Boolean))) as string[]).map((img: string, idx: number) => (
                 <Reorder.Item 
                   key={`${img}-${idx}`} 
                   value={img}

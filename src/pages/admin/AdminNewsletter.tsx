@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Mail, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';

@@ -4,7 +4,7 @@ import {
   Plus, Pencil, Trash2, Loader2, Save, X, 
   Image as ImageIcon, Upload, Link as LinkIcon
 } from 'lucide-react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface Product {
