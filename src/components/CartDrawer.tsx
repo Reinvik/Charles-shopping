@@ -28,12 +28,14 @@ const CartDrawer: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    const finalTotal = remaining > 0 ? totalPrice + (settings.deliveryCost || 3500) : totalPrice;
+
     try {
       const { data, error: functionError } = await supabase.functions.invoke('flow-create-payment', {
         body: {
           items: cart,
           email: email,
-          total: totalPrice,
+          total: finalTotal,
           userId: user?.id
         }
       });
@@ -265,14 +267,14 @@ const CartDrawer: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                   <span style={{ color: '#666', fontSize: '14px' }}>Despacho</span>
                   <span style={{ color: remaining > 0 ? '#000' : '#059669', fontSize: '14px', fontWeight: '600' }}>
-                    {remaining > 0 ? 'Calculado en el checkout' : '¡GRATIS!'}
+                    {remaining > 0 ? `$${(settings.deliveryCost || 3500).toLocaleString('es-CL')} CLP` : '¡GRATIS!'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'flex-end' }}>
                   <span style={{ fontSize: '18px', fontWeight: '800' }}>Total</span>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)' }}>
-                      ${totalPrice.toLocaleString('es-CL')} CLP
+                      ${(remaining > 0 ? totalPrice + (settings.deliveryCost || 3500) : totalPrice).toLocaleString('es-CL')} CLP
                     </div>
                     <div style={{ fontSize: '11px', color: '#999' }}>IVA incluido</div>
                   </div>
