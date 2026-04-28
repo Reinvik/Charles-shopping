@@ -12,6 +12,8 @@ import { CartProvider } from './context/CartContext';
 import CartDrawer from './components/CartDrawer';
 import { Toaster } from 'sonner';
 
+import HeroBanner from './components/HeroBanner';
+
 const HomePage: React.FC = () => {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -71,6 +73,8 @@ const HomePage: React.FC = () => {
       />
       
       <main className="container" style={{ padding: '40px 0' }}>
+        {!selectedCategoryId && <HeroBanner />}
+        
         <div style={{ marginBottom: '40px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px' }}>
             {selectedCategory ? selectedCategory.name : 'Catálogo Completo'}

@@ -15,14 +15,25 @@ const AnnouncementBar = () => {
   
   return (
     <div style={{
-      backgroundColor: '#000',
+      background: 'linear-gradient(270deg, #000, #333, #000)',
+      backgroundSize: '400% 400%',
+      animation: 'gradientBG 15s ease infinite',
       color: '#fff',
-      padding: '8px 0',
-      fontSize: '12px',
+      padding: '10px 0',
+      fontSize: '11px',
       textAlign: 'center',
-      fontWeight: '500'
+      fontWeight: '700',
+      letterSpacing: '0.5px',
+      textTransform: 'uppercase'
     }}>
       {settings.announcementText}
+      <style>{`
+        @keyframes gradientBG {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+      `}</style>
     </div>
   );
 };
