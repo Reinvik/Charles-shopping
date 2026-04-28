@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, User, Settings } from 'lucide-react';
+import { Search, ShoppingCart, User, Settings, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -39,6 +39,10 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [newCatName, setNewCatName] = useState('');
+  const [isAddingCat, setIsAddingCat] = useState(false);
+  const [tempName, setTempName] = useState('');
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,16 +59,55 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  const fetchCategories = async () => {
+    const { data } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name');
+    if (data) setCategories(data);
+  };
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      const { data } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
-      if (data) setCategories(data);
-    };
     fetchCategories();
   }, []);
+
+  const handleAddCategory = async () => {
+    if (!newCatName.trim()) return;
+    try {
+      const slug = newCatName.toLowerCase().trim().replace(/\s+/g, '-');
+      const { error } = await supabase.from('categories').insert([{ name: newCatName.trim(), slug }]);
+      if (error) throw error;
+      setNewCatName('');
+      setIsAddingCat(false);
+      fetchCategories();
+    } catch (err: any) {
+      alert('Error al agregar categoría: ' + err.message);
+    }
+  };
+
+  const handleUpdateCategory = async (id: string) => {
+    if (!tempName.trim()) return;
+    try {
+      const slug = tempName.toLowerCase().trim().replace(/\s+/g, '-');
+      const { error } = await supabase.from('categories').update({ name: tempName.trim(), slug }).eq('id', id);
+      if (error) throw error;
+      setEditingCatId(null);
+      fetchCategories();
+    } catch (err: any) {
+      alert('Error al actualizar categoría: ' + err.message);
+    }
+  };
+
+  const handleDeleteCategory = async (id: string, name: string) => {
+    if (!window.confirm(`¿Estás seguro de eliminar la categoría "${name}"? Los productos asociados podrían quedar sin categoría.`)) return;
+    try {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+      fetchCategories();
+    } catch (err: any) {
+      alert('Error al eliminar categoría: ' + err.message);
+    }
+  };
 
   return (
     <header style={{ 
@@ -172,8 +215,11 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
           {categories.map(category => (
             <li 
               key={category.id} 
-              onClick={() => onCategorySelect?.(category.id)}
               style={{ 
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
                 cursor: 'pointer', 
                 transition: 'var(--transition)',
                 color: selectedCategoryId === category.id ? 'var(--primary)' : 'inherit',
@@ -181,12 +227,103 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
                 paddingBottom: '4px',
                 whiteSpace: 'nowrap'
               }}
+              onClick={(e) => {
+                if (editingCatId === category.id) return;
+                onCategorySelect?.(category.id);
+              }}
             >
-              {category.name.toUpperCase()}
+              {editingCatId === category.id ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <input 
+                    autoFocus
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleUpdateCategory(category.id);
+                      if (e.key === 'Escape') setEditingCatId(null);
+                    }}
+                    style={{ padding: '2px 4px', fontSize: '12px', border: '1px solid var(--primary)', borderRadius: '4px' }}
+                  />
+                  <Check size={14} className="text-primary" onClick={() => handleUpdateCategory(category.id)} />
+                  <X size={14} className="text-red-500" onClick={() => setEditingCatId(null)} />
+                </div>
+              ) : (
+                <>
+                  {category.name.toUpperCase()}
+                  {isAdmin && (
+                    <div className="admin-cat-actions" style={{ display: 'flex', gap: '4px', marginLeft: '4px' }}>
+                      <Pencil 
+                        size={12} 
+                        style={{ opacity: 0.4 }} 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingCatId(category.id);
+                          setTempName(category.name);
+                        }} 
+                      />
+                      <Trash2 
+                        size={12} 
+                        style={{ opacity: 0.4 }} 
+                        className="hover:text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCategory(category.id, category.name);
+                        }} 
+                      />
+                    </div>
+                  )}
+                </>
+              )}
             </li>
           ))}
+
+          {isAdmin && (
+            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isAddingCat ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <input 
+                    autoFocus
+                    placeholder="Nueva..."
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddCategory();
+                      if (e.key === 'Escape') setIsAddingCat(false);
+                    }}
+                    style={{ padding: '2px 4px', fontSize: '12px', border: '1px solid var(--primary)', borderRadius: '4px' }}
+                  />
+                  <Plus size={16} className="text-primary" onClick={handleAddCategory} style={{ cursor: 'pointer' }} />
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setIsAddingCat(true)}
+                  style={{ 
+                    background: 'none', border: '1px dashed #ccc', borderRadius: '4px', padding: '2px 8px',
+                    fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer',
+                    color: '#999'
+                  }}
+                >
+                  <Plus size={12} /> AGREGAR
+                </button>
+              )}
+            </li>
+          )}
         </ul>
       </nav>
+
+      <style>{`
+        .admin-cat-actions {
+          opacity: 0.3;
+          transition: opacity 0.2s;
+        }
+        li:hover .admin-cat-actions {
+          opacity: 1;
+        }
+        .admin-cat-actions svg:hover {
+          color: var(--primary);
+          transform: scale(1.1);
+        }
+      `}</style>
     </header>
   );
 };
