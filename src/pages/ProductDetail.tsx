@@ -487,8 +487,11 @@ export const ProductDetail = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const url = prompt('Nuevo enlace de imagen:');
+                          const url = prompt('Pega el ENLACE DIRECTO de la imagen (debe terminar en .jpg, .png, .webp, etc):\n\nTip: En MercadoLibre, haz clic derecho sobre la foto y selecciona "Copiar dirección de imagen".');
                           if (url) {
+                            if (url.includes('mercadolibre.cl') && !url.includes('mlstatic.com')) {
+                              toast.error('Parece que pegaste el link de la página, no de la foto. Usa "Copiar dirección de imagen".');
+                            }
                             const newImages = [...editImages];
                             const idx = editImages.indexOf(selectedImage);
                             if (idx !== -1) newImages[idx] = url;
@@ -560,19 +563,30 @@ export const ProductDetail = () => {
                   </div>
                 </div>
 
-                {imageSourceMode === 'link' ? (
-                  <div className="flex gap-2">
-                    <input 
-                      type="url"
-                      value={editImageUrl}
-                      onChange={(e) => setEditImageUrl(e.target.value)}
-                      className="edit-input-standard"
-                      placeholder="Pega el enlace de la imagen..."
-                      style={{ flex: 1 }}
-                    />
-                    <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-white shrink-0">
-                      <img src={editImageUrl} className="w-full h-full object-contain" onError={(e: any) => e.target.src = PLACEHOLDER_IMAGE} />
+                 {imageSourceMode === 'link' ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <input 
+                        type="url"
+                        value={editImageUrl}
+                        onChange={(e) => setEditImageUrl(e.target.value)}
+                        className="edit-input-standard"
+                        placeholder="Pega el enlace de la imagen..."
+                        style={{ flex: 1 }}
+                      />
+                      <div className="w-12 h-12 rounded-lg border border-slate-200 overflow-hidden bg-white shrink-0">
+                        <img 
+                          src={editImageUrl} 
+                          className="w-full h-full object-contain" 
+                          onError={(e: any) => e.target.src = PLACEHOLDER_IMAGE} 
+                        />
+                      </div>
                     </div>
+                    {editImageUrl.includes('mercadolibre.cl') && !editImageUrl.includes('mlstatic.com') && (
+                      <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 font-medium">
+                        ⚠️ Estás usando el link de la página de MercadoLibre. Para que se vea la foto, haz <b>clic derecho sobre la imagen</b> en MercadoLibre y selecciona <b>"Copiar dirección de imagen"</b>.
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <button

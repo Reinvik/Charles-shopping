@@ -509,17 +509,40 @@ export const AdminProducts = () => {
                 </Reorder.Group>
 
                 {imageSourceMode === 'link' && (
-                  <div className="flex gap-2">
-                    <input
-                      id="new-image-link"
-                      type="url"
-                      placeholder="Pegar link de imagen y pulsar (+)"
-                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const input = e.target as HTMLInputElement;
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        id="new-image-link"
+                        type="url"
+                        placeholder="Pegar link de imagen y pulsar (+)"
+                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const input = e.target as HTMLInputElement;
+                            if (input.value) {
+                              if (input.value.includes('mercadolibre.cl') && !input.value.includes('mlstatic.com')) {
+                                toast.error('Error: Pegaste el link de la página. Usa "Copiar dirección de imagen".');
+                              }
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                images: [...(prev.images || []), input.value],
+                                image_url: prev.image_url || input.value
+                              }));
+                              input.value = '';
+                              toast.success('Link añadido');
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById('new-image-link') as HTMLInputElement;
                           if (input.value) {
+                            if (input.value.includes('mercadolibre.cl') && !input.value.includes('mlstatic.com')) {
+                              toast.error('Error: Pegaste el link de la página. Usa "Copiar dirección de imagen".');
+                            }
                             setFormData(prev => ({ 
                               ...prev, 
                               images: [...(prev.images || []), input.value],
@@ -528,27 +551,15 @@ export const AdminProducts = () => {
                             input.value = '';
                             toast.success('Link añadido');
                           }
-                        }
-                      }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const input = document.getElementById('new-image-link') as HTMLInputElement;
-                        if (input.value) {
-                          setFormData(prev => ({ 
-                            ...prev, 
-                            images: [...(prev.images || []), input.value],
-                            image_url: prev.image_url || input.value
-                          }));
-                          input.value = '';
-                          toast.success('Link añadido');
-                        }
-                      }}
-                      className="p-2.5 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-md shadow-primary/20"
-                    >
-                      <Plus size={20} />
-                    </button>
+                        }}
+                        className="p-2.5 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-sm"
+                      >
+                        <Plus size={20} />
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100">
+                      💡 <b>Tip para MercadoLibre:</b> No pegues el link de la barra de direcciones. Haz <b>clic derecho sobre la foto</b> y elige <b>"Copiar dirección de imagen"</b>.
+                    </div>
                   </div>
                 )}
 
