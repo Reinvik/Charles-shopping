@@ -31,6 +31,9 @@ export const ProductDetail = () => {
   const [imageSourceMode, setImageSourceMode] = useState<'link' | 'upload'>('link');
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [editCategoryId, setEditCategoryId] = useState<string>('');
+  const [editIsActive, setEditIsActive] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Default placeholder image
@@ -63,10 +66,15 @@ export const ProductDetail = () => {
       }
 
       setLoading(true);
+      
+      // Fetch categories
+      const { data: catData } = await supabase.from('categories').select('*').order('name');
+      setCategories(catData || []);
+
       const { data, error } = await supabase
 
         .from('products')
-        .select('*')
+        .select('*, categories(name)')
         .eq('id', id)
         .single();
         
@@ -77,6 +85,8 @@ export const ProductDetail = () => {
         setEditStock(data.stock || 0);
         setEditDescription(data.description || '');
         setEditImageUrl(data.image_url || '');
+        setEditCategoryId(data.category_id || '');
+        setEditIsActive(data.is_active !== false);
         const initialImages = data.images && data.images.length > 0 ? data.images : [data.image_url];
         // Ensure uniqueness to prevent Reorder component from crashing/duplicating
         setEditImages(Array.from(new Set(initialImages.filter(Boolean))));
@@ -156,11 +166,21 @@ export const ProductDetail = () => {
         price: editPrice, 
         stock: editStock,
         description: editDescription,
+        category_id: editCategoryId,
+        is_active: editIsActive,
         image_url: editImages.length > 0 ? editImages[0] : editImageUrl,
         images: editImages
       });
       setIsEditing(false);
       toast.success('Producto actualizado correctamente');
+      
+      // Refresh to get updated category name etc
+      const { data: refreshed } = await supabase
+        .from('products')
+        .select('*, categories(name)')
+        .eq('id', id)
+        .single();
+      if (refreshed) setProduct(refreshed);
     } catch (err: any) {
       toast.error('Error al guardar: ' + err.message);
     } finally {
@@ -303,42 +323,57 @@ export const ProductDetail = () => {
                   transition: 'all 0.2s'
                 }}
               >
-                {isEditing ? (
-                  <>
-                    <X size={16} />
-                    Cancelar
-                  </>
-                ) : (
-                  <>
-                    <Pencil size={16} className="text-primary" />
-                    Modificar Producto
-                  </>
-                )}
+                {isEditing ? <><X size={16} /> Cancelar</> : <><Pencil size={16} className="text-primary" /> Editar Producto</>}
               </button>
               )}
               
               {isEditing && (
-                <button 
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--primary)',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    fontSize: '14px',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  Guardar
-                </button>
+                <>
+                  <button 
+                    onClick={() => setEditIsActive(!editIsActive)}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px',
+                      backgroundColor: editIsActive ? '#fff' : '#fef2f2', border: `1px solid ${editIsActive ? '#e5e7eb' : '#fecaca'}`,
+                      cursor: 'pointer', fontWeight: '600', fontSize: '14px', color: editIsActive ? '#333' : '#dc2626'
+                    }}
+                  >
+                    {editIsActive ? 'Pausar Publicación' : 'Reanudar Publicación'}
+                  </button>
+
+                  <button 
+                    onClick={async () => {
+                      if (window.confirm('¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.')) {
+                        const { error } = await supabase.from('products').delete().eq('id', id);
+                        if (error) toast.error('Error al eliminar: ' + error.message);
+                        else {
+                          toast.success('Producto eliminado');
+                          navigate('/');
+                        }
+                      }
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px',
+                      backgroundColor: '#fef2f2', border: '1px solid #fecaca',
+                      cursor: 'pointer', fontWeight: '600', fontSize: '14px', color: '#dc2626'
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    Eliminar
+                  </button>
+
+                  <button 
+                    onClick={handleSave}
+                    disabled={saving}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '8px',
+                      backgroundColor: 'var(--primary)', color: '#fff', border: 'none',
+                      cursor: 'pointer', fontWeight: '600', fontSize: '14px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                    Guardar
+                  </button>
+                </>
               )}
             </div>
           )}
@@ -600,7 +635,34 @@ export const ProductDetail = () => {
                 )}
               </div>
             ) : (
-              <h1 className="product-title">{product.name}</h1>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '12px', color: '#666', fontWeight: '600', textTransform: 'uppercase' }}>
+                  {product.categories?.name || 'Sin Categoría'}
+                </span>
+                <h1 className="product-title">{product.name}</h1>
+                {!product.is_active && (
+                  <span style={{ color: '#dc2626', fontWeight: 'bold', fontSize: '12px', background: '#fef2f2', padding: '2px 8px', borderRadius: '4px', alignSelf: 'flex-start' }}>
+                    PAUSADO
+                  </span>
+                )}
+              </div>
+            )}
+            
+            {isEditing && (
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 'bold', color: '#666', display: 'block', marginBottom: '5px' }}>CATEGORÍA</label>
+                <select 
+                  value={editCategoryId}
+                  onChange={(e) => setEditCategoryId(e.target.value)}
+                  className="edit-input-standard"
+                  style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }}
+                >
+                  <option value="">Seleccionar Categoría</option>
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
             )}
             
             <div className="product-price-section">
