@@ -238,7 +238,7 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
                 paddingBottom: '4px',
                 whiteSpace: 'nowrap'
               }}
-              onClick={(e) => {
+              onClick={() => {
                 if (editingCatId === category.id) return;
                 onCategorySelect?.(category.id);
               }}
