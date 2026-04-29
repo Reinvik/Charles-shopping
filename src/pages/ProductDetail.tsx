@@ -34,6 +34,7 @@ export const ProductDetail = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [editCategoryId, setEditCategoryId] = useState<string>('');
   const [editIsActive, setEditIsActive] = useState<boolean>(true);
+  const [editIsOnOffer, setEditIsOnOffer] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Default placeholder image
@@ -50,7 +51,8 @@ export const ProductDetail = () => {
           description: 'Descripción del nuevo producto...',
           image_url: PLACEHOLDER_IMAGE,
           images: [PLACEHOLDER_IMAGE],
-          category_id: null
+          category_id: null,
+          is_on_offer: false
         };
         setProduct(defaultProduct);
         setEditName(defaultProduct.name);
@@ -87,6 +89,7 @@ export const ProductDetail = () => {
         setEditImageUrl(data.image_url || '');
         setEditCategoryId(data.category_id || '');
         setEditIsActive(data.is_active !== false);
+        setEditIsOnOffer(data.is_on_offer || false);
         const initialImages = data.images && data.images.length > 0 ? data.images : [data.image_url];
         // Ensure uniqueness to prevent Reorder component from crashing/duplicating
         setEditImages(Array.from(new Set(initialImages.filter(Boolean))));
@@ -132,7 +135,8 @@ export const ProductDetail = () => {
             description: editDescription,
             image_url: editImages.length > 0 ? editImages[0] : PLACEHOLDER_IMAGE,
             images: editImages,
-            is_active: true
+            is_active: true,
+            is_on_offer: editIsOnOffer
           }])
           .select()
           .single();
@@ -154,7 +158,8 @@ export const ProductDetail = () => {
           stock: editStock,
           description: editDescription,
           image_url: editImages.length > 0 ? editImages[0] : editImageUrl,
-          images: editImages
+          images: editImages,
+          is_on_offer: editIsOnOffer
         })
         .eq('id', id);
 
@@ -662,6 +667,19 @@ export const ProductDetail = () => {
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '15px', backgroundColor: '#fff5f5', padding: '10px', borderRadius: '8px', border: '1px solid #fed7d7' }}>
+                  <input 
+                    type="checkbox"
+                    id="is_on_offer"
+                    checked={editIsOnOffer}
+                    onChange={(e) => setEditIsOnOffer(e.target.checked)}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="is_on_offer" style={{ fontWeight: '700', color: '#c53030', cursor: 'pointer' }}>
+                    🔥 Mostrar también en sección OFERTAS
+                  </label>
+                </div>
               </div>
             )}
             

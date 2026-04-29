@@ -17,6 +17,7 @@ interface Product {
   image_url: string;
   images: string[];
   is_active: boolean;
+  is_on_offer: boolean;
   stock: number;
   categories?: { name: string };
 }
@@ -46,6 +47,7 @@ export const AdminProducts = () => {
     image_url: '',
     images: [],
     is_active: true,
+    is_on_offer: false,
     stock: 0
   });
 
@@ -87,6 +89,7 @@ export const AdminProducts = () => {
         image_url: '',
         images: [],
         is_active: true,
+        is_on_offer: false,
         stock: 0
       });
     }
@@ -160,6 +163,7 @@ export const AdminProducts = () => {
         image_url: formData.images && formData.images.length > 0 ? formData.images[0] : (formData.image_url || ''),
         images: formData.images || [],
         is_active: formData.is_active,
+        is_on_offer: formData.is_on_offer || false,
         stock: Number(formData.stock) || 0
       };
 
@@ -423,6 +427,24 @@ export const AdminProducts = () => {
                 </div>
                 <div className="flex items-end text-[10px] text-slate-400 leading-tight pb-2">
                   * Aparecerá en una etiqueta roja sobre el producto.
+                </div>
+              </div>
+
+              <div className="bg-rose-50 p-4 rounded-2xl border border-rose-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-bold text-rose-900">Sección de Ofertas</h4>
+                    <p className="text-[10px] text-rose-700">Mostrar este producto en la pestaña "Ofertas" adicionalmente.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, is_on_offer: !formData.is_on_offer })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.is_on_offer ? 'bg-rose-500' : 'bg-slate-200'}`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_on_offer ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
+                  </button>
                 </div>
               </div>
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Plus, Minus, Check } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Check, Flame } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,9 +11,10 @@ interface ProductProps {
   price: number;
   oldPrice?: number;
   discount?: string;
+  isOnOffer?: boolean;
 }
 
-const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice, discount }) => {
+const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice, discount, isOnOffer }) => {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
@@ -59,7 +60,27 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
       }}
       whileHover={{ scale: 1.02, boxShadow: 'var(--shadow)' }}
     >
-      {discount && <div className="badge-sale">{discount}</div>}
+      <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 2, display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        {discount && <div className="badge-sale">{discount}</div>}
+        {isOnOffer && (
+          <div style={{ 
+            backgroundColor: '#ef4444', 
+            color: '#fff', 
+            padding: '4px 8px', 
+            borderRadius: '4px', 
+            fontSize: '10px', 
+            fontWeight: '900',
+            textTransform: 'uppercase',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            boxShadow: '0 4px 10px rgba(239, 68, 68, 0.3)'
+          }}>
+            <Flame size={12} fill="white" />
+            Oferta
+          </div>
+        )}
+      </div>
       
       <div style={{ 
         width: '100%', 
