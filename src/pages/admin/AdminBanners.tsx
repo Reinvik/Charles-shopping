@@ -28,7 +28,6 @@ interface Banner {
 
 export const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
@@ -47,7 +46,6 @@ export const AdminBanners: React.FC = () => {
   }, []);
 
   const fetchBanners = async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from('banners')
       .select('*')
@@ -58,7 +56,6 @@ export const AdminBanners: React.FC = () => {
     } else {
       setBanners(data || []);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
