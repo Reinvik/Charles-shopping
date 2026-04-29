@@ -31,6 +31,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
     { label: 'Productos', icon: Package, path: '/admin/products' },
     { label: 'Categorías', icon: Tags, path: '/admin/categories' },
+    { label: 'Banners', icon: Palette, path: '/admin/banners' },
     { label: 'Newsletter', icon: Mail, path: '/admin/newsletter' },
     { label: 'Despacho', icon: Truck, path: '/admin/delivery' },
     { label: 'Ajustes', icon: Palette, path: '/admin/settings' },

@@ -73,7 +73,7 @@ const HomePage: React.FC = () => {
       />
       
       <main className="container" style={{ padding: '40px 0' }}>
-        {!selectedCategoryId && <HeroBanner />}
+        {!selectedCategoryId && <HeroBanner onCategorySelect={setSelectedCategoryId} />}
         
         <div style={{ marginBottom: '40px' }}>
           <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px' }}>
@@ -205,6 +205,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
 import { AdminCategories } from './pages/admin/AdminCategories';
+import { AdminBanners } from './pages/admin/AdminBanners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminDelivery } from './pages/admin/AdminDelivery';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -253,6 +254,7 @@ function App() {
                   <Route path="/" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                   <Route path="/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
                   <Route path="/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
+                  <Route path="/banners" element={<AdminLayout><AdminBanners /></AdminLayout>} />
                   <Route path="/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
                   <Route path="/delivery" element={<AdminLayout><AdminDelivery /></AdminLayout>} />
                   <Route path="/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
