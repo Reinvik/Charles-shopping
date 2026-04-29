@@ -60,8 +60,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
       }}
       whileHover={{ scale: 1.02, boxShadow: 'var(--shadow)' }}
     >
-      <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 2, display: 'flex', flexDirection: 'column', gap: '5px' }}>
-        {discount && <div className="badge-sale">{discount}</div>}
+      <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
         {isOnOffer && (
           <div style={{ 
             backgroundColor: '#ef4444', 
@@ -80,6 +79,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
             Oferta
           </div>
         )}
+        {discount && <div className="badge-sale">{discount}</div>}
       </div>
       
       <div style={{ 
