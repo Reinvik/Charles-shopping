@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface Banner {
   id: string;
@@ -20,6 +21,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -48,12 +50,19 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
     return () => clearInterval(timer);
   }, [banners.length]);
 
-  const handleAction = (link: string) => {
-    // Si el link parece un UUID, asumimos que es una categoría
+  const handleAction = async (link: string) => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
     if (uuidRegex.test(link)) {
-      onCategorySelect?.(link);
-      window.scrollTo({ top: 400, behavior: 'smooth' });
+      // Verificar si es un producto o una categoría
+      const { data: product } = await supabase.from('products').select('id').eq('id', link).single();
+      
+      if (product) {
+        navigate(`/product/${link}`);
+      } else {
+        onCategorySelect?.(link);
+        window.scrollTo({ top: 400, behavior: 'smooth' });
+      }
     } else if (link.startsWith('http')) {
       window.open(link, '_blank');
     } else if (link === '/') {
@@ -131,7 +140,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                   marginBottom: '16px',
                   boxShadow: '0 4px 10px rgba(var(--primary-rgb), 0.2)'
                 }}>
-                  Exclusivo Charles Shopping
+                  Oferta Destacada
                 </span>
                 <h2 style={{
                   fontSize: '48px',
