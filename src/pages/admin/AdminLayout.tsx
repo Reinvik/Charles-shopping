@@ -210,7 +210,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         .sidebar-footer {
           padding: 1.5rem;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
-          background: rgba(0, 0, 0, 0.2);
+          background: #111;
         }
 
         .user-info {
