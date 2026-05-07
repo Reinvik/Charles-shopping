@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import '../../admin.css';
+import logoImg from '../../assets/logo.png';
 import { 
   LayoutDashboard, 
   Package, 
@@ -44,7 +45,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <Link to="/" className="sidebar-logo">
-            <img src="/logo.png" alt="Charles Shopping" />
+            <img src={logoImg} alt="Charles Shopping" />
           </Link>
           <button className="mobile-close" onClick={() => setIsMobileMenuOpen(false)}>
             <X size={24} />
