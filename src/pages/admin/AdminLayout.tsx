@@ -99,7 +99,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         .admin-layout {
           display: flex;
           min-height: 100vh;
-          background: #f4f6f8;
+          background: #0a0a0a;
           color: #1a1a1a;
           font-family: 'Inter', system-ui, sans-serif;
         }
@@ -263,14 +263,15 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           flex: 1;
           display: flex;
           flex-direction: column;
+          background: #f4f6f8;
           /* If there's a scroll area needed inside main */
           overflow-y: auto;
           height: 100vh;
         }
 
         .admin-header {
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(12px);
+          background: #ffffff;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           padding: 1.25rem 2.5rem;
           border-bottom: 1px solid rgba(0, 0, 0, 0.05);
           display: flex;
