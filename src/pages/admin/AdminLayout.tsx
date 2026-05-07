@@ -97,22 +97,22 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
       <style>{`
         .admin-layout {
-          display: flex;
-          min-height: 100vh;
+          display: grid;
+          grid-template-columns: 280px 1fr;
+          height: 100vh;
+          overflow: hidden;
           background: #0a0a0a;
           color: #1a1a1a;
           font-family: 'Inter', system-ui, sans-serif;
         }
 
         .admin-sidebar {
-          width: 280px;
           background: #0a0a0a;
           border-right: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
           flex-direction: column;
-          position: sticky;
-          top: 0;
           height: 100vh;
+          overflow-y: auto;
           z-index: 1000;
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           color: #fff;
@@ -146,7 +146,10 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
         .sidebar-logo img {
           height: 60px;
-          filter: drop-shadow(0 0 15px rgba(230, 0, 0, 0.15));
+          width: auto;
+          object-fit: contain;
+          mix-blend-mode: screen;
+          filter: brightness(1.1);
         }
 
         .mobile-close {
@@ -211,6 +214,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           padding: 1.5rem;
           border-top: 1px solid rgba(255, 255, 255, 0.08);
           background: #111;
+          margin-top: auto;
         }
 
         .user-info {
