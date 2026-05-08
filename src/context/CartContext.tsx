@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export interface CartItem {
   id: string | number;
@@ -46,6 +47,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [cart]);
 
   const addToCart = (product: Omit<CartItem, 'quantity'>, quantity: number) => {
+    // Registro de evento en base de datos
+    const sessionId = sessionStorage.getItem('shop_session_id');
+    if (sessionId) {
+      supabase.from('cart_events').insert([{
+        session_id: sessionId,
+        product_id: product.id,
+        product_name: product.name
+      }]).then(({ error }) => {
+        if (error) console.error('Error tracking cart event:', error);
+      });
+    }
+
     setCart(currentCart => {
       const existingItem = currentCart.find(item => item.id === product.id);
       if (existingItem) {
