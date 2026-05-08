@@ -20,12 +20,15 @@ interface Product {
   is_active: boolean;
   is_on_offer: boolean;
   stock: number;
+  order_index: number;
   categories?: { name: string };
 }
 
 interface Category {
   id: string;
   name: string;
+  slug: string;
+  order_index: number;
 }
 
 export const AdminProducts = () => {
@@ -75,8 +78,6 @@ export const AdminProducts = () => {
     if (err1 || err2) toast.error('Error al reordenar');
     else fetchData();
   };
-
-  const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all');
 
   const fetchData = async () => {
     try {
