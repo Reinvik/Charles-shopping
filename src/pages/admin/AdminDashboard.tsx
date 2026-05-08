@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Tag, Users, ArrowUpRight, Loader2, Package } from 'lucide-react';
+import { ShoppingBag, Users, ArrowUpRight, Loader2, Package } from 'lucide-react';
 
 export const AdminDashboard = () => {
   const [stats, setStats] = useState({
