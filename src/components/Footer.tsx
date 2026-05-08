@@ -4,7 +4,11 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
-const Footer = () => {
+interface FooterProps {
+  onCategorySelect?: (id: string | null) => void;
+}
+
+const Footer = ({ onCategorySelect }: FooterProps) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [email, setEmail] = useState('');
   const [loadingNewsletter, setLoadingNewsletter] = useState(false);
@@ -65,7 +69,17 @@ const Footer = () => {
           <h4 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px' }}>Categorías</h4>
           <ul style={{ fontSize: '14px', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {categories.map(category => (
-              <li key={category.id} style={{ cursor: 'pointer' }}>{category.name}</li>
+              <li 
+                key={category.id} 
+                style={{ cursor: 'pointer' }}
+                className="hover:text-primary transition-colors"
+                onClick={() => {
+                  onCategorySelect?.(category.id);
+                  window.scrollTo({ top: 400, behavior: 'smooth' });
+                }}
+              >
+                {category.name}
+              </li>
             ))}
             {categories.length === 0 && (
               <>

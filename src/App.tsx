@@ -204,7 +204,7 @@ const HomePage: React.FC = () => {
         )}
       </main>
 
-      <Footer />
+      <Footer onCategorySelect={setSelectedCategoryId} />
     </div>
   );
 };
