@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { ArrowLeft, ShoppingCart, Plus, Minus, Check, Loader2, Pencil, Save, X, Trash2, Camera, Link as LinkIcon, Upload, GripVertical } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import logoImg from '../assets/logo.png';
@@ -102,6 +103,11 @@ export const ProductDetail = () => {
       fetchProduct();
     }
   }, [id]);
+
+  useSEO({
+    title: product?.name,
+    description: product?.description?.substring(0, 160),
+  });
 
   const handleIncrement = () => setQuantity(prev => prev + 1);
   const handleDecrement = () => setQuantity(prev => Math.max(1, prev - 1));
