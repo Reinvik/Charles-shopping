@@ -14,7 +14,6 @@ import {
   Palette,
   Globe,
   Mail,
-  Truck,
   Sliders
 } from 'lucide-react';
 
