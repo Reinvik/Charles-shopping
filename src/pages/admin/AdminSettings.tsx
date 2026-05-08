@@ -25,8 +25,19 @@ const AdminSettings = () => {
     borderRadius: settings.borderRadius,
     siteName: settings.siteName,
     logoUrl: settings.logoUrl,
-    faviconUrl: settings.faviconUrl
+    faviconUrl: settings.faviconUrl,
+    announcementText: settings.announcementText || '',
+    freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
+    deliveryCost: settings.deliveryCost || 3500
   });
+
+  const [flowSettings, setFlowSettings] = useState({
+    apiKey: '',
+    secret: '',
+    isSandbox: true
+  });
+
+  const [activeTab, setActiveTab] = useState('design');
 
   useEffect(() => {
     setFormData({
@@ -34,8 +45,25 @@ const AdminSettings = () => {
       borderRadius: settings.borderRadius,
       siteName: settings.siteName,
       logoUrl: settings.logoUrl,
-      faviconUrl: settings.faviconUrl
+      faviconUrl: settings.faviconUrl,
+      announcementText: settings.announcementText || '',
+      freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
+      deliveryCost: settings.deliveryCost || 3500
     });
+
+    const fetchFlowSettings = async () => {
+      const { data } = await supabase
+        .from('site_settings')
+        .select('value')
+        .eq('key', 'flow_settings')
+        .single();
+      
+      if (data && data.value) {
+        setFlowSettings(data.value as any);
+      }
+    };
+
+    fetchFlowSettings();
   }, [settings]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +109,8 @@ const AdminSettings = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase
+      // 1. Guardar Tema y Tienda
+      const { error: themeError } = await supabase
         .from('site_settings')
         .update({
           value: {
@@ -89,13 +118,42 @@ const AdminSettings = () => {
             borderRadius: formData.borderRadius,
             siteName: formData.siteName,
             logoUrl: formData.logoUrl,
-            faviconUrl: formData.faviconUrl
+            faviconUrl: formData.faviconUrl,
+            announcementText: formData.announcementText,
+            freeDeliveryThreshold: Number(formData.freeDeliveryThreshold),
+            deliveryCost: Number(formData.deliveryCost)
           },
           updated_at: new Date().toISOString()
         })
         .eq('key', 'theme');
 
-      if (error) throw error;
+      if (themeError) throw themeError;
+
+      // 2. Guardar Configuración de Flow
+      const { data: existingFlow } = await supabase
+        .from('site_settings')
+        .select('id')
+        .eq('key', 'flow_settings')
+        .single();
+
+      if (existingFlow) {
+        const { error: flowError } = await supabase
+          .from('site_settings')
+          .update({
+            value: flowSettings,
+            updated_at: new Date().toISOString()
+          })
+          .eq('key', 'flow_settings');
+        if (flowError) throw flowError;
+      } else {
+        const { error: flowError } = await supabase
+          .from('site_settings')
+          .insert({
+            key: 'flow_settings',
+            value: flowSettings
+          });
+        if (flowError) throw flowError;
+      }
 
       await refreshTheme();
       toast.success('Configuración guardada correctamente');
@@ -139,181 +197,386 @@ const AdminSettings = () => {
     <div className="admin-settings-container">
       <div className="settings-header">
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Palette size={24} /> Personalización de Diseño
+          <Palette size={24} /> Configuración General
         </h2>
-        <p>Ajusta los colores, marca e identidad visual de tu tienda.</p>
+        <p>Gestiona la identidad, los pagos y el funcionamiento de tu tienda.</p>
+      </div>
+
+      <div className="settings-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'design' ? 'active' : ''}`}
+          onClick={() => setActiveTab('design')}
+        >
+          Diseño
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'store' ? 'active' : ''}`}
+          onClick={() => setActiveTab('store')}
+        >
+          Tienda
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
+          onClick={() => setActiveTab('payments')}
+        >
+          Pagos
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
+          onClick={() => setActiveTab('security')}
+        >
+          Seguridad
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="settings-grid">
-        {/* Visual Identity Section */}
-        <section className="settings-card">
-          <div className="card-header">
-            <ImageIcon size={20} />
-            <h3>Identidad de Marca</h3>
-          </div>
-          
-          <div className="form-group">
-            <label>Nombre de la Tienda</label>
-            <div className="input-with-icon">
-              <Type size={18} />
-              <input 
-                type="text" 
-                name="siteName" 
-                value={formData.siteName} 
-                onChange={handleInputChange}
-                placeholder="Ej: Charles Shopping"
-              />
-            </div>
-          </div>
-
-          <div className="upload-section">
-            <div className="upload-box">
-              <label>Logo Principal</label>
-              <div className="preview-container">
-                {formData.logoUrl ? (
-                  <img src={formData.logoUrl} alt="Preview Logo" />
-                ) : (
-                  <div className="no-preview">Sin Logo</div>
-                )}
+        
+        {activeTab === 'design' && (
+          <>
+            {/* Visual Identity Section */}
+            <section className="settings-card">
+              <div className="card-header">
+                <ImageIcon size={20} />
+                <h3>Identidad de Marca</h3>
               </div>
-              <label className="upload-label">
-                {uploading === 'logo' ? <Loader2 className="spin" /> : <Upload size={16} />}
-                <span>Cambiar Logo</span>
-                <input type="file" onChange={(e) => handleFileUpload(e, 'logo')} hidden accept="image/*" />
-              </label>
-            </div>
-
-            <div className="upload-box">
-              <label>Favicon (Tab)</label>
-              <div className="preview-container favicon">
-                {formData.faviconUrl ? (
-                  <img src={formData.faviconUrl} alt="Preview Favicon" />
-                ) : (
-                  <div className="no-preview">Sin Icono</div>
-                )}
+              
+              <div className="form-group">
+                <label>Nombre de la Tienda</label>
+                <div className="input-with-icon">
+                  <Type size={18} />
+                  <input 
+                    type="text" 
+                    name="siteName" 
+                    value={formData.siteName} 
+                    onChange={handleInputChange}
+                    placeholder="Ej: Charles Shopping"
+                  />
+                </div>
               </div>
-              <label className="upload-label">
-                {uploading === 'favicon' ? <Loader2 className="spin" /> : <Upload size={16} />}
-                <span>Cambiar Favicon</span>
-                <input type="file" onChange={(e) => handleFileUpload(e, 'favicon')} hidden accept="image/png,image/svg+xml,image/x-icon" />
-              </label>
+
+              <div className="upload-section">
+                <div className="upload-box">
+                  <label>Logo Principal</label>
+                  <div className="preview-container">
+                    {formData.logoUrl ? (
+                      <img src={formData.logoUrl} alt="Preview Logo" />
+                    ) : (
+                      <div className="no-preview">Sin Logo</div>
+                    )}
+                  </div>
+                  <label className="upload-label">
+                    {uploading === 'logo' ? <Loader2 className="spin" /> : <Upload size={16} />}
+                    <span>Cambiar Logo</span>
+                    <input type="file" onChange={(e) => handleFileUpload(e, 'logo')} hidden accept="image/*" />
+                  </label>
+                </div>
+
+                <div className="upload-box">
+                  <label>Favicon (Tab)</label>
+                  <div className="preview-container favicon">
+                    {formData.faviconUrl ? (
+                      <img src={formData.faviconUrl} alt="Preview Favicon" />
+                    ) : (
+                      <div className="no-preview">Sin Icono</div>
+                    )}
+                  </div>
+                  <label className="upload-label">
+                    {uploading === 'favicon' ? <Loader2 className="spin" /> : <Upload size={16} />}
+                    <span>Cambiar Favicon</span>
+                    <input type="file" onChange={(e) => handleFileUpload(e, 'favicon')} hidden accept="image/png,image/x-icon" />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            {/* Global Styles Section */}
+            <section className="settings-card">
+              <div className="card-header">
+                <Palette size={20} />
+                <h3>Colores y Estilos</h3>
+              </div>
+
+              <div className="form-group">
+                <label>Color Principal (Marca)</label>
+                <div className="color-picker-wrapper">
+                  <input 
+                    type="color" 
+                    name="primaryColor" 
+                    value={formData.primaryColor} 
+                    onChange={handleInputChange} 
+                  />
+                  <code>{formData.primaryColor.toUpperCase()}</code>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Redondeo de Bordes: {formData.borderRadius}px</label>
+                <input 
+                  type="range" 
+                  name="borderRadius" 
+                  min="0" max="24" 
+                  value={formData.borderRadius} 
+                  onChange={handleInputChange}
+                />
+              </div>
+
+              <div className="preview-demo">
+                <label>Vista Previa de Botón</label>
+                <button 
+                  type="button"
+                  style={{ 
+                    backgroundColor: formData.primaryColor, 
+                    borderRadius: `${formData.borderRadius}px`,
+                    color: '#fff',
+                    padding: '10px 20px',
+                    fontWeight: '600',
+                    border: 'none',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <CheckCircle2 size={18} /> Ejemplo de Botón
+                </button>
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeTab === 'store' && (
+          <>
+            <section className="settings-card">
+              <div className="card-header">
+                <ImageIcon size={20} />
+                <h3>Ajustes de la Tienda</h3>
+              </div>
+              
+              <div className="form-group">
+                <label>Texto de Anuncio (Barra Superior)</label>
+                <div className="input-with-icon">
+                  <Type size={18} />
+                  <input 
+                    type="text" 
+                    name="announcementText" 
+                    value={formData.announcementText} 
+                    onChange={handleInputChange}
+                    placeholder="Ej: DESPACHOS GRATIS POR COMPRAS SOBRE $30.000"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div className="form-group">
+                  <label>Monto Mínimo para Envío Gratis ($)</label>
+                  <div className="input-with-icon">
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>$</span>
+                    <input 
+                      type="number" 
+                      name="freeDeliveryThreshold" 
+                      value={formData.freeDeliveryThreshold} 
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Costo de Envío Base ($)</label>
+                  <div className="input-with-icon">
+                    <span style={{ fontSize: '16px', fontWeight: 'bold' }}>$</span>
+                    <input 
+                      type="number" 
+                      name="deliveryCost" 
+                      value={formData.deliveryCost} 
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeTab === 'payments' && (
+          <>
+            <section className="settings-card">
+              <div className="card-header">
+                <KeyRound size={20} />
+                <h3>Configuración de Flow.cl</h3>
+              </div>
+              
+              <div className="alert-info" style={{ 
+                padding: '12px', 
+                backgroundColor: '#f0f7ff', 
+                borderRadius: '8px', 
+                marginBottom: '20px',
+                fontSize: '13px',
+                color: '#0369a1',
+                border: '1px solid #bae6fd'
+              }}>
+                Obtén tus llaves desde el panel de <a href="https://www.flow.cl" target="_blank" rel="noreferrer" style={{ fontWeight: 'bold', textDecoration: 'underline' }}>Flow.cl</a> {'>'} Mis Datos {'>'} Integración.
+              </div>
+
+              <div className="form-group">
+                <label>Flow API Key</label>
+                <div className="input-with-icon">
+                  <Lock size={18} />
+                  <input 
+                    type="text" 
+                    value={flowSettings.apiKey} 
+                    onChange={(e) => setFlowSettings({...flowSettings, apiKey: e.target.value})}
+                    placeholder="Ingresa tu API Key"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Flow Secret Key</label>
+                <div className="input-with-icon">
+                  <Lock size={18} />
+                  <input 
+                    type="password" 
+                    value={flowSettings.secret} 
+                    onChange={(e) => setFlowSettings({...flowSettings, secret: e.target.value})}
+                    placeholder="Ingresa tu Secret Key"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px',
+                backgroundColor: '#f9fafb',
+                padding: '16px',
+                borderRadius: '8px'
+              }}>
+                <label style={{ margin: 0, flex: 1 }}>Modo de Entorno</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button 
+                    type="button"
+                    onClick={() => setFlowSettings({...flowSettings, isSandbox: true})}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      border: '1px solid #ddd',
+                      backgroundColor: flowSettings.isSandbox ? '#eab308' : '#fff',
+                      color: flowSettings.isSandbox ? '#000' : '#666',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    SANDBOX (PRUEBAS)
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setFlowSettings({...flowSettings, isSandbox: false})}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      border: '1px solid #ddd',
+                      backgroundColor: !flowSettings.isSandbox ? '#059669' : '#fff',
+                      color: !flowSettings.isSandbox ? '#fff' : '#666',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    PRODUCCIÓN (REAL)
+                  </button>
+                </div>
+              </div>
+            </section>
+          </>
+        )}
+
+        {activeTab === 'security' && (
+          <section className="settings-card">
+            <div className="card-header">
+              <Lock size={20} />
+              <h3>Seguridad y Contraseña</h3>
             </div>
-          </div>
-        </section>
+            
+            <div className="security-form-container">
+              <div className="form-group">
+                <label>Nueva Contraseña</label>
+                <div className="input-with-icon">
+                  <KeyRound size={18} />
+                  <input 
+                    type="password" 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Escribe la nueva contraseña"
+                  />
+                </div>
+              </div>
 
-        {/* Global Styles Section */}
-        <section className="settings-card">
-          <div className="card-header">
-            <Palette size={20} />
-            <h3>Colores y Estilos</h3>
-          </div>
+              <div className="form-group">
+                <label>Confirmar Nueva Contraseña</label>
+                <div className="input-with-icon">
+                  <KeyRound size={18} />
+                  <input 
+                    type="password" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repite la contraseña"
+                  />
+                </div>
+              </div>
 
-          <div className="form-group">
-            <label>Color Principal (Marca)</label>
-            <div className="color-picker-wrapper">
-              <input 
-                type="color" 
-                name="primaryColor" 
-                value={formData.primaryColor} 
-                onChange={handleInputChange} 
-              />
-              <code>{formData.primaryColor.toUpperCase()}</code>
+              <div className="form-actions" style={{ justifyContent: 'flex-start', marginTop: '0' }}>
+                <button 
+                  type="button" 
+                  className="save-btn" 
+                  onClick={handlePasswordChange}
+                  disabled={passwordLoading || !newPassword || !confirmPassword}
+                  style={{ background: '#eab308', color: '#000' }}
+                >
+                  {passwordLoading ? <Loader2 className="spin" /> : 'Actualizar Contraseña'}
+                </button>
+              </div>
             </div>
-          </div>
-
-          <div className="form-group">
-            <label>Redondeo de Bordes: {formData.borderRadius}px</label>
-            <input 
-              type="range" 
-              name="borderRadius" 
-              min="0" max="24" 
-              value={formData.borderRadius} 
-              onChange={handleInputChange}
-            />
-          </div>
-
-          <div className="preview-demo">
-            <label>Vista Previa de Botón</label>
-            <button 
-              type="button"
-              style={{ 
-                backgroundColor: formData.primaryColor, 
-                borderRadius: `${formData.borderRadius}px`,
-                color: '#fff',
-                padding: '10px 20px',
-                fontWeight: '600',
-                border: 'none',
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
-            >
-              <CheckCircle2 size={18} /> Ejemplo de Botón
-            </button>
-          </div>
-        </section>
+          </section>
+        )}
 
         <div className="form-actions">
           <button type="submit" className="save-btn" disabled={loading || uploading !== null}>
-            {loading ? <Loader2 className="spin" /> : 'Guardar Cambios'}
+            {loading ? <Loader2 className="spin" /> : 'Guardar Todos los Cambios'}
           </button>
         </div>
-        {/* Password Change Section */}
-        <section className="settings-card">
-          <div className="card-header">
-            <Lock size={20} />
-            <h3>Seguridad y Contraseña</h3>
-          </div>
-          
-          <div className="security-form-container">
-            <div className="form-group">
-              <label>Nueva Contraseña</label>
-              <div className="input-with-icon">
-                <KeyRound size={18} />
-                <input 
-                  type="password" 
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Escribe la nueva contraseña"
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Confirmar Nueva Contraseña</label>
-              <div className="input-with-icon">
-                <KeyRound size={18} />
-                <input 
-                  type="password" 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repite la contraseña"
-                />
-              </div>
-            </div>
-
-            <div className="form-actions" style={{ justifyContent: 'flex-start', marginTop: '0' }}>
-              <button 
-                type="button" 
-                className="save-btn" 
-                onClick={handlePasswordChange}
-                disabled={passwordLoading || !newPassword || !confirmPassword}
-                style={{ background: '#eab308', color: '#000' }}
-              >
-                {passwordLoading ? <Loader2 className="spin" /> : 'Actualizar Contraseña'}
-              </button>
-            </div>
-          </div>
-        </section>
 
       </form>
 
       <style>{`
-        .admin-settings-container {
-          max-width: 900px;
-          margin: 0 auto;
+        .settings-tabs {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 2rem;
+          border-bottom: 1px solid #e9ecef;
+          padding-bottom: 2px;
+        }
+
+        .tab-btn {
+          padding: 10px 20px;
+          background: none;
+          border: none;
+          border-bottom: 2px solid transparent;
+          cursor: pointer;
+          font-weight: 600;
+          color: #666;
+          transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+          color: var(--primary);
+          border-bottom-color: var(--primary);
+        }
+
+        .tab-btn:hover:not(.active) {
+          color: #333;
+          border-bottom-color: #ddd;
         }
         .settings-header {
           margin-bottom: 2rem;

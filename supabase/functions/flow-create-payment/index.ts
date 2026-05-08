@@ -24,7 +24,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 2. Insert order
+    // 2. Fetch Flow Settings from Database
+    const { data: settingsData, error: settingsError } = await supabaseClient
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'flow_settings')
+      .single()
+
+    if (settingsError || !settingsData?.value) {
+      throw new Error('No se ha configurado Flow en el panel de administración.')
+    }
+
+    const { apiKey, secret, isSandbox } = settingsData.value as any
+    const FLOW_URL = isSandbox ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api"
+
+    // 3. Insert order
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .insert({
@@ -39,39 +53,38 @@ serve(async (req) => {
 
     if (orderError) throw orderError
 
-    // 3. Prepare Flow Request
-    // Based on Flow API: parameters must be in alphabetical order for signature
+    // 4. Prepare Flow Request
     const params: any = {
-      amount: total,
-      apiKey: FLOW_API_KEY,
+      amount: Math.round(total),
+      apiKey: apiKey,
       commerceOrder: order.id,
       currency: "CLP",
       email: email,
-      subject: "Compra en Charles Shopping",
-      urlConfirmation: "https://iuzpgljjfeobxlptmsma.supabase.co/functions/v1/flow-webhook",
+      subject: `Pedido #${order.id.toString().slice(0, 8)} - Charles Shopping`,
+      urlConfirmation: `${Deno.env.get('SUPABASE_URL')}/functions/v1/flow-webhook`,
       urlReturn: `${req.headers.get('origin')}/checkout/success`,
       urlError: `${req.headers.get('origin')}/checkout/failure`,
     }
 
-    // Sort keys and concatenate for signature as per Flow documentation
+    // Sort keys and concatenate for signature
     const sortedKeys = Object.keys(params).sort()
     let toSign = ""
     for (const key of sortedKeys) {
       toSign += key + params[key]
     }
     
-    // Flow Signature: HMAC-SHA256 of concatenated keys and values
+    // HMAC-SHA256
     const encoder = new TextEncoder()
-    const key = await crypto.subtle.importKey(
+    const cryptoKey = await crypto.subtle.importKey(
       "raw",
-      encoder.encode(FLOW_SECRET),
+      encoder.encode(secret),
       { name: "HMAC", hash: "SHA-256" },
       false,
       ["sign"]
     )
     const signatureBuffer = await crypto.subtle.sign(
       "HMAC",
-      key,
+      cryptoKey,
       encoder.encode(toSign)
     )
     const signature = Array.from(new Uint8Array(signatureBuffer))
@@ -80,7 +93,7 @@ serve(async (req) => {
 
     params.s = signature
 
-    // 4. Call Flow using URLSearchParams (application/x-www-form-urlencoded)
+    // 5. Call Flow
     const formData = new URLSearchParams()
     for (const k in params) {
       formData.append(k, params[k])
@@ -94,10 +107,10 @@ serve(async (req) => {
     const flowData = await flowResponse.json()
 
     if (!flowResponse.ok) {
-      throw new Error(`Flow Error: ${JSON.stringify(flowData)}`)
+      throw new Error(`Error de Flow: ${JSON.stringify(flowData)}`)
     }
 
-    // 5. Update order with token
+    // 6. Update order with token
     await supabaseClient
       .from('orders')
       .update({ flow_token: flowData.token })

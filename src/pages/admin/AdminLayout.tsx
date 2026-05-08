@@ -14,7 +14,8 @@ import {
   Palette,
   Globe,
   Mail,
-  Truck
+  Truck,
+  Sliders
 } from 'lucide-react';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -34,8 +35,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'Categorías', icon: Tags, path: '/admin/categories' },
     { label: 'Banners', icon: Palette, path: '/admin/banners' },
     { label: 'Newsletter', icon: Mail, path: '/admin/newsletter' },
-    { label: 'Despacho', icon: Truck, path: '/admin/delivery' },
-    { label: 'Ajustes', icon: Palette, path: '/admin/settings' },
+    { label: 'Configuración', icon: Sliders, path: '/admin/settings' },
     { label: 'Ver Tienda', icon: Globe, path: '/' },
   ];
 
