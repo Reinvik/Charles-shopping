@@ -74,7 +74,7 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
     const { data } = await supabase
       .from('categories')
       .select('*')
-      .order('name');
+      .order('order_index', { ascending: true });
     if (data) setCategories(data);
   };
 

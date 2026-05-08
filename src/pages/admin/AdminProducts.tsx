@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   Plus, Pencil, Trash2, Loader2, Save, X, 
-  Image as ImageIcon, Upload, Link as LinkIcon
+  Image as ImageIcon, Upload, Link as LinkIcon,
+  MoveUp, MoveDown, Search, Filter
 } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { toast } from 'sonner';
@@ -36,6 +37,8 @@ export const AdminProducts = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageSourceMode, setImageSourceMode] = useState<'link' | 'upload'>('link');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all');
 
   // Form state
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -51,11 +54,44 @@ export const AdminProducts = () => {
     stock: 0
   });
 
+  const moveProduct = async (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === products.length - 1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentProd = products[index];
+    const targetProd = products[newIndex];
+
+    const { error: err1 } = await supabase
+      .from('products')
+      .update({ order_index: targetProd.order_index })
+      .eq('id', currentProd.id);
+
+    const { error: err2 } = await supabase
+      .from('products')
+      .update({ order_index: currentProd.order_index })
+      .eq('id', targetProd.id);
+
+    if (err1 || err2) toast.error('Error al reordenar');
+    else fetchData();
+  };
+
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all');
+
   const fetchData = async () => {
     try {
+      let query = supabase
+        .from('products')
+        .select('*, categories(name)')
+        .order('order_index', { ascending: true });
+      
+      if (selectedFilterCategory !== 'all') {
+        query = query.eq('category_id', selectedFilterCategory);
+      }
+
       const [prodRes, catRes] = await Promise.all([
-        supabase.from('products').select('*, categories(name)').order('created_at', { ascending: false }),
-        supabase.from('categories').select('*').order('name')
+        query,
+        supabase.from('categories').select('*').order('order_index', { ascending: true })
       ]);
 
       if (prodRes.error) throw prodRes.error;
@@ -72,14 +108,13 @@ export const AdminProducts = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [selectedFilterCategory]);
 
   const openModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
       setFormData({ ...product });
     } else {
-      setEditingProduct(null);
       setFormData({
         name: '',
         category_id: categories[0]?.id || '',
@@ -234,23 +269,64 @@ export const AdminProducts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-2xl font-bold">Productos</h2>
-          <p className="text-slate-500 text-sm">Gestiona el inventario, precios y ofertas</p>
+      <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input
+            type="text"
+            placeholder="Buscar productos..."
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
-        <button
-          onClick={() => openModal()}
-          className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20"
-        >
-          <Plus size={20} />
-          Nuevo Producto
-        </button>
+
+        <div className="flex gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 flex-1 md:flex-initial">
+            <Filter size={18} className="text-slate-400" />
+            <select
+              className="bg-transparent outline-none text-sm font-medium w-full"
+              value={selectedFilterCategory}
+              onChange={(e) => setSelectedFilterCategory(e.target.value)}
+            >
+              <option value="all">Todas las categorías</option>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <button
+            onClick={() => openModal()}
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-opacity-90 transition-all shadow-sm shadow-primary/20"
+          >
+            <Plus size={20} />
+            <span className="hidden sm:inline">Nuevo Producto</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <div key={product.id} className={`bg-white rounded-2xl border ${product.is_active ? 'border-slate-100' : 'border-slate-200 opacity-75'} shadow-sm overflow-hidden group hover:shadow-md transition-all`}>
+        {products
+          .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          .map((product, index, filteredArr) => (
+          <div key={product.id} className={`bg-white rounded-2xl border ${product.is_active ? 'border-slate-100' : 'border-slate-200 opacity-75'} shadow-sm overflow-hidden group hover:shadow-md transition-all relative`}>
+            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={() => moveProduct(index, 'up')}
+                disabled={index === 0}
+                className="p-1.5 bg-white/90 backdrop-blur shadow rounded-lg text-slate-600 hover:text-primary disabled:opacity-30"
+              >
+                <MoveUp size={14} />
+              </button>
+              <button 
+                onClick={() => moveProduct(index, 'down')}
+                disabled={index === filteredArr.length - 1}
+                className="p-1.5 bg-white/90 backdrop-blur shadow rounded-lg text-slate-600 hover:text-primary disabled:opacity-30"
+              >
+                <MoveDown size={14} />
+              </button>
+            </div>
             <div className="relative aspect-square bg-slate-50 overflow-hidden">
               <img 
                 src={product.image_url} 

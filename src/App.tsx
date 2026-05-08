@@ -34,14 +34,21 @@ const HomePage: React.FC = () => {
         .eq('is_active', true)
         .gt('stock', 0);
       
+      const { data: offersCat } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', 'ofertas')
+        .single();
+
       if (selectedCategoryId) {
-        // Si es la categoría de ofertas, mostramos productos de esa categoría O con el flag is_on_offer
-        if (selectedCategoryId === '146e6d06-2a88-444e-b32c-25cd0db766eb') {
+        if (selectedCategoryId === offersCat?.id) {
           query = query.or(`category_id.eq.${selectedCategoryId},is_on_offer.eq.true`);
         } else {
           query = query.eq('category_id', selectedCategoryId);
         }
       }
+
+      query = query.order('order_index', { ascending: true });
 
       const { data, error } = await query;
       

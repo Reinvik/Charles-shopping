@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Plus, Pencil, Trash2, Loader2, Save, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Save, X, MoveUp, MoveDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Category {
@@ -17,12 +17,34 @@ export const AdminCategories = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [newValue, setNewValue] = useState('');
 
+  const moveCategory = async (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === categories.length - 1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentCat = categories[index];
+    const targetCat = categories[newIndex];
+
+    const { error: err1 } = await supabase
+      .from('categories')
+      .update({ order_index: targetCat.order_index })
+      .eq('id', currentCat.id);
+
+    const { error: err2 } = await supabase
+      .from('categories')
+      .update({ order_index: currentCat.order_index })
+      .eq('id', targetCat.id);
+
+    if (err1 || err2) toast.error('Error al reordenar');
+    else fetchCategories();
+  };
+
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .order('name');
+        .order('order_index', { ascending: true });
       
       if (error) throw error;
       setCategories(data || []);
@@ -57,7 +79,11 @@ export const AdminCategories = () => {
       const slug = generateSlug(newValue.trim());
       const { error } = await supabase
         .from('categories')
-        .insert([{ name: newValue.trim(), slug }]);
+        .insert([{ 
+          name: newValue.trim(), 
+          slug,
+          order_index: categories.length 
+        }]);
 
       if (error) {
         console.error('Error details:', error);
@@ -170,14 +196,33 @@ export const AdminCategories = () => {
         <table className="w-full text-left">
           <thead className="bg-slate-50 border-b border-slate-100">
             <tr>
+              <th className="px-6 py-4 font-semibold text-sm text-slate-700">Orden</th>
               <th className="px-6 py-4 font-semibold text-sm text-slate-700">Nombre</th>
               <th className="px-6 py-4 font-semibold text-sm text-slate-700">Slug</th>
               <th className="px-6 py-4 font-semibold text-sm text-slate-700 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {categories.map((category) => (
+            {categories.map((category, index) => (
               <tr key={category.id} className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => moveCategory(index, 'up')} 
+                      disabled={index === 0}
+                      className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"
+                    >
+                      <MoveUp size={14} />
+                    </button>
+                    <button 
+                      onClick={() => moveCategory(index, 'down')} 
+                      disabled={index === categories.length - 1}
+                      className="p-1 text-slate-400 hover:text-primary disabled:opacity-30"
+                    >
+                      <MoveDown size={14} />
+                    </button>
+                  </div>
+                </td>
                 <td className="px-6 py-4">
                   {isEditing === category.id ? (
                     <input

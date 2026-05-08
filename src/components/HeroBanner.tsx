@@ -187,7 +187,10 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                   </button>
 
                   <button 
-                    onClick={() => onCategorySelect?.('146e6d06-2a88-444e-b32c-25cd0db766eb')}
+                    onClick={async () => {
+                      const { data } = await supabase.from('categories').select('id').eq('slug', 'ofertas').single();
+                      if (data) onCategorySelect?.(data.id);
+                    }}
                     style={{
                       backgroundColor: '#fff',
                       color: '#111',
