@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, Loader2, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import logoImg from '../assets/logo.png';
+import { useTheme } from '../context/ThemeContext';
 
 export const Login: React.FC = () => {
+  const { settings } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -62,7 +63,7 @@ export const Login: React.FC = () => {
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
               className="logo-container"
             >
-              <img src={logoImg} alt="Charles Shopping" className="main-logo" />
+              <img src={settings.logoUrl} alt={settings.siteName} className="main-logo" />
             </motion.div>
             
             <div className="title-group">
@@ -72,7 +73,7 @@ export const Login: React.FC = () => {
                 <span>Secure Portal</span>
               </div>
             </div>
-            <p className="subtitle">Ingresa a la consola de administración de Charles Shopping</p>
+            <p className="subtitle">Ingresa a la consola de administración de {settings.siteName}</p>
           </div>
 
           <form onSubmit={handleLogin} className="login-form">
@@ -82,7 +83,7 @@ export const Login: React.FC = () => {
                 <Mail className="field-icon" size={18} />
                 <input
                   type="email"
-                  placeholder="admin@charles-shopping.cl"
+                  placeholder="admin@charlyhome.cl"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -143,7 +144,7 @@ export const Login: React.FC = () => {
           </form>
 
           <div className="login-footer">
-            <p>© 2026 Charles Shopping • Sistema de Gestión de Inventario</p>
+            <p>© 2026 {settings.siteName} • Sistema de Gestión de Inventario</p>
           </div>
         </div>
       </motion.div>

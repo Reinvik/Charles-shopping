@@ -754,7 +754,7 @@ export const ProductDetail = () => {
                 />
               ) : (
                 <p>
-                  {product.description || "Este producto te garantiza la mejor calidad para tus compras en Charles Shopping. Ideal para tu hogar o tu empresa, contamos con el mejor stock de la ciudad."}
+                  {product.description || "Este producto te garantiza la mejor calidad para tus compras en Charly Home. Ideal para tu hogar o tu empresa, contamos con el mejor stock de la ciudad."}
                 </p>
               )}
             </div>
