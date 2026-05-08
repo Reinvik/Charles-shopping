@@ -137,7 +137,7 @@ export const AdminDashboard = () => {
             </div>
             <h3 className="font-bold">Bienvenido al Panel de Control</h3>
             <p className="text-slate-500 text-sm mt-2 max-w-xs">
-              Desde aquí puedes controlar todo el contenido de Charles Shopping en tiempo real.
+              Desde aquí puedes controlar todo el contenido de Charly Home en tiempo real.
             </p>
         </div>
       </div>

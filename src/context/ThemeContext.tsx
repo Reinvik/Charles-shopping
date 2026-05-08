@@ -23,8 +23,8 @@ const defaultSettings: ThemeSettings = {
   borderRadius: '8',
   logoUrl: null,
   faviconUrl: null,
-  siteName: 'Charles Shopping',
-  announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
+  siteName: 'Charly Home',
+    announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
   freeDeliveryThreshold: 30000,
   deliveryCost: 3500
 };

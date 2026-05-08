@@ -53,8 +53,8 @@ const Footer = () => {
       <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '40px' }}>
         <div>
           <div style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px' }}>
-            <span style={{ color: 'var(--dark)' }}>CHARLES</span>
-            <span style={{ color: 'var(--primary)' }}>SHOPPING</span>
+            <span style={{ color: 'var(--dark)' }}>CHARLY</span>
+            <span style={{ color: 'var(--primary)' }}>HOME</span>
           </div>
           <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
             Tu tienda de confianza para productos de aseo y papelería. Despachos rápidos y seguros a todo Santiago.
@@ -121,7 +121,7 @@ const Footer = () => {
       </div>
       
       <div className="container" style={{ marginTop: '60px', borderTop: '1px solid #f0f0f0', paddingTop: '30px', textAlign: 'center', fontSize: '12px', color: '#999' }}>
-        © 2026 Charles Shopping Delivery Home. Todos los derechos reservados.
+        © 2026 Charly Home Delivery Home. Todos los derechos reservados.
       </div>
     </footer>
   );

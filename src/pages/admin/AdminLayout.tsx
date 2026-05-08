@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import '../../admin.css';
 import logoImg from '../../assets/logo.png';
 import { 
@@ -19,6 +20,7 @@ import {
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, signOut } = useAuth();
+  const { settings } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -44,7 +46,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <Link to="/" className="sidebar-logo">
-            <img src={logoImg} alt="Charles Shopping" />
+            <img src={settings.logoUrl || logoImg} alt={settings.siteName} />
           </Link>
           <button className="mobile-close" onClick={() => setIsMobileMenuOpen(false)}>
             <X size={24} />

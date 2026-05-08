@@ -249,7 +249,7 @@ const AdminSettings = () => {
                     name="siteName" 
                     value={formData.siteName} 
                     onChange={handleInputChange}
-                    placeholder="Ej: Charles Shopping"
+                    placeholder="Ej: Charly Home"
                   />
                 </div>
               </div>
