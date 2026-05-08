@@ -63,7 +63,7 @@ export const Login: React.FC = () => {
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
               className="logo-container"
             >
-              <img src={settings.logoUrl} alt={settings.siteName} className="main-logo" />
+              <img src={settings.logoUrl || ''} alt={settings.siteName} className="main-logo" />
             </motion.div>
             
             <div className="title-group">
