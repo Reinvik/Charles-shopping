@@ -15,7 +15,8 @@ import {
   Palette,
   Globe,
   Mail,
-  Sliders
+  Sliders,
+  ShoppingBag
 } from 'lucide-react';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -32,6 +33,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const navItems = [
     { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
+    { label: 'Pedidos', icon: ShoppingBag, path: '/admin/orders' },
     { label: 'Productos', icon: Package, path: '/admin/products' },
     { label: 'Categorías', icon: Tags, path: '/admin/categories' },
     { label: 'Banners', icon: Palette, path: '/admin/banners' },

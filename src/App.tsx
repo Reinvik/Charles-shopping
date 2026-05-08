@@ -225,6 +225,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
+import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminCategories } from './pages/admin/AdminCategories';
 import { AdminBanners } from './pages/admin/AdminBanners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
@@ -274,6 +275,7 @@ function App() {
                 <Routes>
                   <Route path="/" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
                   <Route path="/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
+                  <Route path="/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
                   <Route path="/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
                   <Route path="/banners" element={<AdminLayout><AdminBanners /></AdminLayout>} />
                   <Route path="/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />

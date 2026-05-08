@@ -24,18 +24,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 2. Fetch Flow Settings from Database
+    // 2. Fetch Settings from Database
     const { data: settingsData, error: settingsError } = await supabaseClient
       .from('site_settings')
-      .select('value')
-      .eq('key', 'flow_settings')
-      .single()
+      .select('key, value')
+      .in('key', ['flow_settings', 'theme'])
 
-    if (settingsError || !settingsData?.value) {
+    const flowSettings = settingsData?.find(s => s.key === 'flow_settings')?.value as any
+    const themeSettings = settingsData?.find(s => s.key === 'theme')?.value as any
+    const siteName = themeSettings?.siteName || "Charly Home"
+
+    if (settingsError || !flowSettings) {
       throw new Error('No se ha configurado Flow en el panel de administración.')
     }
 
-    const { apiKey, secret, isSandbox } = settingsData.value as any
+    const { apiKey, secret, isSandbox } = flowSettings
     const FLOW_URL = isSandbox ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api"
 
     // 3. Insert order
@@ -60,7 +63,7 @@ serve(async (req) => {
       commerceOrder: order.id,
       currency: "CLP",
       email: email,
-      subject: `Pedido #${order.id.toString().slice(0, 8)} - Charles Shopping`,
+      subject: `Pedido #${order.id.toString().slice(0, 8)} - ${siteName}`,
       urlConfirmation: `${Deno.env.get('SUPABASE_URL')}/functions/v1/flow-webhook`,
       urlReturn: `${req.headers.get('origin')}/checkout/success`,
       urlError: `${req.headers.get('origin')}/checkout/failure`,
