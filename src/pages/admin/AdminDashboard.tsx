@@ -84,40 +84,36 @@ export const AdminDashboard = () => {
 
   const statCards = [
     { 
-      label: 'Productos', 
+      label: 'PRODUCTOS', 
       value: stats.products, 
       icon: ShoppingBag, 
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      gradient: 'from-rose-500 to-red-600',
+      shadow: 'shadow-red-500/30',
       detail: `${stats.activeProducts} activos`,
-      trend: '+12%'
     },
     { 
-      label: 'Visitantes', 
+      label: 'VISITANTES', 
       value: stats.visitors, 
       icon: Users, 
-      iconColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
+      gradient: 'from-amber-400 to-orange-500',
+      shadow: 'shadow-orange-500/30',
       detail: `+${stats.recentVisitors} esta semana`,
-      trend: '+24%'
     },
     { 
-      label: 'Carritos', 
+      label: 'CARRITOS', 
       value: stats.carts, 
       icon: MousePointer2, 
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      gradient: 'from-violet-500 to-purple-600',
+      shadow: 'shadow-purple-500/30',
       detail: 'Interacciones activas',
-      trend: '+5%'
     },
     { 
-      label: 'Conversión', 
+      label: 'CONVERSIÓN', 
       value: `${stats.conversionRate}%`, 
       icon: TrendingUp, 
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      gradient: 'from-emerald-400 to-teal-600',
+      shadow: 'shadow-emerald-500/30',
       detail: 'Ventas efectivas',
-      trend: '+3%'
     },
   ];
 
@@ -126,7 +122,7 @@ export const AdminDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Panel de Control</h2>
-          <p className="text-slate-500 text-sm mt-1">Monitoreo de rendimiento y logística en tiempo real.</p>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Monitoreo de rendimiento y logística en tiempo real.</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-500">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -136,19 +132,23 @@ export const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, i) => (
-          <div key={i} className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="flex items-start justify-between mb-4">
-              <div className={`p-4 rounded-2xl ${stat.bgColor} ${stat.iconColor} transition-colors group-hover:scale-110 duration-300`}>
-                <stat.icon size={24} />
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg mb-1">{stat.trend}</span>
-                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{stat.label}</p>
-              </div>
+          <div key={i} className={`group relative overflow-hidden bg-gradient-to-br ${stat.gradient} p-6 rounded-3xl shadow-xl ${stat.shadow} hover:-translate-y-1 transition-all duration-300`}>
+            {/* Background Decorative Icon */}
+            <div className="absolute -right-4 -bottom-4 text-white opacity-10 group-hover:scale-110 transition-transform duration-500">
+              <stat.icon size={120} />
             </div>
-            <div>
-              <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
-              <p className="text-slate-400 text-xs mt-1 font-medium">{stat.detail}</p>
+
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <p className="text-white/80 text-[10px] font-black tracking-widest mb-1">{stat.label}</p>
+                <h3 className="text-4xl font-black text-white tracking-tighter">{stat.value}</h3>
+              </div>
+              
+              <div className="mt-6">
+                <span className="inline-block px-3 py-1.5 bg-black/10 backdrop-blur-md rounded-xl text-white text-[11px] font-black">
+                  {stat.detail}
+                </span>
+              </div>
             </div>
           </div>
         ))}
