@@ -6,6 +6,7 @@ import {
   Loader2, Package, Printer, 
   TrendingUp, MousePointer2, Truck, Plus
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const AdminDashboard = () => {
   const [stats, setStats] = useState({
