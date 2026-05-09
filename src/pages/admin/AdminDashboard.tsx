@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Link } from 'react-router-dom';
 import { 
-  ShoppingBag, Users, ArrowUpRight, 
-  Loader2, Package, Printer, 
-  TrendingUp, MousePointer2, Truck, Plus
+  ShoppingBag, Users, 
+  Loader2, Truck, MousePointer2, TrendingUp,
+  Printer, Package
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -84,315 +82,353 @@ export const AdminDashboard = () => {
 
   const statCards = [
     { 
-      label: 'PRODUCTOS', 
+      label: 'PRODUCTOS TOTALES', 
       value: stats.products, 
       icon: ShoppingBag, 
-      gradient: 'from-rose-500 to-red-600',
-      shadow: 'shadow-red-500/30',
+      color: '#3b82f6', // blue-500
+      glow: 'shadow-blue-500/20',
       detail: `${stats.activeProducts} activos`,
     },
     { 
       label: 'VISITANTES', 
       value: stats.visitors, 
       icon: Users, 
-      gradient: 'from-amber-400 to-orange-500',
-      shadow: 'shadow-orange-500/30',
+      color: '#10b981', // emerald-500
+      glow: 'shadow-emerald-500/20',
       detail: `+${stats.recentVisitors} esta semana`,
     },
     { 
       label: 'CARRITOS', 
       value: stats.carts, 
       icon: MousePointer2, 
-      gradient: 'from-violet-500 to-purple-600',
-      shadow: 'shadow-purple-500/30',
-      detail: 'Interacciones activas',
+      color: '#8b5cf6', // violet-500
+      glow: 'shadow-violet-500/20',
+      detail: 'Añadidos al carrito',
     },
     { 
       label: 'CONVERSIÓN', 
       value: `${stats.conversionRate}%`, 
       icon: TrendingUp, 
-      gradient: 'from-emerald-400 to-teal-600',
-      shadow: 'shadow-emerald-500/30',
-      detail: 'Ventas efectivas',
+      color: '#f97316', // orange-500
+      glow: 'shadow-orange-500/20',
+      detail: 'Ventas sobre visitas',
     },
   ];
 
+  const handlePrintLatestLabel = async () => {
+    try {
+      const { data: latestOrder } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Demo data if no order found
+      const orderToPrint = latestOrder || {
+        id: 'DEMO-882-99X',
+        created_at: new Date().toISOString(),
+        shipping_details: {
+          fullName: 'NICOLÁS RIVERA (DEMO)',
+          address: 'Av. Vitacura 2670, Piso 15',
+          comuna: 'Vitacura, Santiago',
+          phone: '+56 9 8223 1022',
+          reference: 'Torre Titanium'
+        }
+      };
+
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+
+      const labelHtml = `
+        <html>
+          <head>
+            <style>
+              @page { size: 100mm 150mm; margin: 0; }
+              body { 
+                margin: 0; 
+                padding: 10mm; 
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                background: white;
+              }
+              .label-container {
+                border: 2pt solid black;
+                height: 128mm;
+                display: flex;
+                flex-direction: column;
+                color: black;
+              }
+              .header {
+                background: black;
+                color: white;
+                padding: 4mm;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-weight: 900;
+                font-size: 14pt;
+              }
+              .info-row {
+                padding: 4mm;
+                border-bottom: 1.5pt solid black;
+                display: flex;
+                justify-content: space-between;
+                font-size: 10pt;
+              }
+              .commune {
+                background: black;
+                color: white;
+                padding: 6mm 0;
+                text-align: center;
+                font-weight: 900;
+                font-size: 28pt;
+                letter-spacing: -1px;
+              }
+              .details {
+                flex: 1;
+                padding: 6mm;
+                display: flex;
+                flex-direction: column;
+              }
+              .address {
+                font-weight: 900;
+                font-size: 14pt;
+                margin-bottom: 4mm;
+                line-height: 1.2;
+              }
+              .footer {
+                margin-top: auto;
+                border-top: 1pt solid #eee;
+                padding-top: 4mm;
+                display: flex;
+                justify-content: space-between;
+                font-size: 9pt;
+                font-weight: 800;
+              }
+              .demo-tag {
+                position: absolute;
+                top: 5mm;
+                left: -15mm;
+                background: red;
+                color: white;
+                padding: 2mm 20mm;
+                transform: rotate(-45deg);
+                font-weight: 900;
+                font-size: 10pt;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="label-container" style="position: relative; overflow: hidden;">
+              ${!latestOrder ? '<div class="demo-tag">DEMOSTRACIÓN</div>' : ''}
+              <div class="header">
+                <span>CHARLY HOME</span>
+                <span style="font-style: italic; font-size: 10pt;">FLEX v2.0</span>
+              </div>
+              <div class="info-row">
+                <div>
+                  <div style="font-size: 8pt; color: #666; font-weight: 900;">ID OPERACIÓN</div>
+                  <div style="font-weight: 900;">#${orderToPrint.id.substring(0, 12).toUpperCase()}</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 8pt; color: #666; font-weight: 900;">FECHA</div>
+                  <div style="font-weight: 900;">${new Date(orderToPrint.created_at).toLocaleDateString()}</div>
+                </div>
+              </div>
+              <div class="commune">
+                ${orderToPrint.shipping_details.comuna.split(',')[0].toUpperCase()}
+              </div>
+              <div class="details">
+                <div style="font-size: 8pt; color: #666; font-weight: 900; margin-bottom: 2mm;">DIRECCIÓN DE ENTREGA</div>
+                <div class="address">${orderToPrint.shipping_details.address}</div>
+                ${orderToPrint.shipping_details.reference ? `<div style="font-size: 10pt; color: #444; font-weight: 700;">Ref: ${orderToPrint.shipping_details.reference}</div>` : ''}
+                
+                <div class="footer">
+                  <div>
+                    <div style="font-size: 7pt; color: #666;">DESTINATARIO</div>
+                    <div>${orderToPrint.shipping_details.fullName.toUpperCase()}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div style="font-size: 7pt; color: #666;">CONTACTO</div>
+                    <div>${orderToPrint.shipping_details.phone}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <script>window.onload = () => { window.print(); window.close(); }</script>
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(labelHtml);
+      printWindow.document.close();
+    } catch (err) {
+      console.error('Error printing label:', err);
+    }
+  };
+
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Panel de Control</h2>
-          <p className="text-slate-500 text-sm mt-1 font-medium">Monitoreo de rendimiento y logística en tiempo real.</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Dashboard</h2>
+          <p className="text-slate-500 text-sm mt-1 font-medium">Estado actual de tu inventario y métricas clave.</p>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-500">
+        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-sm text-xs font-bold text-slate-600">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
           SISTEMA EN VIVO
         </div>
       </div>
 
+      {/* KPI Section - Vibrant & Eye-Catching */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, i) => {
-          // Define static classes to prevent Tailwind purging
-          let cardClasses = "";
-          let shadowClasses = "";
-          
-          if (stat.label === 'PRODUCTOS') {
-            cardClasses = "from-rose-500 to-red-600";
-            shadowClasses = "shadow-red-500/30";
-          } else if (stat.label === 'VISITANTES') {
-            cardClasses = "from-amber-400 to-orange-500";
-            shadowClasses = "shadow-orange-500/30";
-          } else if (stat.label === 'CARRITOS') {
-            cardClasses = "from-violet-500 to-purple-600";
-            shadowClasses = "shadow-purple-500/30";
-          } else {
-            cardClasses = "from-emerald-400 to-teal-600";
-            shadowClasses = "shadow-emerald-500/30";
-          }
-
-          return (
-            <div key={i} className={`group relative overflow-hidden bg-gradient-to-br ${cardClasses} p-6 rounded-3xl shadow-xl ${shadowClasses} hover:-translate-y-1 transition-all duration-300`}>
-              {/* Background Decorative Icon */}
-              <div className="absolute -right-4 -bottom-4 text-white opacity-10 group-hover:scale-110 transition-transform duration-500">
-                <stat.icon size={120} />
+        {statCards.map((stat, i) => (
+          <div key={i} className={`bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm ${stat.glow} hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group`}>
+            {/* Background Accent */}
+            <div className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full opacity-[0.03] group-hover:opacity-[0.08] transition-opacity" style={{ backgroundColor: stat.color }} />
+            
+            <div className="flex flex-col gap-4 relative z-10">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg" style={{ backgroundColor: stat.color }}>
+                <stat.icon size={24} />
               </div>
-
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div>
-                  <p className="text-white/80 text-[10px] font-black tracking-widest mb-1">{stat.label}</p>
-                  <h3 className="text-4xl font-black text-white tracking-tighter">{stat.value}</h3>
-                </div>
-                
-                <div className="mt-6">
-                  <span className="inline-block px-3 py-1.5 bg-black/10 backdrop-blur-md rounded-xl text-white text-[11px] font-black">
-                    {stat.detail}
-                  </span>
+              <div>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider mb-1">{stat.label}</p>
+                <div className="flex items-baseline gap-2">
+                  <h3 className="text-3xl font-black text-slate-900 tracking-tighter">{stat.value}</h3>
+                  <span className="text-[10px] font-bold text-slate-400">{stat.detail}</span>
                 </div>
               </div>
             </div>
-          );
-        })}
+            
+            {/* Bottom Color Bar */}
+            <div className="absolute bottom-0 left-0 w-full h-1 opacity-20" style={{ backgroundColor: stat.color }} />
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Quick Actions & Welcome */}
         <div className="lg:col-span-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden flex flex-col items-center text-center group">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-orange-500" />
-              <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center mb-5 group-hover:rotate-12 transition-transform duration-500">
-                <ShoppingBag size={32} />
+          {/* Top Favoritos - Moved UP */}
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-500" />
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="font-black text-slate-900 flex items-center gap-3 uppercase tracking-tighter text-xl italic">
+                <span className="flex items-center justify-center w-10 h-10 bg-primary/10 text-primary rounded-xl rotate-[-5deg]">🔥</span>
+                Top Favoritos
+              </h3>
+              <div className="p-2 bg-slate-50 text-primary rounded-xl border border-slate-100">
+                <TrendingUp size={20} />
               </div>
-              <h3 className="text-xl font-black text-slate-900">Charly Home Admin</h3>
-              <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-                Gestiona tu catálogo y pedidos con herramientas de última generación.
-              </p>
-              <Link to="/admin/products" className="mt-6 px-8 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
-                Ver Inventario
-              </Link>
             </div>
 
-            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
-              <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter text-lg">
-                <Package size={20} className="text-orange-500" />
-                Acciones Rápidas
-              </h3>
-              <div className="space-y-3">
-                <Link to="/admin/products" className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/30 hover:bg-white hover:shadow-md transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
-                      <Plus size={18} />
+            <div className="space-y-4">
+              {stats.topProducts.length > 0 ? stats.topProducts.map((product, idx) => {
+                const maxCount = Math.max(...stats.topProducts.map(p => p.count));
+                const percentage = (product.count / maxCount) * 100;
+                
+                return (
+                  <div key={idx} className="space-y-2 group/item">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center text-[10px] font-black group-hover/item:bg-primary transition-colors">
+                          {idx + 1}
+                        </div>
+                        <p className="text-sm font-black text-slate-900 group-hover/item:text-primary transition-colors tracking-tight">{product.name}</p>
+                      </div>
+                      <span className="text-xs font-black text-primary">{product.count}</span>
                     </div>
-                    <div>
-                      <p className="font-bold text-sm text-slate-800">Agregar Producto</p>
-                      <p className="text-[10px] text-slate-400">Nuevas ofertas</p>
-                    </div>
-                  </div>
-                  <ArrowUpRight size={18} className="text-slate-300 group-hover:text-primary transition-colors" />
-                </Link>
-                <Link to="/admin/categories" className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-orange-500/30 hover:bg-white hover:shadow-md transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-orange-500 shadow-sm">
-                      <Package size={18} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-slate-800">Nueva Categoría</p>
-                      <p className="text-[10px] text-slate-400">Organizar catálogo</p>
+                    <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                      <div 
+                        className={`h-full rounded-full bg-primary transition-all duration-1000`}
+                        style={{ width: `${percentage}%` }}
+                      />
                     </div>
                   </div>
-                  <ArrowUpRight size={18} className="text-slate-300 group-hover:text-orange-500 transition-colors" />
-                </Link>
-              </div>
+                );
+              }) : (
+                <div className="py-12 text-center text-slate-300 font-bold text-sm">Sin actividad reciente</div>
+              )}
+            </div>
+
+            <div className="mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100 relative overflow-hidden">
+                <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1.5">Análisis de Carrito</p>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Estos productos son los más añadidos. Considera crear promociones para aumentar la conversión.
+                </p>
             </div>
           </div>
 
-          {/* Logistics Pro Section - High Contrast Designer Look */}
-          <div className="bg-black rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 blur-[120px] rounded-full -mr-48 -mt-48 opacity-50" />
-            <div className="relative z-10 grid grid-cols-1 xl:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-full font-black text-[10px] uppercase tracking-[0.2em] mb-6">
-                  <Truck size={14} /> Logistics Engine v2.0
+          {/* Logistics Section - Simple & Vistoso (Light theme) */}
+          <div className="bg-white rounded-[2.5rem] border-2 border-slate-900 p-8 relative overflow-hidden shadow-xl group">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
+              <div className="flex-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-900 text-white rounded-full font-black text-[9px] uppercase tracking-widest mb-6">
+                  <Truck size={12} /> LOGISTICS ENGINE V2.0
                 </div>
-                <h3 className="text-4xl font-black mb-6 leading-[1.1] tracking-tighter">
+                <h3 className="text-3xl font-black text-slate-900 mb-4 leading-tight tracking-tighter italic">
                   Logística de <br/>
-                  <span className="text-primary">Alto Rendimiento.</span>
+                  <span className="text-primary underline decoration-slate-200 underline-offset-4">Alto Rendimiento.</span>
                 </h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-sm font-medium">
-                  Optimiza tu despacho con etiquetas térmicas de grado industrial. Compatibilidad total con Zebra y Brother.
+                <p className="text-slate-500 text-sm leading-relaxed mb-8 font-bold">
+                  Gestión inteligente de etiquetas. Imprime directo o descarga el formato terminal.
                 </p>
                 
-                <div className="grid grid-cols-2 gap-4 mb-10">
-                  {[
-                    { label: 'Resolución', val: '203 DPI' },
-                    { label: 'Formato', val: '100x150mm' },
-                    { label: 'Tipo', val: 'Thermal' },
-                    { label: 'Sync', val: 'Real-time' }
-                  ].map((spec, i) => (
-                    <div key={i} className="bg-white/5 border border-white/10 p-3 rounded-2xl">
-                      <p className="text-[9px] text-slate-500 font-bold uppercase">{spec.label}</p>
-                      <p className="text-xs font-black text-white">{spec.val}</p>
-                    </div>
-                  ))}
+                <div className="flex flex-wrap gap-4">
+                  <button 
+                    onClick={handlePrintLatestLabel}
+                    style={{ 
+                      backgroundColor: '#000000', 
+                      color: '#FFFFFF',
+                      padding: '1rem 2rem',
+                      borderRadius: '1rem',
+                      fontWeight: '900',
+                      fontSize: '0.875rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+                    }}
+                    className="hover:scale-105 transition-all active:scale-95"
+                  >
+                    <Printer size={18} /> Imprimir Última Etiqueta
+                  </button>
                 </div>
-
-                <Link to="/admin/orders" className="group inline-flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-95">
-                  Gestionar Pedidos 
-                  <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                </Link>
               </div>
 
-              {/* High Contrast Label Mockup */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
-                <div className="relative bg-white rounded-3xl p-6 text-slate-900 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.5)] rotate-2 group-hover:rotate-0 transition-all duration-700 max-w-[300px] mx-auto border-[8px] border-slate-900">
-                  <div className="border-[1.5pt] border-black h-[380px] flex flex-col font-sans overflow-hidden">
-                    {/* Label Header */}
-                    <div className="bg-black text-white p-3 flex justify-between items-center">
-                      <div className="font-black text-[11px] tracking-tighter">CHARLY HOME</div>
-                      <div className="text-[10px] font-black italic">FLEX</div>
-                    </div>
-                    
-                    <div className="p-4 border-b-[1.5pt] border-black flex justify-between items-end bg-slate-50">
-                      <div>
-                        <div className="text-[8px] font-black text-slate-400 uppercase">ID Operación</div>
-                        <div className="text-[12px] font-black">#CH-992-88X</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[8px] font-black text-slate-400 uppercase">Fecha</div>
-                        <div className="text-[10px] font-black">18/05/2026</div>
-                      </div>
-                    </div>
-
-                    {/* Commune Giant Text */}
-                    <div className="bg-black text-white py-4 text-center">
-                      <div className="text-[8px] font-bold tracking-[0.3em] opacity-50 mb-1">DESTINO FINAL</div>
-                      <div className="text-3xl font-black tracking-tighter">SANTIAGO</div>
-                    </div>
-
-                    {/* QR and Details Area */}
-                    <div className="flex-1 flex flex-col p-4">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="w-20 h-20 bg-black flex items-center justify-center p-1">
-                          <div className="w-full h-full bg-white grid grid-cols-8 gap-0.5">
-                            {Array(64).fill(0).map((_, i) => (
-                              <div key={i} className={`w-full h-full ${Math.random() > 0.4 ? 'bg-black' : 'bg-transparent'}`} />
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex-1 pl-4 text-[9px] leading-tight font-bold">
-                           <div className="mb-2">
-                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Dirección</span>
-                             Av. Vitacura 2670, Piso 15
-                           </div>
-                           <div>
-                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Referencia</span>
-                             Torre Titanium
-                           </div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-auto pt-3 border-t-[1pt] border-slate-200">
-                        <div className="flex justify-between items-center">
-                           <div>
-                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Destinatario</span>
-                             <div className="text-[10px] font-black">NICOLÁS RIVERA</div>
-                           </div>
-                           <div className="text-right">
-                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Contacto</span>
-                             <div className="text-[9px] font-black">+56 9 8223 1022</div>
-                           </div>
-                        </div>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { val: '203 DPI', icon: Truck },
+                  { val: '100x150mm', icon: Package },
+                  { val: 'Thermal', icon: ShoppingBag },
+                  { val: 'Real-time', icon: TrendingUp }
+                ].map((spec, i) => (
+                  <div key={i} className="bg-slate-50 border border-slate-100 p-5 rounded-3xl w-32 h-32 flex flex-col justify-between hover:border-primary transition-colors group/spec">
+                    <div className="text-slate-900 group-hover/spec:text-primary transition-colors"><spec.icon size={22} /></div>
+                    <p className="text-sm font-black text-slate-900">{spec.val}</p>
                   </div>
-                  <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-xs shadow-xl rotate-[-15deg]">V2</div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Top Products */}
-        <div className="lg:col-span-4 bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-black text-slate-900 flex items-center gap-2 uppercase tracking-tighter text-xl">
-              🔥 Top Favoritos
-            </h3>
-            <div className="p-2 bg-primary/10 text-primary rounded-xl">
-              <TrendingUp size={20} />
-            </div>
-          </div>
-          
-          <div className="space-y-8">
-            {stats.topProducts.length > 0 ? stats.topProducts.map((product, idx) => {
-              const maxCount = stats.topProducts[0].count;
-              const percentage = (product.count / maxCount) * 100;
-              
-              return (
-                <div key={idx} className="space-y-2 group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-sm font-black text-slate-400 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm border border-slate-100">
-                        {idx + 1}
-                      </div>
-                      <p className="text-sm font-black text-slate-700 line-clamp-1 group-hover:text-primary transition-colors">{product.name}</p>
-                    </div>
-                    <span className="text-xs font-black text-slate-400">{product.count}</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${percentage}%` }}
-                      transition={{ duration: 1, delay: idx * 0.1 }}
-                      className={`h-full rounded-full bg-gradient-to-r ${idx === 0 ? 'from-primary to-orange-500' : 'from-slate-300 to-slate-400'}`}
-                    />
-                  </div>
-                </div>
-              );
-            }) : (
-              <div className="py-20 text-center space-y-4">
-                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-200">
-                  <ShoppingBag size={32} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-400">Sin datos de actividad</p>
-                  <p className="text-[10px] text-slate-300">Las métricas aparecerán con las ventas.</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {stats.topProducts.length > 0 && (
-            <div className="mt-12 p-6 bg-gradient-to-br from-slate-50 to-white rounded-[2rem] border border-slate-100 relative overflow-hidden">
-               <div className="relative z-10">
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-2">Análisis de Carrito</p>
-                <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                  Estos productos son los más añadidos por tus clientes. Considera crear promociones especiales para aumentar la conversión.
-                </p>
+        {/* Right Column: Quick Welcome */}
+        <div className="lg:col-span-4 space-y-8">
+          <div className="bg-slate-900 p-8 rounded-[2.5rem] relative overflow-hidden text-center text-white shadow-2xl h-full flex flex-col items-center justify-center min-h-[400px]">
+             <div className="absolute top-0 left-0 w-full h-full bg-primary/10 blur-[80px] rounded-full" />
+             <div className="relative z-10">
+               <div className="w-20 h-20 bg-primary/20 rounded-[2rem] flex items-center justify-center text-primary mx-auto mb-8 animate-bounce">
+                 <ShoppingBag size={40} />
                </div>
-            </div>
-          )}
+               <h3 className="text-2xl font-black mb-4 tracking-tighter">Bienvenido al Panel de Control</h3>
+               <p className="text-slate-400 text-sm leading-relaxed mb-10 px-4">
+                 Desde aquí puedes controlar todo el contenido de Charly Home en tiempo real.
+               </p>
+               <div className="w-12 h-1 bg-primary mx-auto rounded-full opacity-30" />
+             </div>
+          </div>
         </div>
       </div>
     </div>

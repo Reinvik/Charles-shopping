@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   Loader2, Search, Filter, 
   ShoppingBag, Calendar, Mail, 
   CheckCircle2, Clock, XCircle, AlertCircle,
-  Eye, Package, Printer, Phone, MapPin
+  Users, Eye, Package, Printer, Phone, MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { QRCodeSVG } from 'qrcode.react';
+
 
 interface Order {
   id: string;
