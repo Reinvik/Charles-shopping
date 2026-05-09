@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { 
   ShoppingBag, Users, ArrowUpRight, 
   Loader2, Package, Printer, 
-  TrendingUp, MousePointer2, Truck
+  TrendingUp, MousePointer2, Truck, Plus
 } from 'lucide-react';
 
 export const AdminDashboard = () => {
