@@ -11,16 +11,28 @@ const CartDrawer: React.FC = () => {
   const { user } = useAuth();
   const { settings } = useTheme();
   
-  const [email, setEmail] = useState(user?.email || '');
-  const [shippingDetails, setShippingDetails] = useState({
-    fullName: '',
-    phone: '',
-    address: '',
-    comuna: '',
-    reference: ''
+  const [email, setEmail] = useState(user?.email || localStorage.getItem('charles-customer-email') || '');
+  const [shippingDetails, setShippingDetails] = useState(() => {
+    const saved = localStorage.getItem('charles-shipping-details');
+    return saved ? JSON.parse(saved) : {
+      fullName: '',
+      phone: '',
+      address: '',
+      comuna: '',
+      reference: ''
+    };
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Persist email and shipping details
+  useEffect(() => {
+    localStorage.setItem('charles-customer-email', email);
+  }, [email]);
+
+  useEffect(() => {
+    localStorage.setItem('charles-shipping-details', JSON.stringify(shippingDetails));
+  }, [shippingDetails]);
 
   const freeShippingThreshold = settings.freeDeliveryThreshold || 30000;
   const progress = Math.min((totalPrice / freeShippingThreshold) * 100, 100);
@@ -260,6 +272,7 @@ const CartDrawer: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={loading}
+                        autoComplete="email"
                         style={{
                           width: '100%',
                           padding: '10px 12px 10px 36px',
@@ -283,6 +296,7 @@ const CartDrawer: React.FC = () => {
                         value={shippingDetails.fullName}
                         onChange={(e) => setShippingDetails({...shippingDetails, fullName: e.target.value})}
                         disabled={loading}
+                        autoComplete="name"
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                       />
                       <input 
@@ -291,6 +305,7 @@ const CartDrawer: React.FC = () => {
                         value={shippingDetails.phone}
                         onChange={(e) => setShippingDetails({...shippingDetails, phone: e.target.value})}
                         disabled={loading}
+                        autoComplete="tel"
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                       />
                       <input 
@@ -299,6 +314,7 @@ const CartDrawer: React.FC = () => {
                         value={shippingDetails.address}
                         onChange={(e) => setShippingDetails({...shippingDetails, address: e.target.value})}
                         disabled={loading}
+                        autoComplete="address-line1"
                         style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                       />
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -308,6 +324,7 @@ const CartDrawer: React.FC = () => {
                           value={shippingDetails.comuna}
                           onChange={(e) => setShippingDetails({...shippingDetails, comuna: e.target.value})}
                           disabled={loading}
+                          autoComplete="address-level2"
                           style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                         />
                         <input 
@@ -316,6 +333,7 @@ const CartDrawer: React.FC = () => {
                           value={shippingDetails.reference}
                           onChange={(e) => setShippingDetails({...shippingDetails, reference: e.target.value})}
                           disabled={loading}
+                          autoComplete="address-line2"
                           style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                         />
                       </div>
