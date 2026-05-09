@@ -87,7 +87,8 @@ export const AdminDashboard = () => {
       label: 'Productos', 
       value: stats.products, 
       icon: ShoppingBag, 
-      gradient: 'from-blue-600 to-indigo-600',
+      iconColor: 'text-blue-600',
+      bgColor: 'bg-blue-50',
       detail: `${stats.activeProducts} activos`,
       trend: '+12%'
     },
@@ -95,7 +96,8 @@ export const AdminDashboard = () => {
       label: 'Visitantes', 
       value: stats.visitors, 
       icon: Users, 
-      gradient: 'from-emerald-600 to-teal-600',
+      iconColor: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
       detail: `+${stats.recentVisitors} esta semana`,
       trend: '+24%'
     },
@@ -103,7 +105,8 @@ export const AdminDashboard = () => {
       label: 'Carritos', 
       value: stats.carts, 
       icon: MousePointer2, 
-      gradient: 'from-purple-600 to-violet-600',
+      iconColor: 'text-purple-600',
+      bgColor: 'bg-purple-50',
       detail: 'Interacciones activas',
       trend: '+5%'
     },
@@ -111,7 +114,8 @@ export const AdminDashboard = () => {
       label: 'Conversión', 
       value: `${stats.conversionRate}%`, 
       icon: TrendingUp, 
-      gradient: 'from-orange-600 to-red-600',
+      iconColor: 'text-orange-600',
+      bgColor: 'bg-orange-50',
       detail: 'Ventas efectivas',
       trend: '+3%'
     },
@@ -132,18 +136,19 @@ export const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, i) => (
-          <div key={i} className="group relative bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.gradient} opacity-[0.03] rounded-bl-full -mr-8 -mt-8 group-hover:scale-110 transition-transform`} />
+          <div key={i} className="group bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
             <div className="flex items-start justify-between mb-4">
-              <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg shadow-indigo-500/20`}>
-                <stat.icon size={22} />
+              <div className={`p-4 rounded-2xl ${stat.bgColor} ${stat.iconColor} transition-colors group-hover:scale-110 duration-300`}>
+                <stat.icon size={24} />
               </div>
-              <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg">{stat.trend}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg mb-1">{stat.trend}</span>
+                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">{stat.label}</p>
+              </div>
             </div>
             <div>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{stat.label}</p>
-              <h3 className="text-3xl font-black text-slate-900 mt-1">{stat.value}</h3>
-              <p className="text-slate-400 text-xs mt-2 font-medium">{stat.detail}</p>
+              <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+              <p className="text-slate-400 text-xs mt-1 font-medium">{stat.detail}</p>
             </div>
           </div>
         ))}
