@@ -131,27 +131,47 @@ export const AdminDashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, i) => (
-          <div key={i} className={`group relative overflow-hidden bg-gradient-to-br ${stat.gradient} p-6 rounded-3xl shadow-xl ${stat.shadow} hover:-translate-y-1 transition-all duration-300`}>
-            {/* Background Decorative Icon */}
-            <div className="absolute -right-4 -bottom-4 text-white opacity-10 group-hover:scale-110 transition-transform duration-500">
-              <stat.icon size={120} />
-            </div>
+        {statCards.map((stat, i) => {
+          // Define static classes to prevent Tailwind purging
+          let cardClasses = "";
+          let shadowClasses = "";
+          
+          if (stat.label === 'PRODUCTOS') {
+            cardClasses = "from-rose-500 to-red-600";
+            shadowClasses = "shadow-red-500/30";
+          } else if (stat.label === 'VISITANTES') {
+            cardClasses = "from-amber-400 to-orange-500";
+            shadowClasses = "shadow-orange-500/30";
+          } else if (stat.label === 'CARRITOS') {
+            cardClasses = "from-violet-500 to-purple-600";
+            shadowClasses = "shadow-purple-500/30";
+          } else {
+            cardClasses = "from-emerald-400 to-teal-600";
+            shadowClasses = "shadow-emerald-500/30";
+          }
 
-            <div className="relative z-10 flex flex-col h-full justify-between">
-              <div>
-                <p className="text-white/80 text-[10px] font-black tracking-widest mb-1">{stat.label}</p>
-                <h3 className="text-4xl font-black text-white tracking-tighter">{stat.value}</h3>
+          return (
+            <div key={i} className={`group relative overflow-hidden bg-gradient-to-br ${cardClasses} p-6 rounded-3xl shadow-xl ${shadowClasses} hover:-translate-y-1 transition-all duration-300`}>
+              {/* Background Decorative Icon */}
+              <div className="absolute -right-4 -bottom-4 text-white opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <stat.icon size={120} />
               </div>
-              
-              <div className="mt-6">
-                <span className="inline-block px-3 py-1.5 bg-black/10 backdrop-blur-md rounded-xl text-white text-[11px] font-black">
-                  {stat.detail}
-                </span>
+
+              <div className="relative z-10 flex flex-col h-full justify-between">
+                <div>
+                  <p className="text-white/80 text-[10px] font-black tracking-widest mb-1">{stat.label}</p>
+                  <h3 className="text-4xl font-black text-white tracking-tighter">{stat.value}</h3>
+                </div>
+                
+                <div className="mt-6">
+                  <span className="inline-block px-3 py-1.5 bg-black/10 backdrop-blur-md rounded-xl text-white text-[11px] font-black">
+                    {stat.detail}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
