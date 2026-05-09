@@ -206,65 +206,108 @@ export const AdminDashboard = () => {
             </div>
           </div>
 
-          {/* Logistics Preview Section */}
-          <div className="bg-slate-900 rounded-[3rem] p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[100px] rounded-full -mr-32 -mt-32" />
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+          {/* Logistics Pro Section - High Contrast Designer Look */}
+          <div className="bg-black rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 blur-[120px] rounded-full -mr-48 -mt-48 opacity-50" />
+            <div className="relative z-10 grid grid-cols-1 xl:grid-cols-2 gap-12 items-center">
               <div>
-                <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-[0.2em] mb-4">
-                  <Truck size={16} /> Logística Pro
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/20 text-primary rounded-full font-black text-[10px] uppercase tracking-[0.2em] mb-6">
+                  <Truck size={14} /> Logistics Engine v2.0
                 </div>
-                <h3 className="text-3xl font-black mb-4 leading-tight">Etiquetas Térmicas Inteligentes</h3>
-                <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                  Hemos integrado un generador de tickets compatible con impresoras Zebra, Brother y genéricas de 100x150mm.
+                <h3 className="text-4xl font-black mb-6 leading-[1.1] tracking-tighter">
+                  Logística de <br/>
+                  <span className="text-primary">Alto Rendimiento.</span>
+                </h3>
+                <p className="text-slate-400 text-sm leading-relaxed mb-8 max-w-sm font-medium">
+                  Optimiza tu despacho con etiquetas térmicas de grado industrial. Compatibilidad total con Zebra y Brother.
                 </p>
-                <ul className="space-y-3 mb-8">
-                  {['Código QR de seguimiento', 'Formato Mercado Libre', 'Datos de envío persistentes'].map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-xs font-bold text-slate-300">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      {item}
-                    </li>
+                
+                <div className="grid grid-cols-2 gap-4 mb-10">
+                  {[
+                    { label: 'Resolución', val: '203 DPI' },
+                    { label: 'Formato', val: '100x150mm' },
+                    { label: 'Tipo', val: 'Thermal' },
+                    { label: 'Sync', val: 'Real-time' }
+                  ].map((spec, i) => (
+                    <div key={i} className="bg-white/5 border border-white/10 p-3 rounded-2xl">
+                      <p className="text-[9px] text-slate-500 font-bold uppercase">{spec.label}</p>
+                      <p className="text-xs font-black text-white">{spec.val}</p>
+                    </div>
                   ))}
-                </ul>
-                <Link to="/admin/orders" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:brightness-110 transition-all">
-                  Gestionar Pedidos <Printer size={16} />
+                </div>
+
+                <Link to="/admin/orders" className="group inline-flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl font-black text-sm hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-95">
+                  Gestionar Pedidos 
+                  <ArrowUpRight size={18} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
                 </Link>
               </div>
 
-              {/* Label Mockup Preview */}
-              <div className="relative bg-white rounded-2xl p-4 text-slate-900 shadow-2xl rotate-3 transform hover:rotate-0 transition-transform duration-500 max-w-[280px] mx-auto">
-                <div className="border-2 border-slate-900 h-[360px] flex flex-col font-sans">
-                  <div className="border-b-2 border-slate-900 p-2 flex justify-between items-start">
-                    <div>
-                      <div className="font-black text-[10px]">CHARLY HOME</div>
-                      <div className="text-[8px] font-bold">Pedido: #CH-8821</div>
+              {/* High Contrast Label Mockup */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-75 group-hover:scale-100 transition-transform duration-700" />
+                <div className="relative bg-white rounded-3xl p-6 text-slate-900 shadow-[0_32px_64px_-15px_rgba(0,0,0,0.5)] rotate-2 group-hover:rotate-0 transition-all duration-700 max-w-[300px] mx-auto border-[8px] border-slate-900">
+                  <div className="border-[1.5pt] border-black h-[380px] flex flex-col font-sans overflow-hidden">
+                    {/* Label Header */}
+                    <div className="bg-black text-white p-3 flex justify-between items-center">
+                      <div className="font-black text-[11px] tracking-tighter">CHARLY HOME</div>
+                      <div className="text-[10px] font-black italic">FLEX</div>
                     </div>
-                    <div className="text-[7px] text-right font-bold">18/05/2026</div>
-                  </div>
-                  <div className="grid grid-cols-2 border-b-2 border-slate-900 text-center">
-                    <div className="border-r-2 border-slate-900 py-1 font-black text-xl italic">FLEX</div>
-                    <div className="py-1 font-black text-xl italic">18 MAY</div>
-                  </div>
-                  <div className="flex-1 flex items-center justify-center p-4">
-                    <div className="w-24 h-24 border-2 border-slate-900 flex items-center justify-center">
-                       <div className="grid grid-cols-4 gap-0.5 opacity-80">
-                         {Array(16).fill(0).map((_, i) => (
-                           <div key={i} className={`w-4 h-4 ${Math.random() > 0.5 ? 'bg-slate-900' : 'bg-transparent'}`} />
-                         ))}
-                       </div>
+                    
+                    <div className="p-4 border-b-[1.5pt] border-black flex justify-between items-end bg-slate-50">
+                      <div>
+                        <div className="text-[8px] font-black text-slate-400 uppercase">ID Operación</div>
+                        <div className="text-[12px] font-black">#CH-992-88X</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[8px] font-black text-slate-400 uppercase">Fecha</div>
+                        <div className="text-[10px] font-black">18/05/2026</div>
+                      </div>
+                    </div>
+
+                    {/* Commune Giant Text */}
+                    <div className="bg-black text-white py-4 text-center">
+                      <div className="text-[8px] font-bold tracking-[0.3em] opacity-50 mb-1">DESTINO FINAL</div>
+                      <div className="text-3xl font-black tracking-tighter">SANTIAGO</div>
+                    </div>
+
+                    {/* QR and Details Area */}
+                    <div className="flex-1 flex flex-col p-4">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="w-20 h-20 bg-black flex items-center justify-center p-1">
+                          <div className="w-full h-full bg-white grid grid-cols-8 gap-0.5">
+                            {Array(64).fill(0).map((_, i) => (
+                              <div key={i} className={`w-full h-full ${Math.random() > 0.4 ? 'bg-black' : 'bg-transparent'}`} />
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex-1 pl-4 text-[9px] leading-tight font-bold">
+                           <div className="mb-2">
+                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Dirección</span>
+                             Av. Vitacura 2670, Piso 15
+                           </div>
+                           <div>
+                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Referencia</span>
+                             Torre Titanium
+                           </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-auto pt-3 border-t-[1pt] border-slate-200">
+                        <div className="flex justify-between items-center">
+                           <div>
+                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Destinatario</span>
+                             <div className="text-[10px] font-black">NICOLÁS RIVERA</div>
+                           </div>
+                           <div className="text-right">
+                             <span className="opacity-40 uppercase block text-[7px] mb-0.5">Contacto</span>
+                             <div className="text-[9px] font-black">+56 9 8223 1022</div>
+                           </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="border-t-2 border-b-2 border-slate-900 py-2 text-center font-black text-xl">
-                    SANTIAGO
-                  </div>
-                  <div className="p-3 text-[9px] leading-tight font-bold">
-                    <div>DIR: Av. Providencia 1234, Of 502</div>
-                    <div>REF: Frente al metro</div>
-                    <div>TEL: +56 9 1234 5678</div>
-                    <div className="mt-1 uppercase">DEST: JUAN PÉREZ GARCÍA</div>
-                  </div>
+                  <div className="absolute -top-4 -left-4 w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-xs shadow-xl rotate-[-15deg]">V2</div>
                 </div>
-                <div className="absolute -top-3 -right-3 w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg">PREVIEW</div>
               </div>
             </div>
           </div>
