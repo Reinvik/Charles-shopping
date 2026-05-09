@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
   Loader2, Search, Filter, 
   ShoppingBag, Calendar, Mail, 
   CheckCircle2, Clock, XCircle, AlertCircle,
-  Eye, Package
+  Eye, Package, Printer, Phone, MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Order {
   id: string;
@@ -15,6 +16,13 @@ interface Order {
   customer_email: string;
   items: any[];
   flow_token?: string;
+  shipping_details?: {
+    fullName: string;
+    phone: string;
+    address: string;
+    comuna: string;
+    reference: string;
+  };
   created_at: string;
 }
 
@@ -232,6 +240,182 @@ export const AdminOrders = () => {
                 </div>
               </div>
 
+              {/* Shipping Information Section */}
+              {selectedOrder.shipping_details && (
+                <div className="mb-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-100/50">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2">
+                      <MapPin size={14} /> Información de Despacho
+                    </h4>
+                    <button 
+                      onClick={() => {
+                        const order = selectedOrder;
+                        const printWindow = window.open('', '_blank');
+                        if (!printWindow || !order.shipping_details) return;
+
+                        const qrValue = `https://charlyhome.cl/orders/${order.id}`;
+                        
+                        const labelHtml = `
+                          <!DOCTYPE html>
+                          <html>
+                            <head>
+                              <style>
+                                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+                                @page { size: 100mm 150mm; margin: 0; }
+                                body { 
+                                  font-family: 'Inter', sans-serif; 
+                                  margin: 0; 
+                                  padding: 5mm; 
+                                  width: 90mm;
+                                  color: #000;
+                                }
+                                .container {
+                                  border: 1.5pt solid #000;
+                                  height: 135mm;
+                                  display: flex;
+                                  flex-direction: column;
+                                }
+                                .header {
+                                  padding: 4mm;
+                                  border-bottom: 1pt solid #000;
+                                  display: flex;
+                                  justify-content: space-between;
+                                  align-items: flex-start;
+                                }
+                                .store-info { font-size: 8pt; font-weight: 700; }
+                                .order-id { font-size: 7pt; margin-top: 2pt; }
+                                .flex-section {
+                                  display: grid;
+                                  grid-template-columns: 1fr 1fr;
+                                  border-bottom: 1pt solid #000;
+                                  text-align: center;
+                                }
+                                .flex-box {
+                                  padding: 3mm;
+                                  font-size: 18pt;
+                                  font-weight: 900;
+                                  border-right: 1pt solid #000;
+                                }
+                                .date-box {
+                                  padding: 3mm;
+                                  font-size: 14pt;
+                                  font-weight: 700;
+                                  display: flex;
+                                  align-items: center;
+                                  justify-content: center;
+                                }
+                                .qr-section {
+                                  flex: 1;
+                                  display: flex;
+                                  align-items: center;
+                                  justify-content: center;
+                                  padding: 5mm;
+                                }
+                                .commune-section {
+                                  padding: 4mm;
+                                  text-align: center;
+                                  border-top: 1pt solid #000;
+                                  border-bottom: 1pt solid #000;
+                                }
+                                .commune-name {
+                                  font-size: 20pt;
+                                  font-weight: 900;
+                                  text-transform: uppercase;
+                                }
+                                .delivery-type {
+                                  font-size: 12pt;
+                                  font-weight: 700;
+                                  text-align: center;
+                                  padding: 2mm;
+                                  border-bottom: 1pt solid #000;
+                                }
+                                .footer {
+                                  padding: 4mm;
+                                  font-size: 9pt;
+                                }
+                                .detail-row { margin-bottom: 3pt; }
+                                .label { font-weight: 700; }
+                              </style>
+                            </head>
+                            <body>
+                              <div class="container">
+                                <div class="header">
+                                  <div>
+                                    <div class="store-info">CHARLY HOME</div>
+                                    <div class="order-id">Pedido: #${order.id.slice(0, 8)}</div>
+                                  </div>
+                                  <div style="font-size: 7pt; text-align: right;">
+                                    Santiago, Chile<br>
+                                    Venta: ${new Date(order.created_at).getTime()}
+                                  </div>
+                                </div>
+                                <div class="flex-section">
+                                  <div class="flex-box">FLEX</div>
+                                  <div class="date-box">${new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
+                                </div>
+                                <div class="qr-section">
+                                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrValue}" width="120" height="120" />
+                                </div>
+                                <div class="commune-section">
+                                  <div class="commune-name">${order.shipping_details.comuna}</div>
+                                </div>
+                                <div class="delivery-type">RESIDENCIAL</div>
+                                <div class="footer">
+                                  <div class="detail-row"><span class="label">Dirección:</span> ${order.shipping_details.address}</div>
+                                  <div class="detail-row"><span class="label">Referencia:</span> ${order.shipping_details.reference || 'N/A'}</div>
+                                  <div class="detail-row"><span class="label">Teléfono:</span> ${order.shipping_details.phone}</div>
+                                  <div class="detail-row"><span class="label">Destinatario:</span> ${order.shipping_details.fullName}</div>
+                                </div>
+                              </div>
+                              <script>
+                                window.onload = () => {
+                                  window.print();
+                                  setTimeout(() => window.close(), 1000);
+                                };
+                              </script>
+                            </body>
+                          </html>
+                        `;
+
+                        printWindow.document.write(labelHtml);
+                        printWindow.document.close();
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
+                    >
+                      <Printer size={14} /> Generar Etiqueta
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-white rounded-lg text-blue-500 shadow-sm">
+                        <Users size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Destinatario</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedOrder.shipping_details.fullName}</p>
+                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                          <Phone size={12} /> {selectedOrder.shipping_details.phone}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-white rounded-lg text-blue-500 shadow-sm">
+                        <MapPin size={16} />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Destino</p>
+                        <p className="text-sm font-bold text-slate-800">{selectedOrder.shipping_details.address}</p>
+                        <p className="text-xs text-slate-500">{selectedOrder.shipping_details.comuna}</p>
+                        {selectedOrder.shipping_details.reference && (
+                          <p className="text-[10px] text-slate-400 italic mt-1 line-clamp-1">Ref: {selectedOrder.shipping_details.reference}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Items List */}
               <div className="space-y-4">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Productos del Pedido</p>
@@ -239,8 +423,8 @@ export const AdminOrders = () => {
                   {selectedOrder.items.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-50 shadow-sm">
                       <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                        {item.image_url ? (
-                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <ShoppingBag size={20} />

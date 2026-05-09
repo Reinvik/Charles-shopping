@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { items, email, total, userId } = await req.json()
+    const { items, email, total, userId, shippingDetails } = await req.json()
 
     // 1. Create client
     const supabaseClient = createClient(
@@ -49,7 +49,8 @@ serve(async (req) => {
         total,
         status: 'pending',
         items,
-        customer_email: email
+        customer_email: email,
+        shipping_details: shippingDetails
       })
       .select()
       .single()

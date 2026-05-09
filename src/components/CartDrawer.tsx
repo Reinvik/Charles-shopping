@@ -12,6 +12,13 @@ const CartDrawer: React.FC = () => {
   const { settings } = useTheme();
   
   const [email, setEmail] = useState(user?.email || '');
+  const [shippingDetails, setShippingDetails] = useState({
+    fullName: '',
+    phone: '',
+    address: '',
+    comuna: '',
+    reference: ''
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +29,11 @@ const CartDrawer: React.FC = () => {
   const handleCheckout = async () => {
     if (!email || !email.includes('@')) {
       setError('Por favor ingresa un correo electrónico válido');
+      return;
+    }
+
+    if (!shippingDetails.fullName || !shippingDetails.address || !shippingDetails.comuna || !shippingDetails.phone) {
+      setError('Por favor completa todos los campos de envío obligatorios');
       return;
     }
 
@@ -36,7 +48,8 @@ const CartDrawer: React.FC = () => {
           items: cart,
           email: email,
           total: finalTotal,
-          userId: user?.id
+          userId: user?.id,
+          shippingDetails: shippingDetails
         }
       });
 
@@ -233,31 +246,82 @@ const CartDrawer: React.FC = () => {
             {/* Footer Summary */}
             {cart.length > 0 && (
               <div style={{ padding: '24px', borderTop: '1px solid #f0f0f0', boxShadow: '0 -4px 20px rgba(0,0,0,0.05)' }}>
-                {/* Email Section */}
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#444' }}>
-                    Correo para confirmación
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-                    <input 
-                      type="email" 
-                      placeholder="ejemplo@correo.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={loading}
-                      style={{
-                        width: '100%',
-                        padding: '12px 16px 12px 40px',
-                        borderRadius: '8px',
-                        border: error ? '1px solid #ef4444' : '1px solid #ddd',
-                        fontSize: '14px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s'
-                      }}
-                    />
+                {/* Email & Shipping Section */}
+                <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', marginBottom: '6px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Correo para confirmación
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                      <input 
+                        type="email" 
+                        placeholder="ejemplo@correo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px 10px 36px',
+                          borderRadius: '8px',
+                          border: error && !email ? '1px solid #ef4444' : '1px solid #e5e7eb',
+                          fontSize: '14px',
+                          outline: 'none',
+                          backgroundColor: '#f9fafb'
+                        }}
+                      />
+                    </div>
                   </div>
-                  {error && <p style={{ color: '#ef4444', fontSize: '12px', marginTop: '6px' }}>{error}</p>}
+
+                  <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderRadius: '12px', border: '1px solid #eef2f6' }}>
+                    <p style={{ fontSize: '13px', fontWeight: '800', marginBottom: '12px', color: '#1a1a1a' }}>Información de Despacho</p>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="Nombre Completo de quien recibe"
+                        value={shippingDetails.fullName}
+                        onChange={(e) => setShippingDetails({...shippingDetails, fullName: e.target.value})}
+                        disabled={loading}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
+                      />
+                      <input 
+                        type="tel" 
+                        placeholder="Teléfono de contacto (Ej: +569...)"
+                        value={shippingDetails.phone}
+                        onChange={(e) => setShippingDetails({...shippingDetails, phone: e.target.value})}
+                        disabled={loading}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="Dirección (Calle y Número)"
+                        value={shippingDetails.address}
+                        onChange={(e) => setShippingDetails({...shippingDetails, address: e.target.value})}
+                        disabled={loading}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
+                      />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Comuna"
+                          value={shippingDetails.comuna}
+                          onChange={(e) => setShippingDetails({...shippingDetails, comuna: e.target.value})}
+                          disabled={loading}
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="Dpto / Casa / Ref"
+                          value={shippingDetails.reference}
+                          onChange={(e) => setShippingDetails({...shippingDetails, reference: e.target.value})}
+                          disabled={loading}
+                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {error && <p style={{ color: '#ef4444', fontSize: '12px', fontWeight: '600' }}>{error}</p>}
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
