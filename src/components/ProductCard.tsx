@@ -48,12 +48,12 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
       className="product-card"
       style={{
         backgroundColor: '#fff',
-        borderRadius: '8px',
-        padding: '16px',
+        borderRadius: '16px',
+        padding: 'clamp(10px, 4vw, 16px)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        gap: '12px',
+        gap: 'clamp(8px, 3vw, 12px)',
         border: '1px solid #f0f0f0',
         transition: 'var(--transition)',
         cursor: 'pointer'
@@ -101,11 +101,11 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
 
       <div style={{ flex: 1 }}>
         <h3 style={{ 
-          fontSize: '14px', 
-          fontWeight: '500', 
+          fontSize: 'clamp(12px, 3.5vw, 14px)', 
+          fontWeight: '600', 
           color: '#333',
-          lineHeight: '1.4',
-          minHeight: '40px',
+          lineHeight: '1.3',
+          minHeight: '36px',
           display: '-webkit-box',
           WebkitLineClamp: 2,
           WebkitBoxOrient: 'vertical',
@@ -114,22 +114,22 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
           {name}
         </h3>
 
-        <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {oldPrice && (
             <span style={{ 
-              fontSize: '12px', 
+              fontSize: '11px', 
               color: '#999', 
               textDecoration: 'line-through' 
             }}>
-              ${oldPrice.toLocaleString('es-CL')} CLP
+              ${oldPrice.toLocaleString('es-CL')}
             </span>
           )}
           <span style={{ 
-            fontSize: '18px', 
-            fontWeight: '700', 
+            fontSize: 'clamp(15px, 4.5vw, 18px)', 
+            fontWeight: '800', 
             color: 'var(--primary)' 
           }}>
-            ${price.toLocaleString('es-CL')} CLP
+            ${price.toLocaleString('es-CL')} <span style={{ fontSize: '10px', opacity: 0.7 }}>CLP</span>
           </span>
         </div>
       </div>
@@ -170,22 +170,20 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
           className={added ? "btn-primary" : "btn-primary"} 
           onClick={handleAddToCart}
           style={{ 
-            padding: '10px', 
-            borderRadius: '4px', 
+            padding: '8px', 
+            borderRadius: '10px', 
             flex: 1,
             backgroundColor: added ? '#059669' : 'var(--primary)',
-            transition: 'background-color 0.3s ease'
+            transition: 'background-color 0.3s ease',
+            height: '38px'
           }}
         >
           {added ? (
-            <>
-              <Check size={18} />
-              <span style={{ fontSize: '12px' }}>Agregado</span>
-            </>
+            <Check size={18} />
           ) : (
             <>
-              <ShoppingCart size={18} />
-              <span style={{ fontSize: '12px' }}>Añadir</span>
+              <ShoppingCart size={16} />
+              <span style={{ fontSize: '11px', fontWeight: '800' }}>Añadir</span>
             </>
           )}
         </button>

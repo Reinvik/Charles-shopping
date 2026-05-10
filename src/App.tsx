@@ -92,14 +92,14 @@ const HomePage: React.FC = () => {
         onCategorySelect={setSelectedCategoryId} 
       />
       
-      <main className="container" style={{ padding: '40px 0' }}>
+      <main className="container" style={{ padding: '24px 0' }}>
         {!selectedCategoryId && <HeroBanner onCategorySelect={setSelectedCategoryId} />}
         
-        <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '8px' }}>
+        <div style={{ marginBottom: '32px', padding: '0 4px' }}>
+          <h1 style={{ fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '800', marginBottom: '8px' }}>
             {selectedCategory ? selectedCategory.name : 'Catálogo Completo'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '600px' }}>
             {selectedCategory 
               ? `Explora nuestra selección de ${selectedCategory.name.toLowerCase()} con los mejores precios y stock garantizado.`
               : 'Descubre nuestra selección de productos de aseo y papelería de las mejores marcas con envío a domicilio.'}
@@ -112,20 +112,23 @@ const HomePage: React.FC = () => {
           alignItems: 'center',
           marginBottom: '24px',
           borderBottom: '1px solid #f0f0f0',
-          paddingBottom: '16px'
+          paddingBottom: '16px',
+          paddingLeft: '4px',
+          paddingRight: '4px'
         }}>
-          <div style={{ fontSize: '14px', fontWeight: '500' }}>
-            Mostrando <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{products.length} productos</span>
+          <div style={{ fontSize: '13px', fontWeight: '500' }}>
+            <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{products.length} productos</span>
           </div>
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Ordenar por:</span>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <span className="desktop-only" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Ordenar por:</span>
             <select style={{
-              padding: '8px 12px',
-              borderRadius: '4px',
+              padding: '6px 10px',
+              borderRadius: '8px',
               border: '1px solid var(--border)',
-              fontSize: '13px',
+              fontSize: '12px',
               outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              backgroundColor: '#fff'
             }}>
               <option>Destacados</option>
               <option>Precio: Menor a Mayor</option>
@@ -140,11 +143,7 @@ const HomePage: React.FC = () => {
             <Loader2 className="animate-spin" size={48} color="var(--primary)" />
           </div>
         ) : products.length > 0 ? (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: '24px' 
-          }}>
+          <div className="product-grid">
             {isAdmin && (
               <div 
                 onClick={() => navigate('/product/new')}

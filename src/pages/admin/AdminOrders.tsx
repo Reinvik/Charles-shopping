@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import { 
   Loader2, Search, Filter, 
   ShoppingBag, Calendar, Mail, 
-  CheckCircle2, Clock, XCircle, AlertCircle,
-  Users, Eye, Package, Printer, Phone, MapPin
+  CheckCircle2, Clock, XCircle,
+  Users, Eye, Package, Printer, Phone, MapPin,
+  MessageCircle, Truck
 } from 'lucide-react';
 import { toast } from 'sonner';
-
 
 interface Order {
   id: string;
   total: number;
   status: string;
+  is_delivered?: boolean;
   customer_email: string;
   items: any[];
   flow_token?: string;
@@ -32,6 +34,7 @@ export const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [deliveryReceiptOrder, setDeliveryReceiptOrder] = useState<Order | null>(null);
 
   const fetchOrders = async () => {
     try {
@@ -56,37 +59,81 @@ export const AdminOrders = () => {
     }
   };
 
+  const toggleDelivery = async (orderId: string, currentStatus: boolean) => {
+    try {
+      const { error, count } = await supabase
+        .from('orders')
+        .update({ is_delivered: !currentStatus }, { count: 'exact' })
+        .eq('id', orderId);
+      
+      if (error) throw error;
+      if (count === 0) throw new Error("No se pudo actualizar el pedido. Verifica tus permisos de administrador.");
+      
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, is_delivered: !currentStatus } : o));
+      toast.success(!currentStatus ? 'Pedido marcado como entregado' : 'Pedido marcado como pendiente de entrega');
+    } catch (error: any) {
+      console.error('Update error:', error);
+      toast.error('Error: ' + (error.message || 'Error desconocido al actualizar'));
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
   }, [statusFilter]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isDark: boolean = false) => {
+    const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap";
     switch (status) {
       case 'paid':
         return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100">
-            <CheckCircle2 size={14} /> Pagado
+          <span className={`${baseClasses} ${isDark ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-green-50 text-green-700 border-green-100'}`}>
+            <CheckCircle2 size={12} /> Pagado
           </span>
         );
       case 'pending':
         return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-100">
-            <Clock size={14} /> Pendiente
+          <span className={`${baseClasses} ${isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+            <Clock size={12} /> Pendiente
           </span>
         );
       case 'rejected':
         return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-xs font-bold border border-red-100">
-            <XCircle size={14} /> Rechazado
+          <span className={`${baseClasses} ${isDark ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-50 text-red-700 border-red-100'}`}>
+            <XCircle size={12} /> Fallido
           </span>
         );
       default:
         return (
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 text-slate-700 rounded-full text-xs font-bold border border-slate-100">
-            <AlertCircle size={14} /> {status}
+          <span className={`${baseClasses} ${isDark ? 'bg-slate-500/20 text-slate-400 border-slate-500/30' : 'bg-slate-50 text-slate-700 border-slate-100'}`}>
+            {status}
           </span>
         );
     }
+  };
+
+  const getDeliveryBadge = (order: Order, isDark: boolean = false) => {
+    const isDelivered = order.is_delivered || false;
+    const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all whitespace-nowrap";
+    
+    let stateClasses = "";
+    if (isDelivered) {
+      stateClasses = isDark 
+        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/40' 
+        : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100';
+    } else {
+      stateClasses = isDark 
+        ? 'bg-slate-100/10 text-slate-300 border-slate-100/20 hover:text-white hover:bg-slate-100/20' 
+        : 'bg-slate-50 text-slate-400 border-slate-100 hover:text-slate-600 hover:bg-slate-100';
+    }
+
+    return (
+      <button 
+        onClick={(e) => { e.stopPropagation(); toggleDelivery(order.id, isDelivered); }}
+        className={`${baseClasses} ${stateClasses}`}
+      >
+        <Truck size={12} /> {isDelivered ? 'Entregado' : 'Pendiente'}
+      </button>
+    );
   };
 
   const filteredOrders = orders.filter(order => 
@@ -101,6 +148,8 @@ export const AdminOrders = () => {
       </div>
     );
   }
+
+  const order = selectedOrder;
 
   return (
     <div className="space-y-6">
@@ -132,26 +181,77 @@ export const AdminOrders = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {filteredOrders.map((order) => (
+          <div 
+            key={order.id} 
+            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm active:scale-[0.98] transition-transform"
+            onClick={() => setSelectedOrder(order)}
+          >
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex flex-col gap-1">
+                <span className="font-black text-slate-900 text-sm">#{order.id.slice(0, 8)}</span>
+                <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                  <Calendar size={10} />
+                  {new Date(order.created_at).toLocaleDateString('es-CL')}
+                </span>
+              </div>
+              <div className="text-right">
+                <p className="font-black text-primary text-base">${order.total.toLocaleString()}</p>
+                {getStatusBadge(order.status)}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 mb-4 py-2 border-y border-slate-50">
+              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <Users size={14} className="text-slate-500" />
+              </div>
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-[11px] font-bold text-slate-700 truncate">
+                  {order.shipping_details?.fullName || 'Cliente Anónimo'}
+                </span>
+                <span className="text-[10px] text-slate-400 truncate">{order.customer_email}</span>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              {getDeliveryBadge(order)}
+              <button className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
+                Ver más <Eye size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+        {filteredOrders.length === 0 && !loading && (
+          <div className="py-12 text-center bg-white rounded-2xl border border-slate-100">
+            <Package size={40} className="mx-auto mb-2 opacity-20" />
+            <p className="text-slate-500 font-medium">No hay pedidos</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Pedido</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Cliente</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Total</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider"></th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Pedido</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Fecha</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Cliente</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Estado Pago</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Estado Entrega</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Total</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filteredOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
+                <tr key={order.id} className="hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setSelectedOrder(order)}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400">
                         <ShoppingBag size={16} />
                       </div>
                       <span className="font-bold text-sm text-slate-700">#{order.id.slice(0, 8)}</span>
@@ -159,7 +259,7 @@ export const AdminOrders = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm text-slate-600 flex items-center gap-1.5">
+                      <span className="text-sm text-slate-600 flex items-center gap-1.5 font-medium">
                         <Calendar size={14} className="text-slate-400" />
                         {new Date(order.created_at).toLocaleDateString('es-CL')}
                       </span>
@@ -169,7 +269,7 @@ export const AdminOrders = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
                       <Mail size={14} className="text-slate-400" />
                       {order.customer_email || 'Anónimo'}
                     </div>
@@ -177,23 +277,28 @@ export const AdminOrders = () => {
                   <td className="px-6 py-4">
                     {getStatusBadge(order.status)}
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-900">
+                  <td className="px-6 py-4">
+                    {getDeliveryBadge(order)}
+                  </td>
+                  <td className="px-6 py-4 text-right font-black text-slate-900 text-base">
                     ${order.total.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => setSelectedOrder(order)}
-                      className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                    >
-                      <Eye size={18} />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
+                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
 
               {filteredOrders.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-slate-400">
                       <Package size={48} className="mb-4 opacity-20" />
                       <p className="font-medium text-lg">No se encontraron pedidos</p>
@@ -207,280 +312,229 @@ export const AdminOrders = () => {
         </div>
       </div>
 
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="px-8 py-6 flex justify-between items-center border-b border-slate-100 bg-slate-50/50">
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Detalles del Pedido</h3>
-                <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">#{selectedOrder.id}</p>
+      {/* Order Details Modal via Portal */}
+      {order && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="admin-order-modal"
+            style={{ 
+              background: '#fff', 
+              borderRadius: '2rem', 
+              width: '100%', 
+              maxWidth: '900px', 
+              maxHeight: '92vh', 
+              overflow: 'hidden', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              boxShadow: '0 32px 80px rgba(0,0,0,0.35)',
+              position: 'relative'
+            }}
+          >
+            {/* Header */}
+            <div style={{ background: '#0f172a', padding: 'clamp(1.25rem, 4vw, 2rem) clamp(1.5rem, 5vw, 2.5rem)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                  <div className="desktop-only" style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '0.75rem', padding: '0.5rem', display: 'flex' }}>
+                    <ShoppingBag size={22} color="#fff" />
+                  </div>
+                  <span style={{ color: '#fff', fontWeight: 900, fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', letterSpacing: '-0.03em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Detalles del Pedido</span>
+                </div>
+                <p style={{ color: '#94a3b8', fontSize: '0.65rem', fontFamily: 'monospace', margin: 0 }}>REF: {selectedOrder.id.toUpperCase()}</p>
               </div>
-              <button 
-                onClick={() => setSelectedOrder(null)} 
-                className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-100 rounded-xl transition-all"
-              >
-                <XCircle size={24} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)', marginLeft: '1rem' }}>
+                <div className="desktop-only">{getStatusBadge(selectedOrder.status, true)}</div>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}
+                >
+                  <XCircle size={20} />
+                </button>
+              </div>
             </div>
 
-            <div className="p-8 max-h-[70vh] overflow-y-auto">
-              {/* Customer & Status Header */}
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Información del Cliente</p>
-                  <p className="text-sm font-semibold text-slate-700">{selectedOrder.customer_email}</p>
-                  <p className="text-xs text-slate-500">{new Date(selectedOrder.created_at).toLocaleString('es-CL')}</p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estado del Pago</p>
-                  <div className="flex justify-end mt-1">
-                    {getStatusBadge(selectedOrder.status)}
+            {/* Body */}
+            <div className="modal-scroll-area" style={{ flex: 1, overflowY: 'auto', padding: 'clamp(1.25rem, 4vw, 2rem) clamp(1.5rem, 5vw, 2.5rem)', background: '#f8fafc' }}>
+              <div className="modal-grid-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+
+              {/* Left: Cliente + Despacho */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{ background: '#fff', borderRadius: '1.25rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                  <p style={{ color: '#64748b', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1rem' }}>Cliente</p>
+                  <p style={{ color: '#0f172a', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem', wordBreak: 'break-all' }}>{selectedOrder.customer_email || 'Anónimo'}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.8rem' }}>
+                    <Calendar size={14} />
+                    {new Date(selectedOrder.created_at).toLocaleString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
+
+                {selectedOrder.shipping_details && (
+                  <div style={{ background: '#fff', borderRadius: '1.25rem', padding: '1.5rem', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <p style={{ color: '#64748b', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>Despacho</p>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          title="WhatsApp"
+                          onClick={() => { const p = selectedOrder.shipping_details!.phone.replace(/\D/g,''); window.open(`https://wa.me/${p.startsWith('56')?p:'56'+p}`,'_blank'); }}
+                          style={{ background: '#25D366', border: 'none', borderRadius: '0.6rem', padding: '0.5rem', cursor: 'pointer', display: 'flex', color: '#fff' }}
+                        ><MessageCircle size={16} /></button>
+                        <button
+                          title="Imprimir"
+                          onClick={() => {
+                            if(!selectedOrder.shipping_details) return;
+                            const s = selectedOrder.shipping_details;
+                            const qr = `charlyhome-order-${selectedOrder.id}`;
+                            const pw = window.open('','_blank'); if(!pw) return;
+                            pw.document.write(`<html><head><style>@page{size:100mm 150mm;margin:0}body{font-family:sans-serif;margin:0;padding:5mm}.c{border:2pt solid #000;height:135mm;display:flex;flex-direction:column}.h{padding:3mm;border-bottom:1pt solid #000;display:flex;justify-content:space-between}.fs{display:flex;background:#000;color:#fff}.fb{padding:3mm;font-size:18pt;font-weight:900;border-right:1pt solid #fff}.db{padding:3mm;font-size:14pt;font-weight:700;display:flex;align-items:center}.qrs{flex:1;display:flex;align-items:center;justify-content:center;padding:5mm}.cs{padding:3mm;text-align:center;border-bottom:1pt solid #000;font-size:18pt;font-weight:900;text-transform:uppercase}.ft{padding:3mm;font-size:9pt}</style></head><body><div class=c><div class=h><div><b>CHARLY HOME</b><div>#${selectedOrder.id.slice(0,8)}</div></div></div><div class=fs><div class=fb>FLEX</div><div class=db>${new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'short'}).toUpperCase()}</div></div><div class=qrs><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qr}" width=120 height=120></div><div class=cs>${s.comuna.split(',')[0]}</div><div class=ft><div><b>Dir:</b> ${s.address}</div><div><b>Tel:</b> ${s.phone}</div><div><b>Dest:</b> ${s.fullName}</div></div></div><script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1000)}</script></body></html>`);
+                            pw.document.close();
+                          }}
+                          style={{ background: '#334155', border: 'none', borderRadius: '0.6rem', padding: '0.5rem', cursor: 'pointer', display: 'flex', color: '#fff' }}
+                        ><Printer size={16} /></button>
+                        <button
+                          onClick={() => { setDeliveryReceiptOrder(selectedOrder); setSelectedOrder(null); }}
+                          style={{ background: '#2563eb', border: 'none', borderRadius: '0.6rem', padding: '0.4rem 0.75rem', cursor: 'pointer', color: '#fff', fontSize: '0.7rem', fontWeight: 800 }}
+                        >Confirmar</button>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.4rem', flexShrink: 0 }}><Users size={16} color="#475569" /></div>
+                      <div>
+                        <p style={{ color: '#475569', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 0.2rem' }}>Destinatario</p>
+                        <p style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>{selectedOrder.shipping_details.fullName}</p>
+                        <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '0.2rem 0 0', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Phone size={12} />{selectedOrder.shipping_details.phone}</p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                      <div style={{ background: '#f1f5f9', borderRadius: '0.5rem', padding: '0.4rem', flexShrink: 0 }}><MapPin size={16} color="#475569" /></div>
+                      <div>
+                        <p style={{ color: '#475569', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 0.2rem' }}>Dirección</p>
+                        <p style={{ color: '#0f172a', fontWeight: 800, fontSize: '0.9rem', margin: 0 }}>{selectedOrder.shipping_details.address}</p>
+                        <p style={{ color: '#64748b', fontSize: '0.8rem', margin: '0.2rem 0 0' }}>{selectedOrder.shipping_details.comuna}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Shipping Information Section */}
-              {selectedOrder.shipping_details && (
-                <div className="mb-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-100/50">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                      <MapPin size={14} /> Información de Despacho
-                    </h4>
-                    <button 
-                      onClick={() => {
-                        const order = selectedOrder;
-                        const printWindow = window.open('', '_blank');
-                        if (!printWindow || !order.shipping_details) return;
-
-                        const qrValue = `https://charlyhome.cl/orders/${order.id}`;
-                        
-                        const labelHtml = `
-                          <!DOCTYPE html>
-                          <html>
-                            <head>
-                              <style>
-                                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-                                @page { size: 100mm 150mm; margin: 0; }
-                                body { 
-                                  font-family: 'Inter', sans-serif; 
-                                  margin: 0; 
-                                  padding: 5mm; 
-                                  width: 90mm;
-                                  color: #000;
-                                }
-                                .container {
-                                  border: 1.5pt solid #000;
-                                  height: 135mm;
-                                  display: flex;
-                                  flex-direction: column;
-                                }
-                                .header {
-                                  padding: 4mm;
-                                  border-bottom: 1pt solid #000;
-                                  display: flex;
-                                  justify-content: space-between;
-                                  align-items: flex-start;
-                                }
-                                .store-info { font-size: 8pt; font-weight: 700; }
-                                .order-id { font-size: 7pt; margin-top: 2pt; }
-                                .flex-section {
-                                  display: grid;
-                                  grid-template-columns: 1fr 1fr;
-                                  border-bottom: 1pt solid #000;
-                                  text-align: center;
-                                }
-                                .flex-box {
-                                  padding: 3mm;
-                                  font-size: 18pt;
-                                  font-weight: 900;
-                                  border-right: 1pt solid #000;
-                                }
-                                .date-box {
-                                  padding: 3mm;
-                                  font-size: 14pt;
-                                  font-weight: 700;
-                                  display: flex;
-                                  align-items: center;
-                                  justify-content: center;
-                                }
-                                .qr-section {
-                                  flex: 1;
-                                  display: flex;
-                                  align-items: center;
-                                  justify-content: center;
-                                  padding: 5mm;
-                                }
-                                .commune-section {
-                                  padding: 4mm;
-                                  text-align: center;
-                                  border-top: 1pt solid #000;
-                                  border-bottom: 1pt solid #000;
-                                }
-                                .commune-name {
-                                  font-size: 20pt;
-                                  font-weight: 900;
-                                  text-transform: uppercase;
-                                }
-                                .delivery-type {
-                                  font-size: 12pt;
-                                  font-weight: 700;
-                                  text-align: center;
-                                  padding: 2mm;
-                                  border-bottom: 1pt solid #000;
-                                }
-                                .footer {
-                                  padding: 4mm;
-                                  font-size: 9pt;
-                                }
-                                .detail-row { margin-bottom: 3pt; }
-                                .label { font-weight: 700; }
-                              </style>
-                            </head>
-                            <body>
-                              <div class="container">
-                                <div class="header">
-                                  <div>
-                                    <div class="store-info">CHARLY HOME</div>
-                                    <div class="order-id">Pedido: #${order.id.slice(0, 8)}</div>
-                                  </div>
-                                  <div style="font-size: 7pt; text-align: right;">
-                                    Santiago, Chile<br>
-                                    Venta: ${new Date(order.created_at).getTime()}
-                                  </div>
-                                </div>
-                                <div class="flex-section">
-                                  <div class="flex-box">FLEX</div>
-                                  <div class="date-box">${new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'short' }).toUpperCase()}</div>
-                                </div>
-                                <div class="qr-section">
-                                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrValue}" width="120" height="120" />
-                                </div>
-                                <div class="commune-section">
-                                  <div class="commune-name">${order.shipping_details.comuna}</div>
-                                </div>
-                                <div class="delivery-type">RESIDENCIAL</div>
-                                <div class="footer">
-                                  <div class="detail-row"><span class="label">Dirección:</span> ${order.shipping_details.address}</div>
-                                  <div class="detail-row"><span class="label">Referencia:</span> ${order.shipping_details.reference || 'N/A'}</div>
-                                  <div class="detail-row"><span class="label">Teléfono:</span> ${order.shipping_details.phone}</div>
-                                  <div class="detail-row"><span class="label">Destinatario:</span> ${order.shipping_details.fullName}</div>
-                                </div>
-                              </div>
-                              <script>
-                                window.onload = () => {
-                                  window.print();
-                                  setTimeout(() => window.close(), 1000);
-                                };
-                              </script>
-                            </body>
-                          </html>
-                        `;
-
-                        printWindow.document.write(labelHtml);
-                        printWindow.document.close();
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
-                    >
-                      <Printer size={14} /> Generar Etiqueta
-                    </button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-white rounded-lg text-blue-500 shadow-sm">
-                        <Users size={16} />
+              {/* Right: Productos + Totales */}
+              <div style={{ background: '#fff', borderRadius: '1.25rem', padding: '1.5rem', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column' }}>
+                <p style={{ color: '#64748b', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: '1rem' }}>Productos del Pedido</p>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {selectedOrder.items.map((item: any, idx: number) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '0.875rem', border: '1px solid #e2e8f0' }}>
+                      <div style={{ width: 56, height: 56, background: '#fff', borderRadius: '0.75rem', border: '1px solid #e2e8f0', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {item.image ? <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <ShoppingBag size={20} color="#cbd5e1" />}
                       </div>
-                      <div>
-                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Destinatario</p>
-                        <p className="text-sm font-bold text-slate-800">{selectedOrder.shipping_details.fullName}</p>
-                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                          <Phone size={12} /> {selectedOrder.shipping_details.phone}
-                        </p>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ color: '#0f172a', fontWeight: 700, fontSize: '0.9rem', margin: '0 0 0.2rem' }}>{item.name}</p>
+                        <p style={{ color: '#64748b', fontSize: '0.78rem', margin: 0 }}>{item.quantity} un. × ${item.price.toLocaleString()}</p>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-white rounded-lg text-blue-500 shadow-sm">
-                        <MapPin size={16} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Destino</p>
-                        <p className="text-sm font-bold text-slate-800">{selectedOrder.shipping_details.address}</p>
-                        <p className="text-xs text-slate-500">{selectedOrder.shipping_details.comuna}</p>
-                        {selectedOrder.shipping_details.reference && (
-                          <p className="text-[10px] text-slate-400 italic mt-1 line-clamp-1">Ref: {selectedOrder.shipping_details.reference}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Items List */}
-              <div className="space-y-4">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Productos del Pedido</p>
-                <div className="bg-slate-50 rounded-2xl p-2 border border-slate-100 space-y-1">
-                  {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-slate-50 shadow-sm">
-                      <div className="w-12 h-12 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-300">
-                            <ShoppingBag size={20} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-slate-800 line-clamp-1">{item.name}</p>
-                        <p className="text-xs text-slate-500">{item.quantity} unidad(es) x ${item.price.toLocaleString()}</p>
-                      </div>
-                      <div className="text-sm font-bold text-slate-900">
-                        ${(item.price * item.quantity).toLocaleString()}
-                      </div>
+                      <p style={{ color: '#0f172a', fontWeight: 800, fontSize: '1rem', margin: 0, whiteSpace: 'nowrap' }}>${(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
-              </div>
-
-              {/* Order Summary */}
-              <div className="mt-8 pt-6 border-t border-slate-100 space-y-3">
-                <div className="flex justify-between text-sm text-slate-500">
-                  <span>Subtotal</span>
-                  <span>${selectedOrder.total.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm text-slate-500">
-                  <span>Envío</span>
-                  <span className="text-green-600 font-bold">Gratis</span>
-                </div>
-                <div className="flex justify-between text-xl font-black text-slate-900 pt-2">
-                  <span>Total</span>
-                  <span>${selectedOrder.total.toLocaleString()}</span>
-                </div>
-              </div>
-
-              {selectedOrder.flow_token && (
-                <div className="mt-6 p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <AlertCircle size={14} className="text-primary" />
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Referencia de Pago</span>
+                <div style={{ borderTop: '2px solid #f1f5f9', marginTop: '1.25rem', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.85rem' }}><span>Subtotal</span><span>${selectedOrder.total.toLocaleString()}</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '0.85rem' }}><span>Envío</span><span style={{ color: '#16a34a', fontWeight: 700 }}>GRATIS</span></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#0f172a', fontSize: '1.2rem', fontWeight: 900, paddingTop: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
+                    <span>Total</span><span>${selectedOrder.total.toLocaleString()}</span>
                   </div>
-                  <p className="text-[10px] font-mono text-primary/70 break-all">{selectedOrder.flow_token}</p>
+                  {selectedOrder.flow_token && (
+                    <div style={{ marginTop: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0.75rem', padding: '0.75rem 1rem' }}>
+                      <p style={{ color: '#64748b', fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 0.25rem' }}>Ref. Flow</p>
+                      <p style={{ color: '#475569', fontSize: '0.7rem', fontFamily: 'monospace', wordBreak: 'break-all', margin: 0 }}>{selectedOrder.flow_token}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            <div className="p-6 bg-slate-50/50 border-t border-slate-100">
-              <button 
-                onClick={() => setSelectedOrder(null)}
-                className="w-full py-3 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
-              >
-                Cerrar Detalles
-              </button>
+              </div>
             </div>
           </div>
-        </div>
+          <style>{`
+            @media (max-width: 768px) {
+              .admin-order-modal {
+                border-radius: 0 !important;
+                max-height: 100vh !important;
+                height: 100vh !important;
+              }
+              .modal-grid-layout {
+                grid-template-columns: 1fr !important;
+              }
+              .modal-scroll-area {
+                padding: 1.25rem !important;
+              }
+            }
+          `}</style>
+        </div>,
+        document.body
       )}
+
+      {deliveryReceiptOrder && createPortal(
+        <div
+
+          style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(15,23,42,0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}
+          onClick={() => setDeliveryReceiptOrder(null)}
+        >
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '1.75rem', width: '100%', maxWidth: 440, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.3)' }}>
+            <div style={{ background: '#0f172a', padding: '1.75rem 2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ background: 'rgba(37,211,102,0.2)', borderRadius: '0.75rem', padding: '0.6rem', display: 'flex' }}>
+                <MessageCircle size={26} color="#25D366" />
+              </div>
+              <div>
+                <h3 style={{ color: '#fff', fontWeight: 900, fontSize: '1.25rem', margin: 0, lineHeight: 1.2 }}>Confirmar Recepción</h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.7rem', fontWeight: 700, margin: '0.25rem 0 0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Pedido #{deliveryReceiptOrder.id.substring(0,8).toUpperCase()}</p>
+              </div>
+              <button onClick={() => setDeliveryReceiptOrder(null)} style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <XCircle size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '1.75rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <label style={{ color: '#475569', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', marginBottom: '0.5rem' }}>Nombre de quien recibe</label>
+                <input type="text" id="receipt-name-modal" placeholder="Ej: Juan Pérez" style={{ width: '100%', border: '2px solid #e2e8f0', borderRadius: '0.875rem', padding: '0.875rem 1rem', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', background: '#f8fafc', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ color: '#475569', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', marginBottom: '0.5rem' }}>RUT de quien recibe</label>
+                <input type="text" id="receipt-rut-modal" placeholder="Ej: 12.345.678-9" style={{ width: '100%', border: '2px solid #e2e8f0', borderRadius: '0.875rem', padding: '0.875rem 1rem', fontSize: '0.9rem', fontWeight: 600, color: '#0f172a', background: '#f8fafc', outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <button
+                onClick={async () => {
+                  const name = (document.getElementById('receipt-name-modal') as HTMLInputElement).value;
+                  const rut = (document.getElementById('receipt-rut-modal') as HTMLInputElement).value;
+                  if (!name || !rut) { toast.error('Por favor ingresa nombre y RUT'); return; }
+                  
+                  // Update database status
+                  const { error, count } = await supabase
+                    .from('orders')
+                    .update({ is_delivered: true }, { count: 'exact' })
+                    .eq('id', deliveryReceiptOrder.id);
+                  
+                  if (error) { toast.error('Error al actualizar estado: ' + error.message); return; }
+                  if (count === 0) { toast.error('No se pudo actualizar el pedido. Verifica tus permisos.'); return; }
+                  
+                  const productList = deliveryReceiptOrder.items.map((item: any) => `- ${item.name}`).join('\n');
+                  const clientName = deliveryReceiptOrder.shipping_details?.fullName || 'Cliente';
+                  const phone = deliveryReceiptOrder.shipping_details?.phone.replace(/\D/g, '') || '';
+                  const message = encodeURIComponent(`Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${name}\nRut: ${rut}\n\n¡Gracias por confiar en Charly Home!`);
+                  
+                  window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
+                  setDeliveryReceiptOrder(null);
+                  setOrders(prev => prev.map(o => o.id === deliveryReceiptOrder.id ? { ...o, is_delivered: true } : o));
+                  toast.success('Estado actualizado y abriendo WhatsApp...');
+                }}
+                style={{ width: '100%', background: '#25D366', color: '#fff', border: 'none', borderRadius: '1rem', padding: '1rem', fontWeight: 900, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <MessageCircle size={20} /> Enviar por WhatsApp
+              </button>
+              <button onClick={() => setDeliveryReceiptOrder(null)} style={{ width: '100%', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '1rem', padding: '0.75rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Cancelar</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
     </div>
   );
 };

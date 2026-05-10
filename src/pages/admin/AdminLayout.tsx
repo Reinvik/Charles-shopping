@@ -109,6 +109,12 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
           font-family: 'Inter', system-ui, sans-serif;
         }
 
+        @media (max-width: 768px) {
+          .admin-layout {
+            grid-template-columns: 1fr;
+          }
+        }
+
         .admin-sidebar {
           background: #0a0a0a;
           border-right: 1px solid rgba(255, 255, 255, 0.08);

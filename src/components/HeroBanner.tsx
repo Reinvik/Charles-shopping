@@ -78,13 +78,13 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
   const currentBanner = banners[currentIndex];
 
   return (
-    <div style={{
+    <div className="hero-banner-container" style={{
       width: '100%',
-      height: '450px',
+      height: 'clamp(300px, 45vh, 450px)',
       position: 'relative',
       overflow: 'hidden',
       borderRadius: '24px',
-      marginBottom: '40px',
+      marginBottom: '32px',
       backgroundColor: '#f8f9fa'
     }}>
       <AnimatePresence mode="wait">
@@ -110,18 +110,16 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
             backgroundPosition: 'center',
           }} />
           
-          <div style={{
+          <div className="hero-overlay" style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%)',
             display: 'flex',
             alignItems: 'center',
-            padding: '0 60px'
           }}>
-            <div style={{ maxWidth: '550px' }}>
+            <div className="hero-content" style={{ maxWidth: '550px' }}>
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -143,20 +141,20 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                   Oferta Destacada
                 </span>
                 <h2 style={{
-                  fontSize: '48px',
+                  fontSize: 'clamp(28px, 8vw, 48px)',
                   fontWeight: '900',
                   color: '#111',
                   lineHeight: '1.1',
-                  marginBottom: '18px',
+                  marginBottom: '14px',
                   letterSpacing: '-0.03em'
                 }}>
                   {currentBanner.title}
                 </h2>
                 <p style={{
-                  fontSize: '17px',
+                  fontSize: 'clamp(14px, 3.5vw, 17px)',
                   color: '#444',
-                  lineHeight: '1.6',
-                  marginBottom: '32px',
+                  lineHeight: '1.5',
+                  marginBottom: '24px',
                   fontWeight: '500'
                 }}>
                   {currentBanner.subtitle}
@@ -168,22 +166,23 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                     style={{
                       backgroundColor: 'var(--primary)',
                       color: '#fff',
-                      padding: '16px 32px',
-                      borderRadius: '14px',
+                      padding: '12px 24px',
+                      borderRadius: '12px',
                       fontWeight: '800',
                       border: 'none',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '12px',
+                      gap: '8px',
                       boxShadow: '0 10px 25px rgba(var(--primary-rgb), 0.25)',
-                      transition: 'all 0.3s'
+                      transition: 'all 0.3s',
+                      fontSize: 'clamp(12px, 3vw, 15px)'
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
                     {currentBanner.button_text}
-                    <ShoppingBag size={20} />
+                    <ShoppingBag size={18} />
                   </button>
 
                   <button 
@@ -194,15 +193,16 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                     style={{
                       backgroundColor: '#fff',
                       color: '#111',
-                      padding: '16px 32px',
-                      borderRadius: '14px',
+                      padding: '12px 24px',
+                      borderRadius: '12px',
                       fontWeight: '800',
                       border: '2px solid #eee',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '12px',
-                      transition: 'all 0.3s'
+                      gap: '8px',
+                      transition: 'all 0.3s',
+                      fontSize: 'clamp(12px, 3vw, 15px)'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = 'var(--primary)';
@@ -214,7 +214,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                     }}
                   >
                     Ver Ofertas
-                    <ArrowRight size={20} />
+                    <ArrowRight size={18} />
                   </button>
                 </div>
               </motion.div>
@@ -302,6 +302,32 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
           </div>
         </>
       )}
+      <style>{`
+        .hero-overlay {
+          background: linear-gradient(90deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+          padding: 0 60px;
+        }
+        @media (max-width: 768px) {
+          .hero-overlay {
+            background: linear-gradient(0deg, rgba(255,255,255,0.95) 40%, rgba(255,255,255,0.3) 100%);
+            padding: 0 24px;
+            align-items: flex-end;
+            padding-bottom: 40px;
+          }
+          .hero-content {
+            text-align: center;
+          }
+          .hero-content div {
+            justify-content: center;
+          }
+          .hero-banner-container {
+            border-radius: 0;
+            margin-left: -1rem;
+            margin-right: -1rem;
+            width: calc(100% + 2rem);
+          }
+        }
+      `}</style>
     </div>
   );
 };

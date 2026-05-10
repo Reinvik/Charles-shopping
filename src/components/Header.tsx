@@ -135,19 +135,25 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between', 
-        padding: '20px 0' 
+        padding: '12px 0' 
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
             <img 
               src={settings.logoUrl || logoImg} 
               alt={settings.siteName} 
-              style={{ height: '110px', width: 'auto', cursor: 'pointer', transition: 'var(--transition)' }} 
+              className="site-logo"
+              style={{ 
+                height: 'clamp(50px, 12vw, 100px)', 
+                width: 'auto', 
+                cursor: 'pointer', 
+                transition: 'var(--transition)' 
+              }} 
             />
           </Link>
         </div>
 
-        <div style={{ flex: 1, maxWidth: '500px', margin: '0 40px', position: 'relative' }}>
+        <div className="desktop-only" style={{ flex: 1, maxWidth: '500px', margin: '0 40px', position: 'relative' }}>
           <input 
             type="text" 
             placeholder="Buscar productos..." 
@@ -155,7 +161,7 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
               width: '100%',
               padding: '12px 16px',
               paddingRight: '45px',
-              borderRadius: '4px',
+              borderRadius: '12px',
               border: '1px solid var(--border)',
               backgroundColor: '#f5f5f5',
               fontSize: '14px',
@@ -165,16 +171,19 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
           <Search size={20} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 24px)' }}>
+          <div className="mobile-only">
+            <Search size={22} color="var(--slate-600)" />
+          </div>
           {isAdmin && (
-            <Link to="/admin" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '700', fontSize: '14px' }}>
+            <Link to="/admin" className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '700', fontSize: '14px' }}>
               <Settings size={20} />
               <span>Admin</span>
             </Link>
           )}
           <Link to="/login" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'inherit', textDecoration: 'none' }}>
-            <User size={20} />
-            <span style={{ fontSize: '14px', fontWeight: '500' }}>{user ? 'Mi Cuenta' : 'Ingresar'}</span>
+            <User size={22} />
+            <span className="desktop-only" style={{ fontSize: '14px', fontWeight: '600' }}>{user ? 'Mi Cuenta' : 'Ingresar'}</span>
           </Link>
           <div 
             onClick={() => setIsCartOpen(true)}
@@ -202,14 +211,20 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
         </div>
       </div>
       
-      <nav style={{ backgroundColor: '#fff', borderTop: '1px solid #f0f0f0' }}>
+      <nav style={{ 
+        backgroundColor: '#fff', 
+        borderTop: '1px solid #f0f0f0',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      }} className="hide-scrollbar">
         <ul className="container" style={{ 
           display: 'flex', 
-          gap: '30px', 
-          padding: '12px 0', 
-          fontSize: '13px', 
-          fontWeight: '600',
-          color: '#444'
+          gap: '24px', 
+          padding: '12px 1rem', 
+          fontSize: '12px', 
+          fontWeight: '700',
+          color: '#444',
+          minWidth: 'max-content'
         }}>
           <li 
             onClick={() => onCategorySelect?.(null)}
