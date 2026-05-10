@@ -468,7 +468,6 @@ export const AdminOrders = () => {
             }
           `}</style>
         </div>,
-        document.body
       )}
 
       {deliveryReceiptOrder && createPortal(
