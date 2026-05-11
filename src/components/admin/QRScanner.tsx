@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { QrCode, XCircle, Camera, AlertCircle } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { XCircle, Camera, AlertCircle } from 'lucide-react';
 
 interface QRScannerProps {
   onScan: (decodedText: string) => void;
