@@ -109,8 +109,8 @@ button {
 /* Responsive Grid */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 @media (min-width: 768px) {
