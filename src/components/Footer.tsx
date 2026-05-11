@@ -53,8 +53,8 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
   };
 
   return (
-    <footer style={{ backgroundColor: '#fff', borderTop: '1px solid var(--border)', padding: '60px 0 30px' }}>
-      <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '40px' }}>
+    <footer style={{ backgroundColor: '#fff', borderTop: '1px solid var(--border)', padding: 'clamp(40px, 10vw, 60px) 0 30px' }}>
+      <div className="container footer-grid">
         <div>
           <div style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px' }}>
             <span style={{ color: 'var(--dark)' }}>CHARLY</span>
