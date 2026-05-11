@@ -4,8 +4,9 @@ import { supabase } from '../../lib/supabase';
 import {
   ShoppingBag, Users, Loader2, Truck, MousePointer2, TrendingUp,
   Printer, Package, CheckCircle2, Clock, XCircle, Zap, BarChart3,
-  ArrowUpRight, ChevronRight, Calendar
+  ArrowUpRight, ChevronRight, Calendar, QrCode
 } from 'lucide-react';
+import QRScanner from '../../components/admin/QRScanner';
 import {
   ResponsiveContainer,
   BarChart,
@@ -307,48 +308,41 @@ export const AdminDashboard = () => {
           )}
         </div>
 
-        {/* ── LOGÍSTICA + ACCESOS RÁPIDOS ── */}
+        {/* ── LOGÍSTICA (Lector QR) ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          {/* Logística */}
-          <div style={{ background: '#0f172a', borderRadius: '1.25rem', padding: '1.5rem', flex: 1, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ background: '#0f172a', borderRadius: '1.25rem', padding: '1.5rem', flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <div style={{ position: 'absolute', top: '-2rem', right: '-2rem', width: '8rem', height: '8rem', background: 'rgba(37,99,235,0.15)', borderRadius: '50%', filter: 'blur(40px)' }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                 <div style={{ width: 32, height: 32, borderRadius: '0.625rem', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Truck size={16} color="#fff" />
+                  <QrCode size={16} color="#fff" />
                 </div>
-                <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Logistics v2.0</span>
+                <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Logística Inteligente</span>
               </div>
 
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#fff', margin: '0 0 0.35rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-                Etiquetas de<br /><span style={{ color: '#60a5fa' }}>Alto Rendimiento</span>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 900, color: '#fff', margin: '0 0 1rem', letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+                Lector de <span style={{ color: '#60a5fa' }}>Etiquetas QR</span>
               </h3>
-              <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)', fontWeight: 500, margin: '0 0 1rem', lineHeight: 1.5 }}>
-                Imprime directo desde el panel en formato térmico.
-              </p>
 
-              <button
-                onClick={handlePrintLatestLabel}
-                style={{ width: '100%', background: '#fff', color: '#0f172a', border: 'none', borderRadius: '0.75rem', padding: '0.75rem', fontWeight: 900, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem', transition: 'opacity 0.2s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.9'}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}
-              >
-                <Printer size={15} /> Imprimir Última Etiqueta
-              </button>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <QRScanner onScan={(text) => {
+                  if (text.startsWith('charlyhome-order-')) {
+                    const orderId = text.replace('charlyhome-order-', '');
+                    navigate(`/admin/orders?open=${orderId}`);
+                  } else {
+                    // Si es solo un ID o tiene otro formato, intentamos navegar igual
+                    navigate(`/admin/orders?open=${text}`);
+                  }
+                }} />
+              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                {[
-                  { val: '203 DPI', label: 'Resolución' },
-                  { val: '100×150mm', label: 'Formato' },
-                  { val: 'Thermal', label: 'Tipo de impresión' },
-                  { val: 'Real-time', label: 'Sincronización' },
-                ].map((s, i) => (
-                  <div key={i} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '0.625rem 0.75rem' }}>
-                    <p style={{ fontSize: '0.78rem', fontWeight: 900, color: '#fff', margin: '0 0 0.1rem' }}>{s.val}</p>
-                    <p style={{ fontSize: '0.6rem', fontWeight: 600, color: 'rgba(255,255,255,0.3)', margin: 0 }}>{s.label}</p>
-                  </div>
-                ))}
+              <div style={{ marginTop: '1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                <button
+                  onClick={handlePrintLatestLabel}
+                  style={{ gridColumn: 'span 2', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '0.625rem', fontWeight: 800, fontSize: '0.7rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}
+                >
+                  <Printer size={14} /> Imprimir última etiqueta
+                </button>
               </div>
             </div>
           </div>

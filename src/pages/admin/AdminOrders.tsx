@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
 import { 
@@ -29,6 +30,7 @@ interface Order {
 }
 
 export const AdminOrders = () => {
+  const location = useLocation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,6 +82,17 @@ export const AdminOrders = () => {
   useEffect(() => {
     fetchOrders();
   }, [statusFilter]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const orderToOpen = params.get('open');
+    if (orderToOpen && orders.length > 0) {
+      const order = orders.find(o => o.id === orderToOpen || o.id.startsWith(orderToOpen));
+      if (order) {
+        setSelectedOrder(order);
+      }
+    }
+  }, [location.search, orders]);
 
   const getStatusBadge = (status: string, isDark: boolean = false) => {
     const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap";
