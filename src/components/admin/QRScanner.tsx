@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { QrCode, XCircle, Loader2 } from 'lucide-react';
+import { QrCode, XCircle } from 'lucide-react';
 
 interface QRScannerProps {
   onScan: (decodedText: string) => void;
@@ -27,7 +27,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan }) => {
             scanner.clear().catch(error => console.error("Failed to clear scanner", error));
           }
         },
-        (error) => {
+        (_error) => {
           // Ignore scanning errors
         }
       );
