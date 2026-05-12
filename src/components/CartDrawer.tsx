@@ -24,6 +24,29 @@ const CartDrawer: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
+  const [fetchingZones, setFetchingZones] = useState(true);
+
+  // Fetch delivery zones
+  useEffect(() => {
+    const fetchZones = async () => {
+      try {
+        const { data, error: zonesError } = await supabase
+          .from('delivery_zones')
+          .select('*')
+          .eq('is_active', true)
+          .order('order_index', { ascending: true });
+
+        if (zonesError) throw zonesError;
+        setDeliveryZones(data || []);
+      } catch (err) {
+        console.error('Error fetching delivery zones:', err);
+      } finally {
+        setFetchingZones(false);
+      }
+    };
+    fetchZones();
+  }, []);
 
   // Persist email and shipping details
   useEffect(() => {
@@ -34,9 +57,18 @@ const CartDrawer: React.FC = () => {
     localStorage.setItem('charles-shipping-details', JSON.stringify(shippingDetails));
   }, [shippingDetails]);
 
-  const freeShippingThreshold = settings.freeDeliveryThreshold || 30000;
+  // Find selected zone info
+  const selectedZone = deliveryZones.find(z => z.name === shippingDetails.comuna);
+  
+  // Use zone-specific cost/threshold or fallback to global settings
+  const currentDeliveryCost = selectedZone ? selectedZone.cost : (settings.deliveryCost || 3500);
+  const freeShippingThreshold = selectedZone?.free_shipping_threshold !== null && selectedZone?.free_shipping_threshold !== undefined
+    ? selectedZone.free_shipping_threshold 
+    : (settings.freeDeliveryThreshold || 30000);
+
   const progress = Math.min((totalPrice / freeShippingThreshold) * 100, 100);
   const remaining = freeShippingThreshold - totalPrice;
+  const isFreeShipping = remaining <= 0;
 
   const handleCheckout = async () => {
     if (!email || !email.includes('@')) {
@@ -52,7 +84,8 @@ const CartDrawer: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const finalTotal = remaining > 0 ? totalPrice + (settings.deliveryCost || 3500) : totalPrice;
+    const finalShippingCost = isFreeShipping ? 0 : currentDeliveryCost;
+    const finalTotal = totalPrice + finalShippingCost;
 
     try {
       const { data, error: functionError } = await supabase.functions.invoke('flow-create-payment', {
@@ -61,7 +94,10 @@ const CartDrawer: React.FC = () => {
           email: email,
           total: finalTotal,
           userId: user?.id,
-          shippingDetails: shippingDetails
+          shippingDetails: {
+            ...shippingDetails,
+            shippingCost: finalShippingCost
+          }
         }
       });
 
@@ -320,15 +356,28 @@ const CartDrawer: React.FC = () => {
                           style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                         />
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                          <input 
-                            type="text" 
-                            placeholder="Comuna"
+                          <select 
                             value={shippingDetails.comuna}
                             onChange={(e) => setShippingDetails({...shippingDetails, comuna: e.target.value})}
-                            disabled={loading}
+                            disabled={loading || fetchingZones}
                             autoComplete="address-level2"
-                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
-                          />
+                            style={{ 
+                              width: '100%', 
+                              padding: '10px 12px', 
+                              borderRadius: '8px', 
+                              border: '1px solid #e5e7eb', 
+                              fontSize: '13px', 
+                              outline: 'none',
+                              backgroundColor: '#fff',
+                              cursor: (loading || fetchingZones) ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            <option value="">Selecciona Comuna</option>
+                            {deliveryZones.map(zone => (
+                              <option key={zone.id} value={zone.name}>{zone.name}</option>
+                            ))}
+                            <option value="OTRA">OTRA (Región / Especial)</option>
+                          </select>
                           <input 
                             type="text" 
                             placeholder="Dpto / Casa / Ref"
@@ -350,15 +399,15 @@ const CartDrawer: React.FC = () => {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <span style={{ color: '#666', fontSize: '14px' }}>Despacho</span>
-                    <span style={{ color: remaining > 0 ? '#000' : '#059669', fontSize: '14px', fontWeight: '600' }}>
-                      {remaining > 0 ? `$${(settings.deliveryCost || 3500).toLocaleString('es-CL')} CLP` : '¡GRATIS!'}
+                    <span style={{ color: isFreeShipping ? '#059669' : '#000', fontSize: '14px', fontWeight: '600' }}>
+                      {isFreeShipping ? '¡GRATIS!' : `$${currentDeliveryCost.toLocaleString('es-CL')} CLP`}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'flex-end' }}>
                     <span style={{ fontSize: '18px', fontWeight: '800' }}>Total</span>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)' }}>
-                        ${(remaining > 0 ? totalPrice + (settings.deliveryCost || 3500) : totalPrice).toLocaleString('es-CL')} CLP
+                        ${(totalPrice + (isFreeShipping ? 0 : currentDeliveryCost)).toLocaleString('es-CL')} CLP
                       </div>
                       <div style={{ fontSize: '11px', color: '#999' }}>IVA incluido</div>
                     </div>
