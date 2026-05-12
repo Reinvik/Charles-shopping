@@ -13,7 +13,7 @@ import CartDrawer from './components/CartDrawer';
 import { Toaster } from 'sonner';
 
 import HeroBanner from './components/HeroBanner';
-import { useSEO } from './hooks/useSEO';
+import { SEO } from './hooks/useSEO';
 
 const HomePage: React.FC = () => {
   const [products, setProducts] = React.useState<any[]>([]);
@@ -23,12 +23,12 @@ const HomePage: React.FC = () => {
   const { isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  useSEO({
+  const seoData = {
     title: selectedCategory ? selectedCategory.name : 'Inicio',
     description: selectedCategory 
       ? `Compra ${selectedCategory.name.toLowerCase()} al mejor precio en Charly Home. Despachos rápidos a todo Santiago.`
       : 'Charly Home: Tu tienda de aseo y papelería en Santiago. Productos de alta calidad con despacho a domicilio el mismo día.'
-  });
+  };
 
   React.useEffect(() => {
     const fetchProducts = async () => {
@@ -87,6 +87,7 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="app">
+      <SEO {...seoData} />
       <Header 
         selectedCategoryId={selectedCategoryId} 
         onCategorySelect={setSelectedCategoryId} 

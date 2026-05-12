@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { ArrowLeft, ShoppingCart, Plus, Minus, Check, Loader2, Pencil, Save, X, Trash2, Camera, Link as LinkIcon, Upload, GripVertical } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useSEO } from '../hooks/useSEO';
+import { SEO } from '../hooks/useSEO';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import logoImg from '../assets/logo.png';
@@ -276,8 +276,39 @@ export const ProductDetail = () => {
     );
   }
 
+  const productSchema = product ? {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.images || [product.image_url],
+    "description": product.description,
+    "brand": {
+      "@type": "Brand",
+      "name": "Charly Home"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": window.location.href,
+      "priceCurrency": "CLP",
+      "price": product.price,
+      "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+    }
+  } : null;
+
   return (
     <div style={{ backgroundColor: '#fafafa', minHeight: '100vh' }}>
+      <SEO 
+        title={product.name}
+        description={product.description?.substring(0, 160)}
+        image={product.image_url}
+        url={window.location.href}
+        type="product"
+      />
+      {productSchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(productSchema)}
+        </script>
+      )}
       {/* Header Bar */}
       <div style={{ 
         padding: '20px', 
