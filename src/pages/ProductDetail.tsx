@@ -139,6 +139,7 @@ export const ProductDetail = () => {
             price: editPrice,
             stock: editStock,
             description: editDescription,
+            category_id: editCategoryId || null,
             image_url: editImages.length > 0 ? editImages[0] : PLACEHOLDER_IMAGE,
             images: editImages,
             is_active: true,
@@ -163,6 +164,8 @@ export const ProductDetail = () => {
           price: editPrice,
           stock: editStock,
           description: editDescription,
+          category_id: editCategoryId || null,
+          is_active: editIsActive,
           image_url: editImages.length > 0 ? editImages[0] : editImageUrl,
           images: editImages,
           is_on_offer: editIsOnOffer
