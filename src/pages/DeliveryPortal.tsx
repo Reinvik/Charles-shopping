@@ -28,18 +28,34 @@ const DeliveryPortal = () => {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        if (!orderId) return;
+        if (!orderId) {
+          console.error('No orderId provided in URL');
+          return;
+        }
+        
+        // Limpiamos el ID por si acaso
+        const cleanId = orderId.trim();
+        console.log('Buscando pedido con ID:', cleanId);
+
         const { data, error } = await supabase
           .from('orders')
           .select('*')
-          .eq('id', orderId)
+          .eq('id', cleanId)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error de Supabase:', error);
+          throw error;
+        }
+        
+        if (!data) {
+          console.warn('No se encontró data para el ID:', cleanId);
+        }
+
         setOrder(data);
       } catch (error: any) {
-        console.error('Error fetching order:', error);
-        toast.error('No se pudo encontrar el pedido');
+        console.error('Error fetching order detail:', error);
+        toast.error('Error al buscar el pedido: ' + (error.message || 'Desconocido'));
       } finally {
         setLoading(false);
       }
