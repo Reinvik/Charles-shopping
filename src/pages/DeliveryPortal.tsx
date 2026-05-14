@@ -88,80 +88,80 @@ const DeliveryPortal = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-        <Loader2 className="animate-spin text-green-600 mb-4" size={48} />
-        <p className="text-slate-600 font-bold">Cargando Pedido...</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+        <Loader2 className="animate-spin" size={48} color="#075e54" />
+        <p style={{ color: '#475569', fontWeight: '800', marginTop: '16px', fontFamily: 'sans-serif' }}>Cargando Pedido...</p>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
-          <AlertCircle className="text-red-500" size={40} />
+      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', textAlign: 'center' }}>
+        <div style={{ width: '80px', height: '80px', backgroundColor: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
+          <AlertCircle style={{ color: '#ef4444' }} size={40} />
         </div>
-        <h1 className="text-slate-900 text-2xl font-black mb-2">Pedido no encontrado</h1>
-        <p className="text-slate-500 mb-8">El código QR no parece ser válido o el pedido ya no existe.</p>
-        <button onClick={() => window.location.reload()} className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold">Reintentar</button>
+        <h1 style={{ color: '#0f172a', fontSize: '24px', fontWeight: '900', marginBottom: '8px' }}>Pedido no encontrado</h1>
+        <p style={{ color: '#64748b', marginBottom: '32px' }}>El código QR no parece ser válido o el pedido ya no existe.</p>
+        <button onClick={() => window.location.reload()} style={{ backgroundColor: '#0f172a', color: 'white', padding: '12px 32px', borderRadius: '12px', fontWeight: '700' }}>Reintentar</button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-12">
-      {/* Header Estilo WhatsApp */}
-      <div className="bg-[#075e54] text-white p-6 pt-12 rounded-b-[2.5rem] shadow-lg">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f1f5f9', fontFamily: "'Inter', sans-serif", paddingBottom: '40px' }}>
+      {/* Header Premium */}
+      <div style={{ backgroundColor: '#075e54', color: 'white', padding: '48px 24px 32px', borderRadius: '0 0 40px 40px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}>
+        <div style={{ maxWidth: '480px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
               <ShoppingBag size={24} />
             </div>
             <div>
-              <h1 className="font-black text-xl leading-none">Charly Home</h1>
-              <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest mt-1">Confirmación de Entrega</p>
+              <h1 style={{ color: 'white', fontWeight: '900', fontSize: '20px', margin: 0, lineHeight: 1 }}>Charly Home</h1>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.15em', marginTop: '6px' }}>Confirmación de Entrega</p>
             </div>
           </div>
-          <div className="bg-white/10 px-3 py-1 rounded-full text-[10px] font-black border border-white/20">
+          <div style={{ backgroundColor: 'rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '20px', fontSize: '11px', fontWeight: '900', border: '1px solid rgba(255,255,255,0.2)' }}>
             #{order.id.slice(0, 8).toUpperCase()}
           </div>
         </div>
       </div>
 
-      <main className="max-w-md mx-auto px-4 -mt-6 space-y-6">
-        {/* Resumen Card */}
-        <div className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
-          <div className="space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <User size={18} className="text-blue-600" />
+      <main style={{ maxWidth: '480px', margin: '-24px auto 0', padding: '0 16px' }}>
+        {/* Info Card */}
+        <div style={{ backgroundColor: 'white', borderRadius: '32px', padding: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{ width: '40px', height: '40px', backgroundColor: '#eff6ff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <User size={18} style={{ color: '#2563eb' }} />
               </div>
               <div>
-                <p className="text-slate-400 text-[9px] font-black uppercase tracking-tighter">Cliente</p>
-                <p className="text-slate-900 font-black text-base">{order.shipping_details?.fullName}</p>
+                <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 2px' }}>Cliente</p>
+                <p style={{ color: '#0f172a', fontWeight: '900', fontSize: '16px', margin: 0 }}>{order.shipping_details?.fullName}</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                <MapPin size={18} className="text-amber-600" />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{ width: '40px', height: '40px', backgroundColor: '#fffbeb', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <MapPin size={18} style={{ color: '#d97706' }} />
               </div>
               <div>
-                <p className="text-slate-400 text-[9px] font-black uppercase tracking-tighter">Dirección</p>
-                <p className="text-slate-900 font-bold text-sm leading-tight">{order.shipping_details?.address}</p>
-                <p className="text-slate-500 text-xs font-medium">{order.shipping_details?.comuna}</p>
+                <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 2px' }}>Dirección</p>
+                <p style={{ color: '#0f172a', fontWeight: '700', fontSize: '14px', margin: 0, lineHeight: 1.3 }}>{order.shipping_details?.address}</p>
+                <p style={{ color: '#64748b', fontSize: '12px', margin: '2px 0 0' }}>{order.shipping_details?.comuna}</p>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-50">
-               <p className="text-slate-400 text-[9px] font-black uppercase tracking-tighter mb-2">Productos ({order.items.length})</p>
-               <div className="space-y-2">
+            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+               <p style={{ color: '#94a3b8', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 12px' }}>Productos ({order.items.length})</p>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                  {order.items.map((item, idx) => (
-                   <div key={idx} className="flex justify-between items-center text-sm">
-                     <span className="text-slate-700 font-bold flex items-center gap-2">
-                       <Package size={14} className="text-slate-300" /> {item.name}
+                   <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                     <span style={{ color: '#334155', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <Package size={14} style={{ color: '#cbd5e1' }} /> {item.name}
                      </span>
-                     <span className="text-slate-900 font-black ml-2 px-2 py-0.5 bg-slate-100 rounded-md text-xs">x{item.quantity}</span>
+                     <span style={{ color: '#0f172a', fontWeight: '900', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '6px', fontSize: '11px' }}>x{item.quantity}</span>
                    </div>
                  ))}
                </div>
@@ -169,61 +169,74 @@ const DeliveryPortal = () => {
           </div>
         </div>
 
-        {/* Inputs Form */}
-        <div className="space-y-4 px-2">
-          <div className="space-y-1.5">
-            <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-2 block">
-              Nombre de quien recibe
-            </label>
+        {/* Inputs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div>
+            <label style={{ color: '#64748b', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: '8px', marginBottom: '8px', display: 'block' }}>Nombre de quien recibe</label>
             <input 
               type="text" 
-              placeholder="Nombre Apellido"
+              placeholder="Ej: Juan Pérez"
               value={receiverName}
               onChange={(e) => setReceiverName(e.target.value)}
-              className="w-full bg-white border-2 border-slate-200 focus:border-[#25d366] rounded-2xl py-4 px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 shadow-sm"
+              style={{ width: '100%', backgroundColor: 'white', border: '2px solid #e2e8f0', borderRadius: '16px', padding: '16px 20px', fontSize: '16px', fontWeight: '700', color: '#0f172a', outline: 'none', transition: 'border-color 0.2s' }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#25d366'}
+              onBlur={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-slate-500 text-[10px] font-black uppercase tracking-widest ml-2 block">
-              RUT de quien recibe
-            </label>
+          <div>
+            <label style={{ color: '#64748b', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', marginLeft: '8px', marginBottom: '8px', display: 'block' }}>RUT de quien recibe</label>
             <input 
               type="text" 
-              placeholder="12.345.678-9"
+              placeholder="Ej: 12.345.678-9"
               value={receiverRut}
               onChange={(e) => setReceiverRut(e.target.value)}
-              className="w-full bg-white border-2 border-slate-200 focus:border-[#25d366] rounded-2xl py-4 px-6 text-slate-900 font-bold outline-none transition-all placeholder:text-slate-300 shadow-sm"
+              style={{ width: '100%', backgroundColor: 'white', border: '2px solid #e2e8f0', borderRadius: '16px', padding: '16px 20px', fontSize: '16px', fontWeight: '700', color: '#0f172a', outline: 'none', transition: 'border-color 0.2s' }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#25d366'}
+              onBlur={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
             />
           </div>
 
-          <div className="pt-4">
-            <button
-              onClick={handleConfirmDelivery}
-              disabled={submitting}
-              className="w-full bg-[#25d366] hover:bg-[#128c7e] disabled:opacity-50 text-white font-black py-5 rounded-[2rem] shadow-xl shadow-green-200 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
-              style={{ boxShadow: '0 20px 40px -10px rgba(37, 211, 102, 0.4)' }}
-            >
-              {submitting ? (
-                <Loader2 className="animate-spin" size={24} />
-              ) : (
-                <>
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <MessageCircle size={18} />
-                  </div>
-                  <span className="text-lg">NOTIFICAR ENTREGA</span>
-                </>
-              )}
-            </button>
-            <p className="text-center text-slate-400 text-[10px] font-bold mt-4 uppercase tracking-widest">
-              Al confirmar se abrirá WhatsApp con el mensaje listo
-            </p>
-          </div>
+          <button
+            onClick={handleConfirmDelivery}
+            disabled={submitting}
+            style={{ 
+              width: '100%', 
+              backgroundColor: '#25d366', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '32px', 
+              padding: '20px', 
+              fontWeight: '900', 
+              fontSize: '18px', 
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '12px',
+              marginTop: '12px',
+              boxShadow: '0 15px 35px rgba(37, 211, 102, 0.3)',
+              opacity: submitting ? 0.7 : 1
+            }}
+          >
+            {submitting ? (
+              <Loader2 className="animate-spin" size={24} />
+            ) : (
+              <>
+                <MessageCircle size={24} />
+                CONFIRMAR ENTREGA
+              </>
+            )}
+          </button>
+          
+          <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '4px' }}>
+            Se actualizará el sistema y se abrirá WhatsApp
+          </p>
         </div>
       </main>
 
-      <footer className="mt-8 text-center text-slate-300 text-[9px] font-black uppercase tracking-[0.2em]">
-        Charly Home Delivery • Engine v1.1
+      <footer style={{ marginTop: '40px', textAlign: 'center', color: '#cbd5e1', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.3em' }}>
+        Charly Home Delivery Engine v1.2
       </footer>
     </div>
   );
