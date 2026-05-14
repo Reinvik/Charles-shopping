@@ -119,10 +119,9 @@ const DeliveryPortal = () => {
         span, p, h1, h2, label { color: black !important; }
       `}</style>
 
-      <div style={{ backgroundColor: '#E60000', padding: '30px 20px', color: 'white', textAlign: 'center', borderRadius: '0 0 30px 30px', boxShadow: '0 4px 15px rgba(230, 0, 0, 0.2)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <img src="/logo.png" alt="Logo" style={{ height: '60px', marginBottom: '10px', filter: 'brightness(0) invert(1)' }} />
-        <h1 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '900', letterSpacing: '1px' }}>CHARLY HOME</h1>
-        <p style={{ color: 'white', opacity: 0.9, fontSize: '11px', fontWeight: 'bold', marginTop: '5px', letterSpacing: '2px' }}>CONFIRMACIÓN DE ENTREGA</p>
+      <div style={{ backgroundColor: '#E60000', padding: '40px 20px', color: 'white', textAlign: 'center', borderRadius: '0 0 30px 30px', boxShadow: '0 4px 15px rgba(230, 0, 0, 0.2)' }}>
+        <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: '900', letterSpacing: '1px' }}>CHARLY HOME</h1>
+        <p style={{ color: 'white', opacity: 0.9, fontSize: '12px', fontWeight: 'bold', marginTop: '5px', letterSpacing: '2px' }}>CONFIRMACIÓN DE ENTREGA</p>
       </div>
 
       <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
