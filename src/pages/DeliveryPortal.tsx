@@ -62,9 +62,14 @@ const DeliveryPortal = () => {
     try {
       setSubmitting(true);
       
+      const newStatus = `Entregado a ${receiverName} Rut ${receiverRut}`;
+      
       const { error } = await supabase
         .from('orders')
-        .update({ is_delivered: true })
+        .update({ 
+          is_delivered: true,
+          status: newStatus 
+        })
         .eq('id', order?.id);
 
       if (error) throw error;
