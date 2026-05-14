@@ -76,15 +76,14 @@ const DeliveryPortal = () => {
       
       const message = `Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${receiverName}\nRut: ${receiverRut}\n\n¡Gracias por confiar en Charly Home!`;
       
-      // Intentar abrir WhatsApp
       if (phone) {
         const whatsappUrl = `https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
       } else {
-        toast.warning('No se encontró teléfono para enviar WhatsApp, pero el pedido fue marcado como entregado.');
+        toast.warning('No se encontró teléfono para enviar WhatsApp');
       }
       
-      toast.success('¡Entrega confirmada con éxito!');
+      toast.success('¡Entrega confirmada!');
     } catch (error: any) {
       toast.error('Error: ' + error.message);
     } finally {
@@ -94,84 +93,74 @@ const DeliveryPortal = () => {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-        <Loader2 className="animate-spin" size={48} color="#075e54" />
-        <p style={{ color: '#000000', fontWeight: 'bold', marginTop: '16px' }}>Cargando Pedido...</p>
+      <div style={{ minHeight: '100vh', backgroundColor: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <Loader2 className="animate-spin" size={40} color="green" />
+        <p style={{ color: 'black', marginTop: '10px', fontWeight: 'bold' }}>Cargando...</p>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', textAlign: 'center' }}>
-        <AlertCircle style={{ color: '#ef4444', marginBottom: '20px' }} size={60} />
-        <h1 style={{ color: '#000000', fontSize: '24px', fontWeight: 'bold' }}>Pedido no encontrado</h1>
-        <p style={{ color: '#666666' }}>Verifica el código QR.</p>
+      <div style={{ minHeight: '100vh', backgroundColor: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+        <AlertCircle color="red" size={50} />
+        <h1 style={{ color: 'black', marginTop: '20px' }}>No se encontró el pedido</h1>
+        <p style={{ color: 'grey' }}>ID: {orderId}</p>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f0f2f5', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingBottom: '50px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f0f0f0', color: 'black', fontFamily: 'sans-serif', paddingBottom: '50px' }}>
       
-      {/* Header Fijo */}
-      <div style={{ width: '100%', backgroundColor: '#075e54', padding: '40px 20px 20px', textAlign: 'center', color: 'white', borderBottomLeftRadius: '30px', borderBottomRightRadius: '30px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-        <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '900' }}>CHARLY HOME</h1>
-        <p style={{ margin: '5px 0 0', opacity: 0.8, fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px' }}>SISTEMA DE ENTREGAS v2.0</p>
+      {/* CSS RESET FORCED */}
+      <style>{`
+        #root { color: black !important; }
+        input { color: black !important; }
+        span, p, h1, h2 { color: black !important; }
+      `}</style>
+
+      <div style={{ backgroundColor: '#075e54', padding: '30px 20px', color: 'white', textAlign: 'center' }}>
+        <h1 style={{ color: 'white', margin: 0, fontSize: '24px' }}>CHARLY LOGÍSTICA</h1>
+        <p style={{ color: 'white', opacity: 0.8, fontSize: '12px' }}>CONFIRMACIÓN DE ENTREGA</p>
       </div>
 
-      <div style={{ width: '90%', maxWidth: '450px', marginTop: '20px' }}>
+      <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
         
-        {/* Card de Información del Pedido */}
-        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '15px' }}>
-            <span style={{ fontWeight: 'bold', color: '#666', fontSize: '12px' }}>PEDIDO</span>
-            <span style={{ fontWeight: '900', color: '#075e54' }}>#{order.id.slice(0,8).toUpperCase()}</span>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#000', marginBottom: '5px' }}>
-              <User size={18} color="#075e54" />
-              <span style={{ fontWeight: 'bold' }}>{order.shipping_details?.fullName || 'No especificado'}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#666', fontSize: '14px' }}>
-              <MapPin size={16} />
-              <span>{order.shipping_details?.address || 'Sin dirección'}, {order.shipping_details?.comuna || ''}</span>
-            </div>
-          </div>
-
-          <div style={{ backgroundColor: '#f9f9f9', borderRadius: '12px', padding: '12px' }}>
-            <p style={{ margin: '0 0 8px', fontSize: '11px', fontWeight: 'bold', color: '#999' }}>PRODUCTOS</p>
-            {order.items?.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '13px', color: '#333' }}>
-                <span style={{ fontWeight: '600' }}>• {item.name || 'Producto'}</span>
-                <span style={{ fontWeight: 'bold' }}>x{item.quantity}</span>
-              </div>
-            ))}
-          </div>
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', marginBottom: '20px', border: '1px solid #ddd' }}>
+          <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey', marginBottom: '5px' }}>CLIENTE</p>
+          <p style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{order.shipping_details?.fullName || 'Cliente'}</p>
+          <p style={{ fontSize: '14px', color: '#444', marginTop: '5px' }}>{order.shipping_details?.address || 'Sin dirección'}</p>
         </div>
 
-        {/* Formulario de Entrada */}
-        <div style={{ backgroundColor: 'white', borderRadius: '20px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', marginBottom: '20px', border: '1px solid #ddd' }}>
+          <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey', marginBottom: '10px' }}>PRODUCTOS</p>
+          {order.items?.map((item, i) => (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px', borderBottom: '1px solid #eee', paddingBottom: '5px' }}>
+              <span style={{ fontSize: '14px' }}>{item.name}</span>
+              <span style={{ fontWeight: 'bold' }}>x{item.quantity}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', border: '1px solid #ddd' }}>
           <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '5px', marginLeft: '5px' }}>NOMBRE DE QUIEN RECIBE</label>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey' }}>NOMBRE DE QUIEN RECIBE</label>
             <input 
               type="text" 
               value={receiverName}
               onChange={(e) => setReceiverName(e.target.value)}
-              placeholder="Escribe el nombre aquí..."
-              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '2px solid #f0f0f0', fontSize: '16px', fontWeight: 'bold', outline: 'none', backgroundColor: '#fcfcfc' }}
+              style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px', color: 'black' }}
             />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#666', marginBottom: '5px', marginLeft: '5px' }}>RUT DE QUIEN RECIBE</label>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey' }}>RUT DE QUIEN RECIBE</label>
             <input 
               type="text" 
               value={receiverRut}
               onChange={(e) => setReceiverRut(e.target.value)}
-              placeholder="Escribe el RUT aquí..."
-              style={{ width: '100%', padding: '15px', borderRadius: '12px', border: '2px solid #f0f0f0', fontSize: '16px', fontWeight: 'bold', outline: 'none', backgroundColor: '#fcfcfc' }}
+              style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px', color: 'black' }}
             />
           </div>
 
@@ -182,31 +171,17 @@ const DeliveryPortal = () => {
               width: '100%', 
               backgroundColor: '#25d366', 
               color: 'white', 
-              padding: '18px', 
-              borderRadius: '15px', 
+              padding: '15px', 
+              borderRadius: '10px', 
               fontSize: '18px', 
-              fontWeight: '900', 
-              border: 'none', 
-              boxShadow: '0 8px 15px rgba(37, 211, 102, 0.2)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px'
+              fontWeight: 'bold', 
+              border: 'none',
+              cursor: 'pointer'
             }}
           >
-            {submitting ? <Loader2 className="animate-spin" /> : (
-              <>
-                <MessageCircle size={22} />
-                ENVIAR MENSAJE WSP
-              </>
-            )}
+            {submitting ? 'Enviando...' : 'ENVIAR MENSAJE WHATSAPP'}
           </button>
         </div>
-
-        <p style={{ textAlign: 'center', marginTop: '20px', color: '#bbb', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
-          DESARROLLADO PARA CHARLY HOME
-        </p>
-
       </div>
     </div>
   );
