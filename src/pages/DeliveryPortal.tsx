@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Loader2, Package, User, MessageCircle, AlertCircle, ShoppingBag, MapPin } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Order {
@@ -113,11 +113,10 @@ const DeliveryPortal = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f0f0f0', color: 'black', fontFamily: 'sans-serif', paddingBottom: '50px' }}>
       
-      {/* CSS RESET FORCED */}
       <style>{`
         #root { color: black !important; }
-        input { color: black !important; }
-        span, p, h1, h2 { color: black !important; }
+        input { color: black !important; background-color: white !important; border: 1px solid #ccc !important; }
+        span, p, h1, h2, label { color: black !important; }
       `}</style>
 
       <div style={{ backgroundColor: '#075e54', padding: '30px 20px', color: 'white', textAlign: 'center' }}>
@@ -129,8 +128,8 @@ const DeliveryPortal = () => {
         
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', marginBottom: '20px', border: '1px solid #ddd' }}>
           <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey', marginBottom: '5px' }}>CLIENTE</p>
-          <p style={{ fontSize: '18px', fontWeight: 'bold', margin: 0 }}>{order.shipping_details?.fullName || 'Cliente'}</p>
-          <p style={{ fontSize: '14px', color: '#444', marginTop: '5px' }}>{order.shipping_details?.address || 'Sin dirección'}</p>
+          <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px' }}>{order.shipping_details?.fullName || order.customer_email || 'Cliente'}</p>
+          <p style={{ fontSize: '14px', color: '#444', margin: 0 }}>{order.shipping_details?.address || 'Sin dirección'}</p>
         </div>
 
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', marginBottom: '20px', border: '1px solid #ddd' }}>
@@ -145,22 +144,22 @@ const DeliveryPortal = () => {
 
         <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '15px', border: '1px solid #ddd' }}>
           <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey' }}>NOMBRE DE QUIEN RECIBE</label>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey', display: 'block', marginBottom: '5px' }}>NOMBRE DE QUIEN RECIBE</label>
             <input 
               type="text" 
               value={receiverName}
               onChange={(e) => setReceiverName(e.target.value)}
-              style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px', color: 'black' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', fontSize: '16px' }}
             />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey' }}>RUT DE QUIEN RECIBE</label>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'grey', display: 'block', marginBottom: '5px' }}>RUT DE QUIEN RECIBE</label>
             <input 
               type="text" 
               value={receiverRut}
               onChange={(e) => setReceiverRut(e.target.value)}
-              style={{ width: '100%', padding: '12px', marginTop: '5px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '16px', color: 'black' }}
+              style={{ width: '100%', padding: '12px', borderRadius: '8px', fontSize: '16px' }}
             />
           </div>
 
@@ -171,7 +170,7 @@ const DeliveryPortal = () => {
               width: '100%', 
               backgroundColor: '#25d366', 
               color: 'white', 
-              padding: '15px', 
+              padding: '18px', 
               borderRadius: '10px', 
               fontSize: '18px', 
               fontWeight: 'bold', 
