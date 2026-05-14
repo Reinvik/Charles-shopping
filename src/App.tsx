@@ -235,6 +235,7 @@ import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
 import { ProductDetail } from './pages/ProductDetail';
 import { DynamicPage } from './pages/DynamicPage';
+import DeliveryPortal from './pages/DeliveryPortal';
 
 function App() {
   React.useEffect(() => {
@@ -264,6 +265,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/entrega/:orderId" element={<DeliveryPortal />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
           <Route path="/checkout/failure" element={<CheckoutFailure />} />
           <Route path="/product/:id" element={<ProductDetail />} />
