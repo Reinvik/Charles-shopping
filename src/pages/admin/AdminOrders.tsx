@@ -139,12 +139,17 @@ export const AdminOrders = () => {
         : 'bg-slate-50 text-slate-400 border-slate-100 hover:text-slate-600 hover:bg-slate-100';
     }
 
+    const deliveryText = (isDelivered && order.status.startsWith('Entregado a')) 
+      ? order.status 
+      : (isDelivered ? 'Entregado' : 'Pendiente');
+
     return (
       <button 
         onClick={(e) => { e.stopPropagation(); toggleDelivery(order.id, isDelivered); }}
         className={`${baseClasses} ${stateClasses}`}
+        style={{ whiteSpace: 'normal', textAlign: 'left', minWidth: '100px' }}
       >
-        <Truck size={12} /> {isDelivered ? 'Entregado' : 'Pendiente'}
+        <Truck size={12} className="flex-shrink-0" /> {deliveryText}
       </button>
     );
   };
