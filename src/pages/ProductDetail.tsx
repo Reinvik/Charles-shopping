@@ -104,10 +104,6 @@ export const ProductDetail = () => {
     }
   }, [id]);
 
-  useSEO({
-    title: product?.name,
-    description: product?.description?.substring(0, 160),
-  });
 
   const handleIncrement = () => setQuantity(prev => prev + 1);
   const handleDecrement = () => setQuantity(prev => Math.max(1, prev - 1));
