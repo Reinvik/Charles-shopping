@@ -119,9 +119,9 @@ const DeliveryPortal = () => {
         span, p, h1, h2, label { color: black !important; }
       `}</style>
 
-      <div style={{ backgroundColor: '#075e54', padding: '30px 20px', color: 'white', textAlign: 'center' }}>
-        <h1 style={{ color: 'white', margin: 0, fontSize: '24px' }}>CHARLY LOGÍSTICA</h1>
-        <p style={{ color: 'white', opacity: 0.8, fontSize: '12px' }}>CONFIRMACIÓN DE ENTREGA</p>
+      <div style={{ backgroundColor: '#E60000', padding: '30px 20px', color: 'white', textAlign: 'center', borderRadius: '0 0 30px 30px', boxShadow: '0 4px 15px rgba(230, 0, 0, 0.2)' }}>
+        <h1 style={{ color: 'white', margin: 0, fontSize: '26px', fontWeight: '900', letterSpacing: '1px' }}>CHARLY HOME</h1>
+        <p style={{ color: 'white', opacity: 0.9, fontSize: '12px', fontWeight: 'bold', marginTop: '5px' }}>CONFIRMACIÓN DE ENTREGA</p>
       </div>
 
       <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
