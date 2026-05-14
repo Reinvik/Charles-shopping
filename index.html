@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/Favicon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#6c3fc5" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Charly Home" />
     <title>Charly Home | Productos de Aseo y Papelería en Santiago</title>
     <meta name="google-site-verification" content="_zGoBiNLxsun4nh9iWsH27UBDf4ZFFu1xXl9aGzP_iE" />
     <meta name="description" content="Charly Home: Tu tienda de confianza para productos de aseo, papelería y hogar. Despachos rápidos y seguros a todo Santiago. ¡Compra online las mejores marcas!" />
@@ -16,5 +23,12 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    </script>
   </body>
 </html>
