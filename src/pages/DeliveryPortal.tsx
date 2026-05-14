@@ -33,8 +33,12 @@ const DeliveryPortal = () => {
           return;
         }
         
-        // Limpiamos el ID por si acaso
-        const cleanId = orderId.trim();
+        // Limpiamos el ID y manejamos el formato viejo si existe
+        let cleanId = orderId.trim();
+        if (cleanId.startsWith('charlyhome-order-')) {
+          cleanId = cleanId.replace('charlyhome-order-', '');
+        }
+        
         console.log('Buscando pedido con ID:', cleanId);
 
         const { data, error } = await supabase
