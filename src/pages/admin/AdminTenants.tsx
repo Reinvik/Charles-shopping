@@ -6,13 +6,10 @@ import {
   Store, 
   Globe, 
   ExternalLink, 
-  Settings, 
   Loader2, 
-  CheckCircle2, 
-  AlertCircle,
-  Copy,
+  Trash2,
   Layout,
-  Trash2
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 

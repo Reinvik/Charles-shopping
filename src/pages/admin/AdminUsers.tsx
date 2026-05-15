@@ -1,17 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
-  Users, 
   UserPlus, 
-  Shield, 
-  Mail, 
-  Store, 
   Loader2, 
-  Trash2, 
-  Edit2,
-  CheckCircle2,
-  XCircle,
-  MoreVertical
+  Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 

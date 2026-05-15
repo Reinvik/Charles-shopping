@@ -535,7 +535,7 @@ export const AdminOrders = () => {
                     .from('orders')
                     .update({ is_delivered: true }, { count: 'exact' })
                     .eq('id', deliveryReceiptOrder.id)
-                    .eq('tenant_id', tenant.id);
+                    .eq('tenant_id', tenant?.id);
                   
                   if (error) { toast.error('Error al actualizar estado: ' + error.message); return; }
                   if (count === 0) { toast.error('No se pudo actualizar el pedido. Verifica tus permisos.'); return; }
@@ -543,7 +543,7 @@ export const AdminOrders = () => {
                   const productList = deliveryReceiptOrder.items.map((item: any) => `- ${item.name}`).join('\n');
                   const clientName = deliveryReceiptOrder.shipping_details?.fullName || 'Cliente';
                   const phone = deliveryReceiptOrder.shipping_details?.phone.replace(/\D/g, '') || '';
-                  const message = encodeURIComponent(`Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${name}\nRut: ${rut}\n\n¡Gracias por confiar en ${tenant.display_name}!`);
+                  const message = encodeURIComponent(`Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${name}\nRut: ${rut}\n\n¡Gracias por confiar en ${tenant?.display_name}!`);
                   
                   window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
                   setDeliveryReceiptOrder(null);

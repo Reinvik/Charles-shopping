@@ -44,9 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkAdmin = async (currentUser: User) => {
-    const { data, error } = await supabase
+  const checkAdmin = async (currentUser: any) => {
+    const { data } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', currentUser.id)
