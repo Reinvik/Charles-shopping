@@ -5,11 +5,13 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../context/ThemeContext';
+import { useTenant } from '../context/TenantContext';
 
 const CartDrawer: React.FC = () => {
   const { cart, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
   const { user } = useAuth();
   const { settings } = useTheme();
+  const { tenant } = useTenant();
   
   const [email, setEmail] = useState(user?.email || localStorage.getItem('charles-customer-email') || '');
   const [shippingDetails, setShippingDetails] = useState(() => {
@@ -30,13 +32,14 @@ const CartDrawer: React.FC = () => {
   // Fetch delivery zones
   useEffect(() => {
     const fetchZones = async () => {
+      if (!tenant) return;
       try {
         const { data, error: zonesError } = await supabase
           .from('delivery_zones')
           .select('*')
+          .eq('tenant_id', tenant.id)
           .eq('is_active', true)
           .order('order_index', { ascending: true });
-
         if (zonesError) throw zonesError;
         setDeliveryZones(data || []);
       } catch (err) {
@@ -46,7 +49,7 @@ const CartDrawer: React.FC = () => {
       }
     };
     fetchZones();
-  }, []);
+  }, [tenant]);
 
   // Persist email and shipping details
   useEffect(() => {
@@ -59,9 +62,8 @@ const CartDrawer: React.FC = () => {
 
   // Find selected zone info
   const selectedZone = deliveryZones.find(z => z.name === shippingDetails.comuna);
-  
-  // Use zone-specific cost/threshold or fallback to global settings
-  const currentDeliveryCost = selectedZone ? selectedZone.cost : (settings.deliveryCost || 3500);
+    // Use zone-specific cost/threshold or fallback to global settings
+  const currentDeliveryCost = selectedZone ? Number(selectedZone.cost) : (Number(settings.deliveryCost) || 3500);
   const freeShippingThreshold = selectedZone?.free_shipping_threshold !== null && selectedZone?.free_shipping_threshold !== undefined
     ? selectedZone.free_shipping_threshold 
     : (settings.freeDeliveryThreshold || 30000);
@@ -94,6 +96,7 @@ const CartDrawer: React.FC = () => {
           email: email,
           total: finalTotal,
           userId: user?.id,
+          tenantId: tenant?.id,
           shippingDetails: {
             ...shippingDetails,
             shippingCost: finalShippingCost

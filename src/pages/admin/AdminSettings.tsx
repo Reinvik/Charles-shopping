@@ -10,7 +10,8 @@ import {
   Loader2,
   CheckCircle2,
   Lock,
-  KeyRound
+  KeyRound,
+  Truck
 } from 'lucide-react';
 
 import { useTenant } from '../../context/TenantContext';
@@ -40,6 +41,9 @@ const AdminSettings = () => {
     secret: '',
     isSandbox: true
   });
+
+  const [zones, setZones] = useState<any[]>([]);
+  const [loadingZones, setLoadingZones] = useState(false);
 
   const [activeTab, setActiveTab] = useState('design');
 
@@ -71,6 +75,19 @@ const AdminSettings = () => {
     };
 
     fetchFlowSettings();
+
+    const fetchZones = async () => {
+      if (!tenant) return;
+      setLoadingZones(true);
+      const { data } = await supabase
+        .from('delivery_zones')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('order_index', { ascending: true });
+      if (data) setZones(data);
+      setLoadingZones(false);
+    };
+    fetchZones();
   }, [settings, tenant]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,6 +169,15 @@ const AdminSettings = () => {
         }, { onConflict: 'key,tenant_id' });
 
       if (flowError) throw flowError;
+
+      // 3. Guardar Zonas de Despacho
+      for (const zone of zones) {
+        const { error: zoneError } = await supabase
+          .from('delivery_zones')
+          .update({ price: Number(zone.price) })
+          .eq('id', zone.id);
+        if (zoneError) throw zoneError;
+      }
 
       await refreshTheme();
       toast.success('Configuración guardada correctamente');
@@ -411,6 +437,59 @@ const AdminSettings = () => {
                   </div>
                 </div>
               </div>
+            </section>
+
+            <section className="settings-card">
+              <div className="card-header">
+                <Truck size={20} />
+                <h3>Costos de Despacho por Zona</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+                Define precios específicos según la ubicación del cliente. Estos valores se aplicarán automáticamente en el checkout.
+              </p>
+
+              {loadingZones ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+                  <Loader2 className="spin" size={24} color="var(--primary)" />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {zones.map((zone, index) => (
+                    <div key={zone.id} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{zone.name}</div>
+                        <div style={{ fontSize: '12px', color: '#64748b' }}>{zone.description || 'Sin descripción'}</div>
+                      </div>
+                      <div className="input-with-icon" style={{ width: '150px', backgroundColor: '#fff' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 'bold' }}>$</span>
+                        <input 
+                          type="number" 
+                          value={zone.price} 
+                          onChange={(e) => {
+                            const newZones = [...zones];
+                            newZones[index].price = e.target.value;
+                            setZones(newZones);
+                          }}
+                          style={{ textAlign: 'right' }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {zones.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '14px' }}>
+                      No hay zonas configuradas.
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
           </>
         )}

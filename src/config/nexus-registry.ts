@@ -1,0 +1,5 @@
+export const NEXUS_PORTS = {
+  FRONTEND: 3000,
+  API: 3100,
+  EDGE_FUNCTIONS: 3200,
+};

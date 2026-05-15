@@ -121,7 +121,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
               color: '#999', 
               textDecoration: 'line-through' 
             }}>
-              ${oldPrice.toLocaleString('es-CL')}
+              ${Number(oldPrice).toLocaleString('es-CL')}
             </span>
           )}
           <span style={{ 
@@ -129,7 +129,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
             fontWeight: '800', 
             color: 'var(--primary)' 
           }}>
-            ${price.toLocaleString('es-CL')} <span style={{ fontSize: '10px', opacity: 0.7 }}>CLP</span>
+            ${Number(price).toLocaleString('es-CL')} <span style={{ fontSize: '10px', opacity: 0.7 }}>CLP</span>
           </span>
         </div>
       </div>

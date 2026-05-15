@@ -185,13 +185,13 @@ const HomePage: React.FC = () => {
               </div>
             )}
             {products.map(product => (
-              <ProductCard 
+              <ProductCard
                 key={product.id}
                 id={product.id}
-                name={product.name}
-                image={product.image_url}
-                price={product.price}
-                oldPrice={product.original_price}
+                name={product.name || 'Producto sin nombre'}
+                price={Number(product.price) || 0}
+                image={product.image_url || 'https://via.placeholder.com/400?text=Sin+Imagen'}
+                oldPrice={product.original_price ? Number(product.original_price) : undefined}
                 discount={product.discount_badge}
                 isOnOffer={product.is_on_offer}
               />

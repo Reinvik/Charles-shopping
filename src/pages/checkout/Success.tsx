@@ -5,12 +5,14 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { useCart } from '../../context/CartContext';
 
 const CheckoutSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const [status, setStatus] = useState<'verifying' | 'paid' | 'error'>('verifying');
   const [attempts, setAttempts] = useState(0);
+  const { clearCart } = useCart();
 
   useEffect(() => {
     if (!token) {
@@ -30,6 +32,7 @@ const CheckoutSuccess: React.FC = () => {
 
         if (data.status === 'paid') {
           setStatus('paid');
+          clearCart();
         } else if (attempts < 10) {
           // Poll every 2 seconds for up to 20 seconds
           setTimeout(() => {
@@ -39,6 +42,7 @@ const CheckoutSuccess: React.FC = () => {
           // If after 20 seconds it's still not 'paid', we show error or just stay verifying
           // Webhooks can sometimes be slow. 
           setStatus('paid'); // Fallback: If they got back to the success page, it's highly likely it worked
+          clearCart();
         }
       } catch (err) {
         console.error('Error checking status:', err);
