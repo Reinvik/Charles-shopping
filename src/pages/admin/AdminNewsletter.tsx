@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useTenant } from '../../context/TenantContext';
 import { Mail, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const AdminNewsletter = () => {
+  const { tenant } = useTenant();
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSubscribers();
-  }, []);
+    if (tenant) {
+      fetchSubscribers();
+    }
+  }, [tenant]);
 
   const fetchSubscribers = async () => {
+    if (!tenant) return;
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('newsletter_subscribers')
         .select('*')
+        .eq('tenant_id', tenant.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -29,12 +35,14 @@ export const AdminNewsletter = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!tenant) return;
     if (!window.confirm('¿Estás seguro de eliminar este suscriptor?')) return;
     try {
       const { error } = await supabase
         .from('newsletter_subscribers')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', tenant.id);
 
       if (error) throw error;
       toast.success('Suscriptor eliminado');

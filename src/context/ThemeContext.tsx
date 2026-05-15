@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { useTenant } from './TenantContext';
 
 interface ThemeSettings {
   primaryColor: string;
@@ -7,6 +8,7 @@ interface ThemeSettings {
   logoUrl: string | null;
   faviconUrl: string | null;
   siteName: string;
+  siteDescription: string;
   announcementText: string;
   freeDeliveryThreshold: number;
   deliveryCost: number;
@@ -24,7 +26,8 @@ const defaultSettings: ThemeSettings = {
   logoUrl: null,
   faviconUrl: null,
   siteName: 'Charly Home',
-    announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
+  siteDescription: 'Tu tienda de confianza para productos de aseo y papelería. Despachos rápidos y seguros a todo Santiago.',
+  announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
   freeDeliveryThreshold: 30000,
   deliveryCost: 3500
 };
@@ -64,12 +67,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const { tenant } = useTenant();
+
   const fetchTheme = async () => {
+    if (!tenant) return;
+    
     try {
       const { data } = await supabase
         .from('site_settings')
         .select('value')
         .eq('key', 'theme')
+        .eq('tenant_id', tenant.id)
         .single();
 
       if (data && data.value) {
@@ -87,7 +95,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     fetchTheme();
-  }, []);
+  }, [tenant]);
 
   return (
     <ThemeContext.Provider value={{ settings, loading, refreshTheme: fetchTheme }}>

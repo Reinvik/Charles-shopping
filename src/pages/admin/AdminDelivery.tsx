@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../context/ThemeContext';
+import { useTenant } from '../../context/TenantContext';
 import { toast } from 'sonner';
 import { Truck, CheckCircle2, Loader2, Info, Plus, Trash2, MapPin } from 'lucide-react';
 
 export const AdminDelivery = () => {
   const { settings, refreshTheme } = useTheme();
+  const { tenant } = useTenant();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     announcementText: settings.announcementText || '',
@@ -27,15 +29,19 @@ export const AdminDelivery = () => {
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
       deliveryCost: settings.deliveryCost || 3500
     });
-    fetchZones();
-  }, [settings]);
+    if (tenant) {
+      fetchZones();
+    }
+  }, [settings, tenant]);
 
   const fetchZones = async () => {
+    if (!tenant) return;
     setFetchingZones(true);
     try {
       const { data, error } = await supabase
         .from('delivery_zones')
         .select('*')
+        .eq('tenant_id', tenant.id)
         .order('order_index', { ascending: true });
       if (error) throw error;
       setZones(data || []);
@@ -53,6 +59,7 @@ export const AdminDelivery = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenant) return;
     setLoading(true);
 
     try {
@@ -65,17 +72,14 @@ export const AdminDelivery = () => {
 
       const { error } = await supabase
         .from('site_settings')
-        .update({ value: newThemeSettings })
-        .eq('key', 'theme');
+        .upsert({ 
+          tenant_id: tenant.id, 
+          key: 'theme', 
+          value: newThemeSettings,
+          updated_at: new Date().toISOString() 
+        }, { onConflict: 'key,tenant_id' });
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Si no existe, lo insertamos
-          await supabase.from('site_settings').insert([{ key: 'theme', value: newThemeSettings }]);
-        } else {
-          throw error;
-        }
-      }
+      if (error) throw error;
 
       await refreshTheme();
       toast.success('Configuración de despacho actualizada exitosamente', {
@@ -90,6 +94,7 @@ export const AdminDelivery = () => {
 
   const handleAddZone = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenant) return;
     if (!newZone.name) {
       toast.error('La comuna es obligatoria');
       return;
@@ -103,7 +108,8 @@ export const AdminDelivery = () => {
           cost: newZone.cost,
           free_shipping_threshold: newZone.free_shipping_threshold,
           zone_type: newZone.zone_type,
-          order_index: zones.length + 1
+          order_index: zones.length + 1,
+          tenant_id: tenant.id
         }]);
 
       if (error) throw error;
@@ -117,13 +123,15 @@ export const AdminDelivery = () => {
   };
 
   const handleDeleteZone = async (id: string) => {
+    if (!tenant) return;
     if (!confirm('¿Estás seguro de eliminar esta comuna?')) return;
 
     try {
       const { error } = await supabase
         .from('delivery_zones')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', tenant.id);
 
       if (error) throw error;
       toast.success('Comuna eliminada');

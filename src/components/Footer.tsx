@@ -3,27 +3,33 @@ import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useTenant } from '../context/TenantContext';
 
 interface FooterProps {
   onCategorySelect?: (id: string | null) => void;
 }
 
 const Footer = ({ onCategorySelect }: FooterProps) => {
+  const { settings } = useTheme();
+  const { tenant } = useTenant();
   const [categories, setCategories] = useState<any[]>([]);
   const [email, setEmail] = useState('');
   const [loadingNewsletter, setLoadingNewsletter] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!tenant) return;
       const { data } = await supabase
         .from('categories')
         .select('*')
+        .eq('tenant_id', tenant.id)
         .order('name')
         .limit(5);
       if (data) setCategories(data);
     };
     fetchCategories();
-  }, []);
+  }, [tenant]);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,12 +62,11 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
     <footer style={{ backgroundColor: '#fff', borderTop: '1px solid var(--border)', padding: 'clamp(40px, 10vw, 60px) 0 30px' }}>
       <div className="container footer-grid">
         <div>
-          <div style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px' }}>
-            <span style={{ color: 'var(--dark)' }}>CHARLY</span>
-            <span style={{ color: 'var(--primary)' }}>HOME</span>
+          <div style={{ fontSize: '20px', fontWeight: '800', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>
+            {settings.siteName}
           </div>
-          <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
-            Tu tienda de confianza para productos de aseo y papelería. Despachos rápidos y seguros a todo Santiago.
+          <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+            {settings.siteDescription}
           </p>
         </div>
         
@@ -81,13 +86,6 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
                 {category.name}
               </li>
             ))}
-            {categories.length === 0 && (
-              <>
-                <li>Papel Higiénico</li>
-                <li>Detergentes</li>
-                <li>Limpieza de Hogar</li>
-              </>
-            )}
           </ul>
         </div>
 
@@ -135,7 +133,7 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
       </div>
       
       <div className="container" style={{ marginTop: '60px', borderTop: '1px solid #f0f0f0', paddingTop: '30px', textAlign: 'center', fontSize: '12px', color: '#999' }}>
-        © 2026 Charly Home Delivery Home. Todos los derechos reservados.
+        © {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.
       </div>
     </footer>
   );

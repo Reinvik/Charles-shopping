@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import { toast } from 'sonner';
+import { useTenant } from '../../context/TenantContext';
 
 interface Product {
   id: string;
@@ -32,6 +33,7 @@ interface Category {
 }
 
 export const AdminProducts = () => {
+  const { tenant } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,7 @@ export const AdminProducts = () => {
   const moveProduct = async (index: number, direction: 'up' | 'down') => {
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === products.length - 1) return;
+    if (!tenant) return;
 
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     const currentProd = products[index];
@@ -68,22 +71,26 @@ export const AdminProducts = () => {
     const { error: err1 } = await supabase
       .from('products')
       .update({ order_index: targetProd.order_index })
-      .eq('id', currentProd.id);
+      .eq('id', currentProd.id)
+      .eq('tenant_id', tenant.id);
 
     const { error: err2 } = await supabase
       .from('products')
       .update({ order_index: currentProd.order_index })
-      .eq('id', targetProd.id);
+      .eq('id', targetProd.id)
+      .eq('tenant_id', tenant.id);
 
     if (err1 || err2) toast.error('Error al reordenar');
     else fetchData();
   };
 
   const fetchData = async () => {
+    if (!tenant) return;
     try {
       let query = supabase
         .from('products')
         .select('*, categories(name)')
+        .eq('tenant_id', tenant.id)
         .order('order_index', { ascending: true });
       
       if (selectedFilterCategory !== 'all') {
@@ -92,7 +99,10 @@ export const AdminProducts = () => {
 
       const [prodRes, catRes] = await Promise.all([
         query,
-        supabase.from('categories').select('*').order('order_index', { ascending: true })
+        supabase.from('categories')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .order('order_index', { ascending: true })
       ]);
 
       if (prodRes.error) throw prodRes.error;
@@ -109,7 +119,7 @@ export const AdminProducts = () => {
 
   useEffect(() => {
     fetchData();
-  }, [selectedFilterCategory]);
+  }, [selectedFilterCategory, tenant]);
 
   const openModal = (product?: Product) => {
     if (product) {
@@ -187,6 +197,7 @@ export const AdminProducts = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenant) return;
     setSaving(true);
 
     try {
@@ -200,7 +211,8 @@ export const AdminProducts = () => {
         images: formData.images || [],
         is_active: formData.is_active,
         is_on_offer: formData.is_on_offer || false,
-        stock: Number(formData.stock) || 0
+        stock: Number(formData.stock) || 0,
+        tenant_id: tenant.id
       };
 
       let query;
@@ -208,7 +220,8 @@ export const AdminProducts = () => {
         query = supabase
           .from('products')
           .update(productData)
-          .eq('id', editingProduct.id);
+          .eq('id', editingProduct.id)
+          .eq('tenant_id', tenant.id);
       } else {
         query = supabase
           .from('products')

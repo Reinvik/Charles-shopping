@@ -13,7 +13,10 @@ import {
   KeyRound
 } from 'lucide-react';
 
+import { useTenant } from '../../context/TenantContext';
+
 const AdminSettings = () => {
+  const { tenant } = useTenant();
   const { settings, refreshTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -27,6 +30,7 @@ const AdminSettings = () => {
     logoUrl: settings.logoUrl,
     faviconUrl: settings.faviconUrl,
     announcementText: settings.announcementText || '',
+    siteDescription: settings.siteDescription || '',
     freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
     deliveryCost: settings.deliveryCost || 3500
   });
@@ -47,16 +51,19 @@ const AdminSettings = () => {
       logoUrl: settings.logoUrl,
       faviconUrl: settings.faviconUrl,
       announcementText: settings.announcementText || '',
+      siteDescription: settings.siteDescription || '',
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
       deliveryCost: settings.deliveryCost || 3500
     });
 
     const fetchFlowSettings = async () => {
+      if (!tenant) return;
       const { data } = await supabase
         .from('site_settings')
         .select('value')
+        .eq('tenant_id', tenant.id)
         .eq('key', 'flow_settings')
-        .single();
+        .maybeSingle();
       
       if (data && data.value) {
         setFlowSettings(data.value as any);
@@ -64,7 +71,7 @@ const AdminSettings = () => {
     };
 
     fetchFlowSettings();
-  }, [settings]);
+  }, [settings, tenant]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,13 +80,13 @@ const AdminSettings = () => {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'favicon') => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !tenant) return;
 
     try {
       setUploading(type);
       const fileExt = file.name.split('.').pop();
-      const fileName = `${type}-${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const fileName = `${tenant.slug}-${type}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `site-assets/${tenant.slug}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('site-assets')
@@ -106,54 +113,45 @@ const AdminSettings = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenant) return;
     setLoading(true);
 
     try {
       // 1. Guardar Tema y Tienda
+      const themeValue = {
+        primaryColor: formData.primaryColor,
+        borderRadius: formData.borderRadius,
+        siteName: formData.siteName,
+        logoUrl: formData.logoUrl,
+        faviconUrl: formData.faviconUrl,
+        announcementText: formData.announcementText,
+        siteDescription: formData.siteDescription,
+        freeDeliveryThreshold: Number(formData.freeDeliveryThreshold),
+        deliveryCost: Number(formData.deliveryCost)
+      };
+
       const { error: themeError } = await supabase
         .from('site_settings')
-        .update({
-          value: {
-            primaryColor: formData.primaryColor,
-            borderRadius: formData.borderRadius,
-            siteName: formData.siteName,
-            logoUrl: formData.logoUrl,
-            faviconUrl: formData.faviconUrl,
-            announcementText: formData.announcementText,
-            freeDeliveryThreshold: Number(formData.freeDeliveryThreshold),
-            deliveryCost: Number(formData.deliveryCost)
-          },
+        .upsert({
+          tenant_id: tenant.id,
+          key: 'theme',
+          value: themeValue,
           updated_at: new Date().toISOString()
-        })
-        .eq('key', 'theme');
+        }, { onConflict: 'key,tenant_id' });
 
       if (themeError) throw themeError;
 
       // 2. Guardar Configuración de Flow
-      const { data: existingFlow } = await supabase
+      const { error: flowError } = await supabase
         .from('site_settings')
-        .select('id')
-        .eq('key', 'flow_settings')
-        .single();
+        .upsert({
+          tenant_id: tenant.id,
+          key: 'flow_settings',
+          value: flowSettings,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key,tenant_id' });
 
-      if (existingFlow) {
-        const { error: flowError } = await supabase
-          .from('site_settings')
-          .update({
-            value: flowSettings,
-            updated_at: new Date().toISOString()
-          })
-          .eq('key', 'flow_settings');
-        if (flowError) throw flowError;
-      } else {
-        const { error: flowError } = await supabase
-          .from('site_settings')
-          .insert({
-            key: 'flow_settings',
-            value: flowSettings
-          });
-        if (flowError) throw flowError;
-      }
+      if (flowError) throw flowError;
 
       await refreshTheme();
       toast.success('Configuración guardada correctamente');
@@ -252,6 +250,25 @@ const AdminSettings = () => {
                     placeholder="Ej: Charly Home"
                   />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label>Descripción de la Tienda (Footer)</label>
+                <textarea 
+                  name="siteDescription" 
+                  value={formData.siteDescription} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, siteDescription: e.target.value }))}
+                  placeholder="Ej: Tu tienda de confianza para productos de aseo..."
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px', 
+                    borderRadius: '0.5rem', 
+                    border: '1px solid #ddd',
+                    minHeight: '80px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
               </div>
 
               <div className="upload-section">

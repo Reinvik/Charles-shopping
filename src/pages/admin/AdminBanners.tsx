@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useTenant } from '../../context/TenantContext';
 import { 
   Plus, 
   Trash2, 
@@ -24,9 +25,11 @@ interface Banner {
   button_link: string;
   order_index: number;
   is_active: boolean;
+  tenant_id: string;
 }
 
 export const AdminBanners: React.FC = () => {
+  const { tenant } = useTenant();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,13 +45,17 @@ export const AdminBanners: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchBanners();
-  }, []);
+    if (tenant) {
+      fetchBanners();
+    }
+  }, [tenant]);
 
   const fetchBanners = async () => {
+    if (!tenant) return;
     const { data, error } = await supabase
       .from('banners')
       .select('*')
+      .eq('tenant_id', tenant.id)
       .order('order_index', { ascending: true });
     
     if (error) {
@@ -60,6 +67,7 @@ export const AdminBanners: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenant) return;
     if (!formData.title || !formData.image_url) {
       toast.error('Título e imagen son obligatorios');
       return;
@@ -68,8 +76,9 @@ export const AdminBanners: React.FC = () => {
     if (editingId) {
       const { error } = await supabase
         .from('banners')
-        .update(formData)
-        .eq('id', editingId);
+        .update({ ...formData })
+        .eq('id', editingId)
+        .eq('tenant_id', tenant.id);
       
       if (error) toast.error('Error al actualizar');
       else {
@@ -80,7 +89,7 @@ export const AdminBanners: React.FC = () => {
     } else {
       const { error } = await supabase
         .from('banners')
-        .insert([{ ...formData, order_index: banners.length }]);
+        .insert([{ ...formData, tenant_id: tenant.id, order_index: banners.length }]);
       
       if (error) toast.error('Error al crear');
       else {
@@ -100,12 +109,14 @@ export const AdminBanners: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    if (!tenant) return;
     if (!confirm('¿Estás seguro de eliminar este banner?')) return;
     
     const { error } = await supabase
       .from('banners')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('tenant_id', tenant.id);
     
     if (error) toast.error('Error al eliminar');
     else {
@@ -115,16 +126,19 @@ export const AdminBanners: React.FC = () => {
   };
 
   const toggleStatus = async (banner: Banner) => {
+    if (!tenant) return;
     const { error } = await supabase
       .from('banners')
       .update({ is_active: !banner.is_active })
-      .eq('id', banner.id);
+      .eq('id', banner.id)
+      .eq('tenant_id', tenant.id);
     
     if (error) toast.error('Error al actualizar estado');
     else fetchBanners();
   };
 
   const moveBanner = async (index: number, direction: 'up' | 'down') => {
+    if (!tenant) return;
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === banners.length - 1) return;
 
@@ -135,12 +149,14 @@ export const AdminBanners: React.FC = () => {
     const { error: err1 } = await supabase
       .from('banners')
       .update({ order_index: targetBanner.order_index })
-      .eq('id', currentBanner.id);
+      .eq('id', currentBanner.id)
+      .eq('tenant_id', tenant.id);
 
     const { error: err2 } = await supabase
       .from('banners')
       .update({ order_index: currentBanner.order_index })
-      .eq('id', targetBanner.id);
+      .eq('id', targetBanner.id)
+      .eq('tenant_id', tenant.id);
 
     if (err1 || err2) toast.error('Error al reordenar');
     else fetchBanners();

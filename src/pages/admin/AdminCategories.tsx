@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useTenant } from '../../context/TenantContext';
 import { Plus, Pencil, Trash2, Loader2, Save, X, MoveUp, MoveDown } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -8,9 +9,11 @@ interface Category {
   name: string;
   slug: string;
   order_index: number;
+  tenant_id: string;
 }
 
 export const AdminCategories = () => {
+  const { tenant } = useTenant();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState<string | null>(null);
@@ -19,6 +22,7 @@ export const AdminCategories = () => {
   const [newValue, setNewValue] = useState('');
 
   const moveCategory = async (index: number, direction: 'up' | 'down') => {
+    if (!tenant) return;
     if (direction === 'up' && index === 0) return;
     if (direction === 'down' && index === categories.length - 1) return;
 
@@ -29,22 +33,26 @@ export const AdminCategories = () => {
     const { error: err1 } = await supabase
       .from('categories')
       .update({ order_index: targetCat.order_index })
-      .eq('id', currentCat.id);
+      .eq('id', currentCat.id)
+      .eq('tenant_id', tenant.id);
 
     const { error: err2 } = await supabase
       .from('categories')
       .update({ order_index: currentCat.order_index })
-      .eq('id', targetCat.id);
+      .eq('id', targetCat.id)
+      .eq('tenant_id', tenant.id);
 
     if (err1 || err2) toast.error('Error al reordenar');
     else fetchCategories();
   };
 
   const fetchCategories = async () => {
+    if (!tenant) return;
     try {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
+        .eq('tenant_id', tenant.id)
         .order('order_index', { ascending: true });
       
       if (error) throw error;
@@ -57,8 +65,10 @@ export const AdminCategories = () => {
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (tenant) {
+      fetchCategories();
+    }
+  }, [tenant]);
 
   const generateSlug = (text: string) => {
     return text
@@ -74,6 +84,7 @@ export const AdminCategories = () => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tenant) return;
     if (!newValue.trim()) return;
 
     try {
@@ -83,7 +94,8 @@ export const AdminCategories = () => {
         .insert([{ 
           name: newValue.trim(), 
           slug,
-          order_index: categories.length 
+          order_index: categories.length,
+          tenant_id: tenant.id
         }]);
 
       if (error) {
@@ -102,6 +114,7 @@ export const AdminCategories = () => {
   };
 
   const handleUpdate = async (id: string) => {
+    if (!tenant) return;
     if (!editValue.trim()) return;
 
     try {
@@ -109,7 +122,8 @@ export const AdminCategories = () => {
       const { error } = await supabase
         .from('categories')
         .update({ name: editValue.trim(), slug })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', tenant.id);
 
       if (error) {
         console.error('Error details:', error);
@@ -126,13 +140,15 @@ export const AdminCategories = () => {
   };
 
   const handleDelete = async (id: string, name: string) => {
+    if (!tenant) return;
     if (!confirm(`¿Estás seguro de eliminar la categoría "${name}"? Esto podría afectar a los productos asociados.`)) return;
 
     try {
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', tenant.id);
 
       if (error) throw error;
 

@@ -14,6 +14,7 @@ import { Toaster } from 'sonner';
 
 import HeroBanner from './components/HeroBanner';
 import { SEO } from './hooks/useSEO';
+import { useTenant } from './context/TenantContext';
 
 const HomePage: React.FC = () => {
   const [products, setProducts] = React.useState<any[]>([]);
@@ -21,17 +22,20 @@ const HomePage: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<any>(null);
   const { isAdmin } = useAuth();
+  const { tenant } = useTenant();
   const navigate = useNavigate();
 
   const seoData = {
-    title: selectedCategory ? selectedCategory.name : 'Inicio',
+    title: selectedCategory ? selectedCategory.name : (tenant?.display_name || 'Inicio'),
     description: selectedCategory 
-      ? `Compra ${selectedCategory.name.toLowerCase()} al mejor precio en Charly Home. Despachos rápidos a todo Santiago.`
-      : 'Charly Home: Tu tienda de aseo y papelería en Santiago. Productos de alta calidad con despacho a domicilio el mismo día.'
+      ? `Compra ${selectedCategory.name.toLowerCase()} al mejor precio en ${tenant?.display_name}.`
+      : `${tenant?.display_name}: Tu tienda de confianza. Productos de alta calidad con despacho a domicilio.`
   };
 
   React.useEffect(() => {
     const fetchProducts = async () => {
+      if (!tenant) return;
+      
       setLoading(true);
       let query = supabase
         .from('products')
@@ -39,12 +43,14 @@ const HomePage: React.FC = () => {
           *,
           categories(id, name)
         `)
+        .eq('tenant_id', tenant.id)
         .eq('is_active', true)
         .gt('stock', 0);
       
       const { data: offersCat } = await supabase
         .from('categories')
         .select('id')
+        .eq('tenant_id', tenant.id)
         .eq('slug', 'ofertas')
         .single();
 
@@ -67,15 +73,16 @@ const HomePage: React.FC = () => {
     };
 
     fetchProducts();
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, tenant]);
 
   React.useEffect(() => {
-    if (selectedCategoryId) {
+    if (selectedCategoryId && tenant) {
       const fetchCategory = async () => {
         const { data } = await supabase
           .from('categories')
           .select('*')
           .eq('id', selectedCategoryId)
+          .eq('tenant_id', tenant.id)
           .single();
         if (data) setSelectedCategory(data);
       };
@@ -83,7 +90,7 @@ const HomePage: React.FC = () => {
     } else {
       setSelectedCategory(null);
     }
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, tenant]);
 
   return (
     <div className="app">
@@ -230,6 +237,8 @@ import { AdminCategories } from './pages/admin/AdminCategories';
 import { AdminBanners } from './pages/admin/AdminBanners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminDelivery } from './pages/admin/AdminDelivery';
+import { AdminTenants } from './pages/admin/AdminTenants';
+import { AdminUsers } from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
@@ -238,8 +247,12 @@ import { DynamicPage } from './pages/DynamicPage';
 import DeliveryPortal from './pages/DeliveryPortal';
 
 function App() {
+  const { tenant } = useTenant();
+
   React.useEffect(() => {
     const trackVisit = async () => {
+      if (!tenant) return;
+      
       let sessionId = sessionStorage.getItem('shop_session_id');
       
       if (!sessionId) {
@@ -248,7 +261,10 @@ function App() {
         
         // Registrar la visita silenciosamente
         try {
-          await supabase.from('store_visits').insert([{ session_id: sessionId }]);
+          await supabase.from('store_visits').insert([{ 
+            session_id: sessionId,
+            tenant_id: tenant.id 
+          }]);
         } catch (err) {
           console.error("No se pudo registrar la visita", err);
         }
@@ -256,7 +272,7 @@ function App() {
     };
     
     trackVisit();
-  }, []);
+  }, [tenant]);
 
   return (
     <CartProvider>
@@ -283,6 +299,8 @@ function App() {
                   <Route path="/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
                   <Route path="/delivery" element={<AdminLayout><AdminDelivery /></AdminLayout>} />
                   <Route path="/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
+                  <Route path="/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
+                  <Route path="/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
                 </Routes>
               </ProtectedRoute>
             } 

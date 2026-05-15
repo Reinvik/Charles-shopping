@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { useTenant } from '../context/TenantContext';
 
 interface Banner {
   id: string;
@@ -22,12 +23,16 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { tenant } = useTenant();
 
   useEffect(() => {
     const fetchBanners = async () => {
+      if (!tenant) return;
+      
       const { data } = await supabase
         .from('banners')
         .select('*')
+        .eq('tenant_id', tenant.id)
         .eq('is_active', true)
         .order('order_index', { ascending: true });
       
@@ -38,7 +43,7 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
     };
 
     fetchBanners();
-  }, []);
+  }, [tenant]);
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -51,11 +56,17 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
   }, [banners.length]);
 
   const handleAction = async (link: string) => {
+    if (!tenant) return;
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     
     if (uuidRegex.test(link)) {
       // Verificar si es un producto o una categoría
-      const { data: product } = await supabase.from('products').select('id').eq('id', link).single();
+      const { data: product } = await supabase
+        .from('products')
+        .select('id')
+        .eq('id', link)
+        .eq('tenant_id', tenant.id)
+        .single();
       
       if (product) {
         navigate(`/product/${link}`);
@@ -187,7 +198,13 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
 
                   <button 
                     onClick={async () => {
-                      const { data } = await supabase.from('categories').select('id').eq('slug', 'ofertas').single();
+                      if (!tenant) return;
+                      const { data } = await supabase
+                        .from('categories')
+                        .select('id')
+                        .eq('slug', 'ofertas')
+                        .eq('tenant_id', tenant.id)
+                        .single();
                       if (data) onCategorySelect?.(data.id);
                     }}
                     style={{

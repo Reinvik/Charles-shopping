@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useTenant } from '../../context/TenantContext';
 import '../../admin.css';
 import logoImg from '../../assets/logo.png';
 import { 
@@ -16,12 +17,15 @@ import {
   Globe,
   Mail,
   Sliders,
-  ShoppingBag
+  ShoppingBag,
+  Store,
+  Users
 } from 'lucide-react';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isPlatformAdmin } = useAuth();
   const { settings } = useTheme();
+  const { tenant } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
@@ -39,6 +43,10 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'Banners', icon: Palette, path: '/admin/banners' },
     { label: 'Newsletter', icon: Mail, path: '/admin/newsletter' },
     { label: 'Configuración', icon: Sliders, path: '/admin/settings' },
+    ...(isPlatformAdmin ? [
+      { label: 'Tiendas', icon: Store, path: '/admin/tenants' },
+      { label: 'Usuarios', icon: Users, path: '/admin/users' },
+    ] : []),
     { label: 'Ver Tienda', icon: Globe, path: '/' },
   ];
 
@@ -73,7 +81,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         <div className="sidebar-footer">
           <div className="user-info">
             <p className="user-email">{user?.email}</p>
-            <p className="user-role">Administrador</p>
+            <p className="user-role">{tenant?.display_name || 'Administrador'}</p>
           </div>
           <button onClick={handleSignOut} className="sign-out-btn">
             <LogOut size={20} />
@@ -89,7 +97,12 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
             <Menu size={24} />
           </button>
           <div className="header-title">
-            <h1>{navItems.find(i => i.path === location.pathname)?.label || 'Panel'}</h1>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '-4px' }}>
+                {tenant?.display_name}
+              </span>
+              <h1 style={{ margin: 0 }}>{navItems.find(i => i.path === location.pathname)?.label || 'Panel'}</h1>
+            </div>
           </div>
         </header>
 

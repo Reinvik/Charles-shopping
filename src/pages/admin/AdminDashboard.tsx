@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { useTenant } from '../../context/TenantContext';
 import {
   ShoppingBag, Users, Loader2, Truck, MousePointer2, TrendingUp,
   Printer, Package, CheckCircle2, Clock, XCircle, Zap, BarChart3,
@@ -31,6 +32,7 @@ interface DailyStats {
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { tenant } = useTenant();
   const [stats, setStats] = useState({
     products: 0, categories: 0, activeProducts: 0, visitors: 0,
     recentVisitors: 0, conversionRate: 0, carts: 0,
@@ -44,24 +46,27 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (!tenant) return;
+      
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-      const [prodRes, , visitorsRes, recentVisitorsRes, ordersRes, cartsRes, topRes, recentOrdersRes] = await Promise.all([
-        supabase.from('products').select('id, is_active'),
-        supabase.from('categories').select('id'),
-        supabase.from('store_visits').select('id', { count: 'exact', head: true }),
-        supabase.from('store_visits').select('id', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
-        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'paid'),
-        supabase.from('cart_events').select('session_id', { count: 'exact', head: true }),
-        supabase.from('cart_events').select('product_name'),
-        supabase.from('orders').select('id, total, status, customer_email, created_at').order('created_at', { ascending: false }).limit(5),
+      const [prodRes, catRes, visitorsRes, recentVisitorsRes, ordersRes, cartsRes, topRes, recentOrdersRes] = await Promise.all([
+        supabase.from('products').select('id, is_active').eq('tenant_id', tenant.id),
+        supabase.from('categories').select('id').eq('tenant_id', tenant.id),
+        supabase.from('store_visits').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
+        supabase.from('store_visits').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.id).gte('created_at', oneWeekAgo.toISOString()),
+        supabase.from('orders').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.id).eq('status', 'paid'),
+        supabase.from('cart_events').select('session_id', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
+        supabase.from('cart_events').select('product_name').eq('tenant_id', tenant.id),
+        supabase.from('orders').select('id, total, status, customer_email, created_at').eq('tenant_id', tenant.id).order('created_at', { ascending: false }).limit(5),
       ]);
 
       // Historical data for charts
       const { data: historyOrders } = await supabase
         .from('orders')
         .select('created_at, total, status')
+        .eq('tenant_id', tenant.id)
         .gte('created_at', oneWeekAgo.toISOString());
 
       const days: Record<string, DailyStats> = {};
@@ -80,7 +85,6 @@ export const AdminDashboard = () => {
       historyOrders?.forEach(o => {
         const key = o.created_at.split('T')[0];
         if (days[key]) {
-          // Asumimos que un pedido pagado o pendiente es relevante para la métrica diaria
           if (o.status === 'paid' || o.status === 'pending') {
             days[key].deliveries += 1;
             days[key].income += o.total || 0;
@@ -104,7 +108,7 @@ export const AdminDashboard = () => {
       setChartData(Object.values(days));
       setStats({
         products: prodRes.data?.length || 0,
-        categories: 0,
+        categories: catRes.data?.length || 0,
         activeProducts: prodRes.data?.filter((p: any) => p.is_active).length || 0,
         visitors: totalVisitors,
         recentVisitors: recentVisitorsRes.count || 0,
@@ -117,17 +121,18 @@ export const AdminDashboard = () => {
       setLoading(false);
     };
     fetchStats();
-  }, []);
+  }, [tenant]);
 
   const handlePrintLatestLabel = async () => {
-    const { data: latest } = await supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(1).single();
+    if (!tenant) return;
+    const { data: latest } = await supabase.from('orders').select('*').eq('tenant_id', tenant.id).order('created_at', { ascending: false }).limit(1).single();
     const o = latest || { id: 'DEMO-882-99X', created_at: new Date().toISOString(), shipping_details: { fullName: 'NICOLÁS RIVERA (DEMO)', address: 'Av. Vitacura 2670, Piso 15', comuna: 'Vitacura, Santiago', phone: '+56 9 8223 1022', reference: 'Torre Titanium' } };
     const pw = window.open('', '_blank'); if (!pw) return;
-    pw.document.write(`<html><head><style>@page{size:100mm 150mm;margin:0}body{margin:0;padding:10mm;font-family:system-ui}.lc{border:2pt solid #000;height:128mm;display:flex;flex-direction:column}.hd{background:#000;color:#fff;padding:4mm;display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:14pt}.ir{padding:4mm;border-bottom:1.5pt solid #000;display:flex;justify-content:space-between;font-size:10pt}.cm{background:#000;color:#fff;padding:6mm 0;text-align:center;font-weight:900;font-size:28pt}.dt{flex:1;padding:6mm;display:flex;flex-direction:column}.ft{margin-top:auto;border-top:1pt solid #eee;padding-top:4mm;display:flex;justify-content:space-between;font-size:9pt;font-weight:800}</style></head><body><div class=lc><div class=hd><span>CHARLY HOME</span><span>FLEX v2.0</span></div><div class=ir><div><div style="font-size:8pt;color:#666;font-weight:900">ID</div><div style="font-weight:900">#${o.id.substring(0,12).toUpperCase()}</div></div><div style="text-align:right"><div style="font-size:8pt;color:#666;font-weight:900">FECHA</div><div style="font-weight:900">${new Date(o.created_at).toLocaleDateString()}</div></div></div><div class=cm>${o.shipping_details.comuna.split(',')[0].toUpperCase()}</div><div class=dt><div style="font-size:8pt;color:#666;font-weight:900;margin-bottom:2mm">DIRECCIÓN</div><div style="font-weight:900;font-size:14pt;margin-bottom:4mm;line-height:1.2">${o.shipping_details.address}</div><div class=ft><div><div style="font-size:7pt;color:#666">DESTINATARIO</div><div>${o.shipping_details.fullName.toUpperCase()}</div></div><div style="text-align:right"><div style="font-size:7pt;color:#666">CONTACTO</div><div>${o.shipping_details.phone}</div></div></div></div></div><script>window.onload=()=>{window.print();window.close()}</script></body></html>`);
+    pw.document.write(`<html><head><style>@page{size:100mm 150mm;margin:0}body{margin:0;padding:10mm;font-family:system-ui}.lc{border:2pt solid #000;height:128mm;display:flex;flex-direction:column}.hd{background:#000;color:#fff;padding:4mm;display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:14pt}.ir{padding:4mm;border-bottom:1.5pt solid #000;display:flex;justify-content:space-between;font-size:10pt}.cm{background:#000;color:#fff;padding:6mm 0;text-align:center;font-weight:900;font-size:28pt}.dt{flex:1;padding:6mm;display:flex;flex-direction:column}.ft{margin-top:auto;border-top:1pt solid #eee;padding-top:4mm;display:flex;justify-content:space-between;font-size:9pt;font-weight:800}</style></head><body><div class=lc><div class=hd><span>${tenant.display_name.toUpperCase()}</span><span>FLEX v2.0</span></div><div class=ir><div><div style="font-size:8pt;color:#666;font-weight:900">ID</div><div style="font-weight:900">#${o.id.substring(0,12).toUpperCase()}</div></div><div style="text-align:right"><div style="font-size:8pt;color:#666;font-weight:900">FECHA</div><div style="font-weight:900">${new Date(o.created_at).toLocaleDateString()}</div></div></div><div class=cm>${o.shipping_details.comuna.split(',')[0].toUpperCase()}</div><div class=dt><div style="font-size:8pt;color:#666;font-weight:900;margin-bottom:2mm">DIRECCIÓN</div><div style="font-weight:900;font-size:14pt;margin-bottom:4mm;line-height:1.2">${o.shipping_details.address}</div><div class=ft><div><div style="font-size:7pt;color:#666">DESTINATARIO</div><div>${o.shipping_details.fullName.toUpperCase()}</div></div><div style="text-align:right"><div style="font-size:7pt;color:#666">CONTACTO</div><div>${o.shipping_details.phone}</div></div></div></div></div><script>window.onload=()=>{window.print();window.close()}</script></body></html>`);
     pw.document.close();
   };
 
-  if (loading) return (
+  if (loading || !tenant) return (
     <div className="flex items-center justify-center p-12">
       <Loader2 className="animate-spin text-primary" size={40} />
     </div>
@@ -188,7 +193,7 @@ export const AdminDashboard = () => {
             Dashboard
           </h2>
           <p style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 600, marginTop: '0.2rem' }}>
-            Panel de control · Charly Home
+            Panel de control · {tenant.display_name}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '0.75rem', padding: '0.4rem 0.9rem' }}>

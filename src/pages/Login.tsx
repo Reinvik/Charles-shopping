@@ -12,6 +12,8 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [isRecoveryMode, setIsRecoveryMode] = useState(window.location.search.includes('type=recovery'));
+  const [newPassword, setNewPassword] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +31,49 @@ export const Login: React.FC = () => {
       setTimeout(() => navigate('/admin'), 1500);
     } catch (error: any) {
       toast.error(error.message || 'Credenciales inválidas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast.error('Por favor, ingresa tu email corporativo primero');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login?type=recovery`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Se ha enviado un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al enviar correo de recuperación');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) return toast.error('La contraseña debe tener al menos 6 caracteres');
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      toast.success('Contraseña actualizada correctamente. Iniciando sesión...');
+      setTimeout(() => navigate('/admin'), 1500);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al actualizar contraseña');
     } finally {
       setLoading(false);
     }
@@ -69,16 +114,21 @@ export const Login: React.FC = () => {
             </motion.div>
             
             <div className="title-group">
-              <h1>Admin Access</h1>
+              <h1>{isRecoveryMode ? 'Restablecer Clave' : 'Admin Access'}</h1>
               <div className="admin-badge">
                 <ShieldCheck size={14} />
-                <span>Secure Portal</span>
+                <span>{isRecoveryMode ? 'Security Action' : 'Secure Portal'}</span>
               </div>
             </div>
-            <p className="subtitle">Ingresa a la consola de administración de {settings.siteName}</p>
+            <p className="subtitle">
+              {isRecoveryMode 
+                ? 'Ingresa tu nueva contraseña para recuperar el acceso' 
+                : `Ingresa a la consola de administración de ${settings.siteName}`}
+            </p>
           </div>
 
-          <form onSubmit={handleLogin} className="login-form">
+          {!isRecoveryMode ? (
+            <form onSubmit={handleLogin} className="login-form">
             <div className="input-group">
               <label>Email Corporativo</label>
               <div className="input-box">
@@ -96,7 +146,14 @@ export const Login: React.FC = () => {
             <div className="input-group">
               <div className="label-row">
                 <label>Contraseña</label>
-                <a href="#" className="forgot-link">¿Olvidaste la clave?</a>
+                <button 
+                  type="button"
+                  onClick={handleResetPassword}
+                  className="forgot-link"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
+                  ¿Olvidaste la clave?
+                </button>
               </div>
               <div className="input-box">
                 <Lock className="field-icon" size={18} />
@@ -143,7 +200,66 @@ export const Login: React.FC = () => {
                 )}
               </AnimatePresence>
             </motion.button>
-          </form>
+            </form>
+          ) : (
+            <form onSubmit={handleUpdatePassword} className="login-form">
+              <div className="input-group">
+                <label>Nueva Contraseña</label>
+                <div className="input-box">
+                  <Lock className="field-icon" size={18} />
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit" 
+                className="submit-btn" 
+                disabled={loading}
+              >
+                <AnimatePresence mode="wait">
+                  {loading ? (
+                    <motion.div 
+                      key="loading"
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      exit={{ opacity: 0 }}
+                      className="btn-content"
+                    >
+                      <Loader2 className="spinner" size={20} />
+                      <span>Actualizando...</span>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="normal"
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      exit={{ opacity: 0 }}
+                      className="btn-content"
+                    >
+                      <span>Cambiar Contraseña</span>
+                      <ArrowRight size={20} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+              
+              <button 
+                type="button" 
+                onClick={() => setIsRecoveryMode(false)}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '13px', cursor: 'pointer', marginTop: '10px' }}
+              >
+                Volver al inicio de sesión
+              </button>
+            </form>
+          )}
 
           <div className="login-footer">
             <p>© 2026 {settings.siteName} • Sistema de Gestión de Inventario</p>

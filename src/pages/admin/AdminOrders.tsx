@@ -10,6 +10,7 @@ import {
   MessageCircle, Truck
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTenant } from '../../context/TenantContext';
 
 interface Order {
   id: string;
@@ -30,6 +31,7 @@ interface Order {
 }
 
 export const AdminOrders = () => {
+  const { tenant } = useTenant();
   const location = useLocation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,11 +41,13 @@ export const AdminOrders = () => {
   const [deliveryReceiptOrder, setDeliveryReceiptOrder] = useState<Order | null>(null);
 
   const fetchOrders = async () => {
+    if (!tenant) return;
     try {
       setLoading(true);
       let query = supabase
         .from('orders')
         .select('*')
+        .eq('tenant_id', tenant.id)
         .order('created_at', { ascending: false });
 
       if (statusFilter !== 'all') {
@@ -62,11 +66,13 @@ export const AdminOrders = () => {
   };
 
   const toggleDelivery = async (orderId: string, currentStatus: boolean) => {
+    if (!tenant) return;
     try {
       const { error, count } = await supabase
         .from('orders')
         .update({ is_delivered: !currentStatus }, { count: 'exact' })
-        .eq('id', orderId);
+        .eq('id', orderId)
+        .eq('tenant_id', tenant.id);
       
       if (error) throw error;
       if (count === 0) throw new Error("No se pudo actualizar el pedido. Verifica tus permisos de administrador.");
@@ -81,7 +87,7 @@ export const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [statusFilter]);
+  }, [statusFilter, tenant]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -404,9 +410,9 @@ export const AdminOrders = () => {
                           onClick={() => {
                             if(!selectedOrder.shipping_details) return;
                             const s = selectedOrder.shipping_details;
-                            const qr = `https://charlyhome.cl/entrega/${selectedOrder.id}`;
+                            const qr = `${window.location.origin}/entrega/${selectedOrder.id}`;
                             const pw = window.open('','_blank'); if(!pw) return;
-                            pw.document.write(`<html><head><style>@page{size:100mm 150mm;margin:0}body{font-family:sans-serif;margin:0;padding:5mm}.c{border:2pt solid #000;height:135mm;display:flex;flex-direction:column}.h{padding:3mm;border-bottom:1pt solid #000;display:flex;justify-content:space-between}.fs{display:flex;background:#000;color:#fff}.fb{padding:3mm;font-size:18pt;font-weight:900;border-right:1pt solid #fff}.db{padding:3mm;font-size:14pt;font-weight:700;display:flex;align-items:center}.qrs{flex:1;display:flex;align-items:center;justify-content:center;padding:5mm}.cs{padding:3mm;text-align:center;border-bottom:1pt solid #000;font-size:18pt;font-weight:900;text-transform:uppercase}.ft{padding:3mm;font-size:9pt}</style></head><body><div class=c><div class=h><div><b>CHARLY HOME</b><div>#${selectedOrder.id.slice(0,8)}</div></div></div><div class=fs><div class=fb>FLEX</div><div class=db>${new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'short'}).toUpperCase()}</div></div><div class=qrs><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qr)}" width=120 height=120></div><div class=cs>${s.comuna.split(',')[0]}</div><div class=ft><div><b>Dir:</b> ${s.address}</div><div><b>Tel:</b> ${s.phone}</div><div><b>Dest:</b> ${s.fullName}</div></div></div><script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1000)}</script></body></html>`);
+                            pw.document.write(`<html><head><style>@page{size:100mm 150mm;margin:0}body{font-family:sans-serif;margin:0;padding:5mm}.c{border:2pt solid #000;height:135mm;display:flex;flex-direction:column}.h{padding:3mm;border-bottom:1pt solid #000;display:flex;justify-content:space-between}.fs{display:flex;background:#000;color:#fff}.fb{padding:3mm;font-size:18pt;font-weight:900;border-right:1pt solid #fff}.db{padding:3mm;font-size:14pt;font-weight:700;display:flex;align-items:center}.qrs{flex:1;display:flex;align-items:center;justify-content:center;padding:5mm}.cs{padding:3mm;text-align:center;border-bottom:1pt solid #000;font-size:18pt;font-weight:900;text-transform:uppercase}.ft{padding:3mm;font-size:9pt}</style></head><body><div class=c><div class=h><div><b>${tenant?.display_name.toUpperCase()}</b><div>#${selectedOrder.id.slice(0,8)}</div></div></div><div class=fs><div class=fb>FLEX</div><div class=db>${new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'short'}).toUpperCase()}</div></div><div class=qrs><img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qr)}" width=120 height=120></div><div class=cs>${s.comuna.split(',')[0]}</div><div class=ft><div><b>Dir:</b> ${s.address}</div><div><b>Tel:</b> ${s.phone}</div><div><b>Dest:</b> ${s.fullName}</div></div></div><script>window.onload=()=>{window.print();setTimeout(()=>window.close(),1000)}</script></body></html>`);
                             pw.document.close();
                           }}
                           style={{ background: '#334155', border: 'none', borderRadius: '0.6rem', padding: '0.5rem', cursor: 'pointer', display: 'flex', color: '#fff' }}
@@ -528,7 +534,8 @@ export const AdminOrders = () => {
                   const { error, count } = await supabase
                     .from('orders')
                     .update({ is_delivered: true }, { count: 'exact' })
-                    .eq('id', deliveryReceiptOrder.id);
+                    .eq('id', deliveryReceiptOrder.id)
+                    .eq('tenant_id', tenant.id);
                   
                   if (error) { toast.error('Error al actualizar estado: ' + error.message); return; }
                   if (count === 0) { toast.error('No se pudo actualizar el pedido. Verifica tus permisos.'); return; }
@@ -536,7 +543,7 @@ export const AdminOrders = () => {
                   const productList = deliveryReceiptOrder.items.map((item: any) => `- ${item.name}`).join('\n');
                   const clientName = deliveryReceiptOrder.shipping_details?.fullName || 'Cliente';
                   const phone = deliveryReceiptOrder.shipping_details?.phone.replace(/\D/g, '') || '';
-                  const message = encodeURIComponent(`Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${name}\nRut: ${rut}\n\n¡Gracias por confiar en Charly Home!`);
+                  const message = encodeURIComponent(`Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${name}\nRut: ${rut}\n\n¡Gracias por confiar en ${tenant.display_name}!`);
                   
                   window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
                   setDeliveryReceiptOrder(null);

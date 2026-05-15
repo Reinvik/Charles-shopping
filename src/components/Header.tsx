@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { useEffect, useState } from 'react';
+import { useTenant } from '../context/TenantContext';
 
 import logoImg from '../assets/logo.png';
 import { useTheme } from '../context/ThemeContext';
@@ -70,23 +71,31 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
+  const { tenant } = useTenant();
+
   const fetchCategories = async () => {
+    if (!tenant) return;
     const { data } = await supabase
       .from('categories')
       .select('*')
+      .eq('tenant_id', tenant.id)
       .order('order_index', { ascending: true });
     if (data) setCategories(data);
   };
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [tenant]);
 
   const handleAddCategory = async () => {
-    if (!newCatName.trim()) return;
+    if (!newCatName.trim() || !tenant) return;
     try {
       const slug = newCatName.toLowerCase().trim().replace(/\s+/g, '-');
-      const { error } = await supabase.from('categories').insert([{ name: newCatName.trim(), slug }]);
+      const { error } = await supabase.from('categories').insert([{ 
+        name: newCatName.trim(), 
+        slug,
+        tenant_id: tenant.id
+      }]);
       if (error) throw error;
       setNewCatName('');
       setIsAddingCat(false);
@@ -97,10 +106,14 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
   };
 
   const handleUpdateCategory = async (id: string) => {
-    if (!tempName.trim()) return;
+    if (!tempName.trim() || !tenant) return;
     try {
       const slug = tempName.toLowerCase().trim().replace(/\s+/g, '-');
-      const { error } = await supabase.from('categories').update({ name: tempName.trim(), slug }).eq('id', id);
+      const { error } = await supabase
+        .from('categories')
+        .update({ name: tempName.trim(), slug })
+        .eq('id', id)
+        .eq('tenant_id', tenant.id);
       if (error) throw error;
       setEditingCatId(null);
       fetchCategories();

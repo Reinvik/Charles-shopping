@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  isPlatformAdmin: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -17,13 +18,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) checkAdmin(session.user.id);
+      if (session?.user) checkAdmin(session.user);
       setLoading(false);
     });
 
@@ -32,9 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        checkAdmin(session.user);
       } else {
         setIsAdmin(false);
+        setIsPlatformAdmin(false);
       }
       setLoading(false);
     });
@@ -42,16 +45,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdmin = async (userId: string) => {
+  const checkAdmin = async (currentUser: User) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', userId)
+      .eq('id', currentUser.id)
       .single();
 
-    if (!error && data) {
-      setIsAdmin(data.role === 'superadmin' || data.role === 'superuser');
-    }
+    const isPlatform = currentUser.email === 'ariel.mellag@gmail.com' || (data?.role === 'superuser' || data?.role === 'superadmin');
+    
+    setIsPlatformAdmin(isPlatform);
+    setIsAdmin(isPlatform || data?.role === 'admin' || data?.role === 'manager');
   };
 
   const signOut = async () => {
@@ -59,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, isPlatformAdmin, signOut }}>
       {children}
     </AuthContext.Provider>
   );
