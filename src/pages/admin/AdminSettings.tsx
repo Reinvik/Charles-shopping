@@ -194,7 +194,7 @@ const AdminSettings = () => {
             .insert({
               tenant_id: tenant.id,
               name: zone.name,
-              price: Number(zone.price),
+              cost: Number(zone.cost || zone.price || 0),
               description: zone.description,
               is_active: zone.is_active,
               order_index: zone.order_index
@@ -205,7 +205,7 @@ const AdminSettings = () => {
           const { error: zoneError } = await supabase
             .from('delivery_zones')
             .update({ 
-              price: Number(zone.price),
+              cost: Number(zone.cost || zone.price || 0),
               is_active: zone.is_active,
               name: zone.name,
               description: zone.description
@@ -684,10 +684,12 @@ const AdminSettings = () => {
                         <span style={{ fontSize: '14px', fontWeight: 'bold' }}>$</span>
                         <input 
                           type="number" 
-                          value={zone.price} 
+                          value={zone.cost || zone.price || 0} 
                           onChange={(e) => {
                             const newZones = [...zones];
-                            newZones[index].price = e.target.value;
+                            newZones[index].cost = e.target.value;
+                            // Mantener compatibilidad si se usa price en otros lados
+                            newZones[index].price = e.target.value; 
                             setZones(newZones);
                           }}
                           style={{ textAlign: 'right' }}
