@@ -195,9 +195,9 @@ const AdminSettings = () => {
               tenant_id: tenant.id,
               name: zone.name,
               cost: Number(zone.cost || zone.price || 0),
-              description: zone.description,
               is_active: zone.is_active,
-              order_index: zone.order_index
+              order_index: zone.order_index,
+              zone_type: zone.zone_type || 'metropolitana'
             });
           if (insertError) throw insertError;
         } else {
@@ -208,7 +208,7 @@ const AdminSettings = () => {
               cost: Number(zone.cost || zone.price || 0),
               is_active: zone.is_active,
               name: zone.name,
-              description: zone.description
+              zone_type: zone.zone_type || 'metropolitana'
             })
             .eq('id', zone.id);
           if (zoneError) throw zoneError;
@@ -616,24 +616,6 @@ const AdminSettings = () => {
                               width: '100%',
                               outline: 'none',
                               color: '#1e293b'
-                            }}
-                          />
-                          <input 
-                            type="text"
-                            value={zone.description}
-                            onChange={(e) => {
-                              const newZones = [...zones];
-                              newZones[index].description = e.target.value;
-                              setZones(newZones);
-                            }}
-                            placeholder="Descripción o comunas..."
-                            style={{ 
-                              fontSize: '12px', 
-                              color: '#64748b',
-                              background: 'transparent',
-                              border: 'none',
-                              width: '100%',
-                              outline: 'none'
                             }}
                           />
                         </div>
