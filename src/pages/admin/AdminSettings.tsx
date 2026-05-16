@@ -11,7 +11,10 @@ import {
   CheckCircle2,
   Lock,
   KeyRound,
-  Truck
+  Truck,
+  Plus,
+  Trash2,
+  AlertCircle
 } from 'lucide-react';
 
 import { useTenant } from '../../context/TenantContext';
@@ -33,7 +36,8 @@ const AdminSettings = () => {
     announcementText: settings.announcementText || '',
     siteDescription: settings.siteDescription || '',
     freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
-    deliveryCost: settings.deliveryCost || 3500
+    deliveryCost: settings.deliveryCost || 3500,
+    googleMapsApiKey: ''
   });
 
   const [flowSettings, setFlowSettings] = useState({
@@ -57,7 +61,8 @@ const AdminSettings = () => {
       announcementText: settings.announcementText || '',
       siteDescription: settings.siteDescription || '',
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
-      deliveryCost: settings.deliveryCost || 3500
+      deliveryCost: settings.deliveryCost || 3500,
+      googleMapsApiKey: settings.googleMapsApiKey || ''
     });
 
     const fetchFlowSettings = async () => {
@@ -144,7 +149,8 @@ const AdminSettings = () => {
         announcementText: formData.announcementText,
         siteDescription: formData.siteDescription,
         freeDeliveryThreshold: Number(formData.freeDeliveryThreshold),
-        deliveryCost: Number(formData.deliveryCost)
+        deliveryCost: Number(formData.deliveryCost),
+        googleMapsApiKey: formData.googleMapsApiKey
       };
 
       const { error: themeError } = await supabase
@@ -172,11 +178,32 @@ const AdminSettings = () => {
 
       // 3. Guardar Zonas de Despacho
       for (const zone of zones) {
-        const { error: zoneError } = await supabase
-          .from('delivery_zones')
-          .update({ price: Number(zone.price) })
-          .eq('id', zone.id);
-        if (zoneError) throw zoneError;
+        if (zone.id.startsWith('new-')) {
+          // Es una zona nueva
+          const { error: insertError } = await supabase
+            .from('delivery_zones')
+            .insert({
+              tenant_id: tenant.id,
+              name: zone.name,
+              price: Number(zone.price),
+              description: zone.description,
+              is_active: zone.is_active,
+              order_index: zone.order_index
+            });
+          if (insertError) throw insertError;
+        } else {
+          // Actualizar existente
+          const { error: zoneError } = await supabase
+            .from('delivery_zones')
+            .update({ 
+              price: Number(zone.price),
+              is_active: zone.is_active,
+              name: zone.name,
+              description: zone.description
+            })
+            .eq('id', zone.id);
+          if (zoneError) throw zoneError;
+        }
       }
 
       await refreshTheme();
@@ -437,15 +464,64 @@ const AdminSettings = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="form-group" style={{ marginTop: '20px' }}>
+                <label>Google Maps API Key (Para autocompletado de direcciones)</label>
+                <div className="input-with-icon">
+                  <KeyRound size={18} />
+                  <input 
+                    type="password" 
+                    name="googleMapsApiKey" 
+                    value={formData.googleMapsApiKey} 
+                    onChange={handleInputChange}
+                    placeholder="Al pegar tu llave se activará el autocompletado de calles"
+                  />
+                </div>
+                <p style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
+                  Deja en blanco para usar el input de dirección tradicional.
+                </p>
+              </div>
             </section>
 
             <section className="settings-card">
-              <div className="card-header">
-                <Truck size={20} />
-                <h3>Costos de Despacho por Zona</h3>
+              <div className="card-header" style={{ justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Truck size={20} />
+                  <h3>Costos de Despacho por Zona</h3>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    const newZone = {
+                      id: `new-${Date.now()}`,
+                      name: 'Nueva Zona',
+                      description: 'Comunas de esta zona',
+                      price: 0,
+                      is_active: true,
+                      order_index: zones.length
+                    };
+                    setZones([...zones, newZone]);
+                  }}
+                  className="add-zone-btn"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    background: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Plus size={16} /> Agregar Zona
+                </button>
               </div>
               <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
-                Define precios específicos según la ubicación del cliente. Estos valores se aplicarán automáticamente en el checkout.
+                Define precios específicos según la ubicación del cliente. Puedes desactivar zonas para bloquear despachos temporalmente.
               </p>
 
               {loadingZones ? (
@@ -457,18 +533,100 @@ const AdminSettings = () => {
                   {zones.map((zone, index) => (
                     <div key={zone.id} style={{ 
                       display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      padding: '12px 16px',
-                      backgroundColor: '#f8fafc',
+                      flexDirection: 'column',
+                      gap: '12px',
+                      padding: '16px',
+                      backgroundColor: zone.is_active ? '#f8fafc' : '#f1f5f9',
                       borderRadius: '12px',
-                      border: '1px solid #e2e8f0'
+                      border: '1px solid #e2e8f0',
+                      opacity: zone.is_active ? 1 : 0.7
                     }}>
-                      <div>
-                        <div style={{ fontWeight: '700', fontSize: '14px' }}>{zone.name}</div>
-                        <div style={{ fontSize: '12px', color: '#64748b' }}>{zone.description || 'Sin descripción'}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ flex: 1 }}>
+                          <input 
+                            type="text"
+                            value={zone.name}
+                            onChange={(e) => {
+                              const newZones = [...zones];
+                              newZones[index].name = e.target.value;
+                              setZones(newZones);
+                            }}
+                            placeholder="Nombre de la zona (ej: Zona Central)"
+                            style={{ 
+                              fontWeight: '700', 
+                              fontSize: '14px', 
+                              background: 'transparent', 
+                              border: 'none',
+                              borderBottom: '1px solid transparent',
+                              padding: '2px 0',
+                              width: '100%',
+                              outline: 'none',
+                              color: '#1e293b'
+                            }}
+                          />
+                          <input 
+                            type="text"
+                            value={zone.description}
+                            onChange={(e) => {
+                              const newZones = [...zones];
+                              newZones[index].description = e.target.value;
+                              setZones(newZones);
+                            }}
+                            placeholder="Descripción o comunas..."
+                            style={{ 
+                              fontSize: '12px', 
+                              color: '#64748b',
+                              background: 'transparent',
+                              border: 'none',
+                              width: '100%',
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label className="switch">
+                              <input 
+                                type="checkbox" 
+                                checked={zone.is_active} 
+                                onChange={(e) => {
+                                  const newZones = [...zones];
+                                  newZones[index].is_active = e.target.checked;
+                                  setZones(newZones);
+                                }}
+                              />
+                              <span className="slider round"></span>
+                            </label>
+                            <span style={{ fontSize: '11px', fontWeight: '700', color: zone.is_active ? '#059669' : '#64748b' }}>
+                              {zone.is_active ? 'ACTIVA' : 'BLOQUEADA'}
+                            </span>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={async () => {
+                              if (confirm('¿Estás seguro de eliminar esta zona?')) {
+                                if (!zone.id.startsWith('new-')) {
+                                  const { error } = await supabase
+                                    .from('delivery_zones')
+                                    .delete()
+                                    .eq('id', zone.id);
+                                  if (error) {
+                                    toast.error('Error al eliminar: ' + error.message);
+                                    return;
+                                  }
+                                }
+                                setZones(zones.filter(z => z.id !== zone.id));
+                                toast.success('Zona eliminada');
+                              }
+                            }}
+                            style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="input-with-icon" style={{ width: '150px', backgroundColor: '#fff' }}>
+                      
+                      <div className="input-with-icon" style={{ width: '150px', backgroundColor: '#fff', alignSelf: 'flex-end' }}>
                         <span style={{ fontSize: '14px', fontWeight: 'bold' }}>$</span>
                         <input 
                           type="number" 
@@ -485,7 +643,7 @@ const AdminSettings = () => {
                   ))}
                   {zones.length === 0 && (
                     <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '14px' }}>
-                      No hay zonas configuradas.
+                      No hay zonas configuradas. Usa el botón superior para agregar una.
                     </div>
                   )}
                 </div>
@@ -836,6 +994,62 @@ const AdminSettings = () => {
 
         @media (max-width: 600px) {
           .upload-section { grid-template-columns: 1fr; }
+        }
+
+        /* Switch Toggle Styles */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 34px;
+          height: 18px;
+        }
+
+        .switch input { 
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #cbd5e1;
+          transition: .4s;
+        }
+
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 12px;
+          width: 12px;
+          left: 3px;
+          bottom: 3px;
+          background-color: white;
+          transition: .4s;
+        }
+
+        input:checked + .slider {
+          background-color: #059669;
+        }
+
+        input:focus + .slider {
+          box-shadow: 0 0 1px #059669;
+        }
+
+        input:checked + .slider:before {
+          transform: translateX(16px);
+        }
+
+        .slider.round {
+          border-radius: 34px;
+        }
+
+        .slider.round:before {
+          border-radius: 50%;
         }
       `}</style>
     </div>

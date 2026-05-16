@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Loader2, Mail } from 'lucide-react';
+import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Loader2, Mail, CheckCircle2, AlertCircle, Truck } from 'lucide-react';
+import Autocomplete from "react-google-autocomplete";
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -349,15 +350,60 @@ const CartDrawer: React.FC = () => {
                           autoComplete="tel"
                           style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
                         />
-                        <input 
-                          type="text" 
-                          placeholder="Dirección (Calle y Número)"
-                          value={shippingDetails.address}
-                          onChange={(e) => setShippingDetails({...shippingDetails, address: e.target.value})}
-                          disabled={loading}
-                          autoComplete="address-line1"
-                          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
-                        />
+                        {settings?.googleMapsApiKey ? (
+                          <Autocomplete
+                            apiKey={settings.googleMapsApiKey}
+                            onPlaceSelected={(place) => {
+                              if (place.formatted_address) {
+                                setShippingDetails({...shippingDetails, address: place.formatted_address});
+                                
+                                // Intentar detectar comuna desde Google
+                                const addressComponents = place.address_components;
+                                if (addressComponents) {
+                                  const locality = addressComponents.find((c: any) => 
+                                    c.types.includes("locality") || c.types.includes("administrative_area_level_3")
+                                  );
+                                  if (locality) {
+                                    const comunaName = locality.long_name;
+                                    const matchingZone = deliveryZones.find(z => 
+                                      z.name.toLowerCase() === comunaName.toLowerCase() && z.is_active
+                                    );
+                                    if (matchingZone) {
+                                      setShippingDetails(prev => ({...prev, address: place.formatted_address || '', comuna: matchingZone.name}));
+                                    }
+                                  }
+                                }
+                              }
+                            }}
+                            options={{
+                              types: ["address"],
+                              componentRestrictions: { country: "cl" },
+                            }}
+                            defaultValue={shippingDetails.address}
+                            disabled={loading}
+                            placeholder="Dirección (Calle y Número)"
+                            className="autocomplete-input"
+                            style={{ 
+                              width: '100%', 
+                              padding: '10px 12px', 
+                              borderRadius: '8px', 
+                              border: '1px solid #e5e7eb', 
+                              fontSize: '13px', 
+                              outline: 'none',
+                              backgroundColor: '#fff'
+                            }}
+                          />
+                        ) : (
+                          <input 
+                            type="text" 
+                            placeholder="Dirección (Calle y Número)"
+                            value={shippingDetails.address}
+                            onChange={(e) => setShippingDetails({...shippingDetails, address: e.target.value})}
+                            disabled={loading}
+                            autoComplete="address-line1"
+                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none' }}
+                          />
+                        )}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                           <select 
                             value={shippingDetails.comuna}
@@ -376,7 +422,7 @@ const CartDrawer: React.FC = () => {
                             }}
                           >
                             <option value="">Selecciona Comuna</option>
-                            {deliveryZones.map(zone => (
+                            {deliveryZones.filter(z => z.is_active).map(zone => (
                               <option key={zone.id} value={zone.name}>{zone.name}</option>
                             ))}
                             <option value="OTRA">OTRA (Región / Especial)</option>
