@@ -211,7 +211,7 @@ const AdminSettings = () => {
             .insert({
               tenant_id: tenant.id,
               name: zone.name || 'Nueva Zona',
-              cost: Math.round(Number(String(zone.cost || 0).replace(/[^0-9.-]/g, ''))),
+              cost: Math.round(Number(String(zone.cost || 3500).replace(/[^0-9.-]/g, ''))),
               is_active: zone.is_active !== false,
               order_index: zone.order_index || 0,
               zone_type: zone.zone_type || 'metropolitana'
@@ -223,7 +223,7 @@ const AdminSettings = () => {
             .from('delivery_zones')
             .update({ 
               name: zone.name,
-              cost: Math.round(Number(String(zone.cost || 0).replace(/[^0-9.-]/g, ''))),
+              cost: Math.round(Number(String(zone.cost || 3500).replace(/[^0-9.-]/g, ''))),
               is_active: zone.is_active,
               order_index: zone.order_index,
               updated_at: new Date().toISOString()
@@ -238,7 +238,8 @@ const AdminSettings = () => {
       await fetchZones();
       toast.success('Configuración guardada correctamente');
     } catch (error: any) {
-      toast.error('Error al guardar: ' + error.message);
+      console.error('Full Error:', error);
+      toast.error('Error al guardar: ' + (error.details || error.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }
@@ -685,7 +686,7 @@ const AdminSettings = () => {
                         <span style={{ fontSize: '14px', fontWeight: 'bold' }}>$</span>
                         <input 
                           type="number" 
-                          value={zone.cost || 0} 
+                          value={zone.cost || 3500} 
                           onChange={(e) => {
                             const newZones = [...zones];
                             newZones[index].cost = e.target.value;
