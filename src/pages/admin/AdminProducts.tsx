@@ -444,171 +444,222 @@ export const AdminProducts = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="px-6 py-4 flex justify-between items-center border-b border-slate-100">
-              <h3 className="text-xl font-bold">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h3>
-              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 p-1">
-                <X size={24} />
+            <div className="px-6 py-5 flex justify-between items-center border-b border-slate-100 bg-slate-50/50">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">{editingProduct ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Completa la información detallada de tu producto.</p>
+              </div>
+              <button onClick={closeModal} className="text-slate-400 hover:text-slate-600 p-2 hover:bg-white rounded-full shadow-sm transition-all">
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-              <div>
-                <label className="block text-sm font-semibold mb-1.5">Nombre del Producto</label>
-                <input
-                  required
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ej: Papel Higiénico Elite 32 Rollos"
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Categoría</label>
-                  <select
-                    required
-                    value={formData.category_id}
-                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    <option value="" disabled>Seleccionar...</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Estado</label>
-                  <div className="flex gap-2 p-1 bg-slate-50 border border-slate-200 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, is_active: true })}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${formData.is_active ? 'bg-white shadow-sm text-primary' : 'text-slate-500'}`}
-                    >
-                      Activo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, is_active: false })}
-                      className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${!formData.is_active ? 'bg-white shadow-sm text-slate-700' : 'text-slate-500'}`}
-                    >
-                      Inactivo
-                    </button>
+            <form onSubmit={handleSave} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              {/* Sección: Información General */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <ImageIcon size={18} />
                   </div>
+                  <h4 className="font-bold text-slate-700">Información General</h4>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+                
                 <div>
-                  <label className="block text-sm font-semibold mb-1.5">Precio de Venta</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
-                    <input
-                      required
-                      type="number"
-                      value={formData.price || ''}
-                      onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                      className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Precio Original (Opcional)</label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
-                    <input
-                      type="number"
-                      value={formData.original_price || ''}
-                      onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })}
-                      className="w-full pl-8 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Etiqueta Oferta (Opcional)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Nombre del Producto</label>
                   <input
+                    required
                     type="text"
-                    value={formData.discount_badge || ''}
-                    onChange={(e) => setFormData({ ...formData, discount_badge: e.target.value })}
-                    placeholder="Ej: 20% OFF"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ej: Papel Higiénico Elite 32 Rollos"
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
                   />
                 </div>
-                <div className="flex items-end text-[10px] text-slate-400 leading-tight pb-2">
-                  * Aparecerá en una etiqueta roja sobre el producto.
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Categoría</label>
+                    <select
+                      required
+                      value={formData.category_id}
+                      onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm appearance-none cursor-pointer"
+                    >
+                      <option value="" disabled>Seleccionar...</option>
+                      {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Estado de Venta</label>
+                    <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl h-[50px]">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, is_active: true })}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all ${formData.is_active ? 'bg-white shadow-md text-green-600' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        <div className={`w-2 h-2 rounded-full ${formData.is_active ? 'bg-green-500' : 'bg-slate-300'}`} />
+                        Activo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, is_active: false })}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-xl text-xs font-bold transition-all ${!formData.is_active ? 'bg-white shadow-md text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        <div className={`w-2 h-2 rounded-full ${!formData.is_active ? 'bg-slate-500' : 'bg-slate-300'}`} />
+                        Pausado
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-rose-50 p-4 rounded-2xl border border-rose-100 space-y-3">
-                <div className="flex items-center justify-between">
+              {/* Sección: Precios e Inventario */}
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                    <Filter size={18} />
+                  </div>
+                  <h4 className="font-bold text-slate-700">Precios e Inventario</h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-sm font-bold text-rose-900">Sección de Ofertas</h4>
-                    <p className="text-[10px] text-rose-700">Mostrar este producto en la pestaña "Ofertas" adicionalmente.</p>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Precio de Venta</label>
+                    <div className="relative group">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-primary transition-colors">$</span>
+                      <input
+                        required
+                        type="number"
+                        value={formData.price || ''}
+                        onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                        className="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Stock Disponible</label>
+                    <div className="relative group">
+                      <input
+                        required
+                        type="number"
+                        value={formData.stock || 0}
+                        onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm font-bold text-slate-700"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">Unidades</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Precio Original (Tachado)</label>
+                    <div className="relative group">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">$</span>
+                      <input
+                        type="number"
+                        value={formData.original_price || ''}
+                        onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })}
+                        placeholder="Sin descuento"
+                        className="w-full pl-8 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm text-slate-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Etiqueta de Oferta</label>
+                    <input
+                      type="text"
+                      value={formData.discount_badge || ''}
+                      onChange={(e) => setFormData({ ...formData, discount_badge: e.target.value })}
+                      placeholder="Ej: 20% OFF"
+                      className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${formData.is_on_offer ? 'bg-rose-50 border-rose-100 shadow-sm' : 'bg-slate-50 border-slate-100'}`}>
+                  <div className="flex gap-3 items-center">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${formData.is_on_offer ? 'bg-rose-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                      <Plus size={20} />
+                    </div>
+                    <div>
+                      <h4 className={`text-sm font-bold ${formData.is_on_offer ? 'text-rose-900' : 'text-slate-600'}`}>Sección de Ofertas</h4>
+                      <p className={`text-[10px] ${formData.is_on_offer ? 'text-rose-600' : 'text-slate-400'}`}>Mostrar permanentemente en la pestaña de Ofertas.</p>
+                    </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, is_on_offer: !formData.is_on_offer })}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.is_on_offer ? 'bg-rose-500' : 'bg-slate-200'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.is_on_offer ? 'bg-rose-500' : 'bg-slate-300'}`}
                   >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_on_offer ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_on_offer ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-semibold">Galería de Imágenes</label>
-                  <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+              {/* Sección: Galería de Imágenes */}
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                      <ImageIcon size={18} />
+                    </div>
+                    <h4 className="font-bold text-slate-700">Multimedia</h4>
+                  </div>
+                  <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
                     <button
                       type="button"
                       onClick={() => setImageSourceMode('link')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
-                        imageSourceMode === 'link' ? 'bg-white shadow-sm text-primary' : 'text-slate-50'
+                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                        imageSourceMode === 'link' ? 'bg-white shadow-md text-primary' : 'text-slate-500 hover:text-slate-700'
                       }`}
                     >
                       <LinkIcon size={12} />
-                      Enlace
+                      Por Enlace
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageSourceMode('upload')}
-                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
-                        imageSourceMode === 'upload' ? 'bg-white shadow-sm text-primary' : 'text-slate-50'
+                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+                        imageSourceMode === 'upload' ? 'bg-white shadow-md text-primary' : 'text-slate-500 hover:text-slate-700'
                       }`}
                     >
                       <Upload size={12} />
-                      Subir
+                      Subir Foto
                     </button>
                   </div>
                 </div>
 
-                {/* Images Grid */}
+                {/* Info Tip */}
+                {imageSourceMode === 'link' && (
+                  <div className="flex gap-3 p-3 bg-amber-50 border border-amber-100 rounded-2xl">
+                    <div className="text-amber-500 shrink-0 mt-0.5">
+                      <LinkIcon size={16} />
+                    </div>
+                    <p className="text-[11px] text-amber-800 leading-normal">
+                      <strong className="block mb-0.5 text-amber-900">Tip de Enlaces:</strong>
+                      No pegues el link de la barra de direcciones. Haz <strong>clic derecho sobre la foto</strong> y elige <strong>"Copiar dirección de imagen"</strong>.
+                    </p>
+                  </div>
+                )}
+
                 <Reorder.Group 
                   axis="x" 
                   values={formData.images || []} 
                   onReorder={(newImages) => setFormData({ ...formData, images: newImages })}
-                  className="grid grid-cols-4 gap-2"
+                  className="grid grid-cols-4 gap-3"
                 >
                   {(formData.images || []).map((img, idx) => (
                     <Reorder.Item 
                       key={img} 
                       value={img}
-                      className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 bg-white group shadow-sm cursor-grab active:cursor-grabbing"
+                      className="relative aspect-square rounded-2xl overflow-hidden border border-slate-200 bg-white group shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
                     >
-                      <img src={img} className="w-full h-full object-contain p-1" alt={`Gallery ${idx}`} />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                        {idx === 0 ? (
-                          <span className="text-[8px] bg-primary text-white px-2 py-0.5 rounded font-bold">PORTADA</span>
-                        ) : (
-                          <span className="text-[8px] bg-white text-slate-900 px-2 py-0.5 rounded font-bold">ARRASTRAR</span>
-                        )}
+                      <img src={img} className="w-full h-full object-contain p-2" alt={`Gallery ${idx}`} />
+                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                        {idx === 0 && <span className="text-[8px] bg-primary text-white px-2 py-0.5 rounded font-bold uppercase tracking-tighter">Principal</span>}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -616,26 +667,28 @@ export const AdminProducts = () => {
                             const newImages = formData.images?.filter((_, i) => i !== idx);
                             setFormData({ ...formData, images: newImages });
                           }}
-                          className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                          className="p-2 bg-white text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-xl"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
-                      {idx === 0 && (
-                        <div className="absolute top-0 left-0 bg-primary text-white text-[8px] px-1.5 py-0.5 font-bold rounded-br-lg shadow-sm">P</div>
-                      )}
                     </Reorder.Item>
                   ))}
                   
                   {imageSourceMode === 'upload' && (
                     <div className="aspect-square">
-                      <label className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all group">
+                      <label className="w-full h-full flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-50 hover:border-primary/50 transition-all group overflow-hidden">
                         {uploadingImage ? (
-                          <Loader2 size={16} className="animate-spin text-primary" />
+                          <div className="flex flex-col items-center gap-2">
+                            <Loader2 size={24} className="animate-spin text-primary" />
+                            <span className="text-[10px] font-bold text-slate-400">SUBIENDO...</span>
+                          </div>
                         ) : (
                           <>
-                            <Plus size={20} className="text-slate-300 group-hover:text-primary transition-colors" />
-                            <span className="text-[8px] font-bold text-slate-400 mt-1 uppercase group-hover:text-primary">Añadir</span>
+                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                              <Plus size={20} />
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight group-hover:text-primary transition-colors">Añadir</span>
                           </>
                         )}
                         <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageUpload} disabled={uploadingImage} />
@@ -645,13 +698,16 @@ export const AdminProducts = () => {
                 </Reorder.Group>
 
                 {imageSourceMode === 'link' && (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1 group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                        <LinkIcon size={16} />
+                      </div>
                       <input
                         id="new-image-link"
                         type="url"
                         placeholder="Pegar link de imagen y pulsar (+)"
-                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -671,62 +727,47 @@ export const AdminProducts = () => {
                           }
                         }}
                       />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const input = document.getElementById('new-image-link') as HTMLInputElement;
-                          if (input.value) {
-                            if (input.value.includes('mercadolibre.cl') && !input.value.includes('mlstatic.com')) {
-                              toast.error('Error: Pegaste el link de la página. Usa "Copiar dirección de imagen".');
-                            }
-                            setFormData(prev => ({ 
-                              ...prev, 
-                              images: [...(prev.images || []), input.value],
-                              image_url: prev.image_url || input.value
-                            }));
-                            input.value = '';
-                            toast.success('Link añadido');
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById('new-image-link') as HTMLInputElement;
+                        if (input.value) {
+                          if (input.value.includes('mercadolibre.cl') && !input.value.includes('mlstatic.com')) {
+                            toast.error('Error: Pegaste el link de la página. Usa "Copiar dirección de imagen".');
                           }
-                        }}
-                        className="p-2.5 bg-primary text-white rounded-xl hover:bg-opacity-90 transition-all shadow-sm"
-                      >
-                        <Plus size={20} />
-                      </button>
-                    </div>
-                    <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100">
-                      💡 <b>Tip para MercadoLibre:</b> No pegues el link de la barra de direcciones. Haz <b>clic derecho sobre la foto</b> y elige <b>"Copiar dirección de imagen"</b>.
-                    </div>
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            images: [...(prev.images || []), input.value],
+                            image_url: prev.image_url || input.value
+                          }));
+                          input.value = '';
+                          toast.success('Link añadido');
+                        }
+                      }}
+                      className="w-12 h-12 flex items-center justify-center bg-primary text-white rounded-2xl hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-95"
+                    >
+                      <Plus size={24} />
+                    </button>
                   </div>
                 )}
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1.5">Inventario / Stock</label>
-                  <input
-                    required
-                    type="number"
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
-                    placeholder="0"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
               </div>
 
-              <div className="pt-4 flex gap-3">
+              {/* Botones de Acción */}
+              <div className="pt-6 flex gap-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                  className="flex-1 py-4 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all border border-transparent hover:border-slate-200"
                 >
                   Cancelar
                 </button>
                 <button
                   disabled={saving}
                   type="submit"
-                  className="flex-1 py-3 px-4 rounded-xl font-bold bg-primary text-white hover:bg-opacity-90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                  className="flex-2 py-4 px-10 rounded-2xl font-bold bg-primary text-white hover:bg-opacity-90 transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none active:scale-[0.98]"
                 >
-                  {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                  {saving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
                   {saving ? 'Guardando...' : 'Guardar Producto'}
                 </button>
               </div>
