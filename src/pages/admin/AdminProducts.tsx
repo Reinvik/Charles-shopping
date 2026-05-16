@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { 
   Plus, Pencil, Trash2, Loader2, Save, X, 
@@ -36,9 +37,32 @@ export const AdminProducts = () => {
   const { tenant } = useTenant();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') === 'add') {
+      const catId = params.get('category');
+      setEditingProduct(null);
+      setFormData({
+        name: '',
+        category_id: catId || '',
+        price: 0,
+        original_price: 0,
+        discount_badge: '',
+        image_url: '',
+        images: [],
+        is_active: true,
+        is_on_offer: false,
+        stock: 10 // Default stock
+      });
+      setIsModalOpen(true);
+    }
+  }, [location]);
+
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imageSourceMode, setImageSourceMode] = useState<'link' | 'upload'>('link');

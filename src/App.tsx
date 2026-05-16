@@ -154,7 +154,6 @@ const HomePage: React.FC = () => {
           <div className="product-grid">
             {isAdmin && (
               <div 
-                onClick={() => navigate('/product/new')}
                 style={{
                   border: '2px dashed var(--primary)',
                   borderRadius: '16px',
@@ -167,6 +166,7 @@ const HomePage: React.FC = () => {
                   backgroundColor: 'rgba(var(--primary-rgb), 0.02)',
                   transition: 'all 0.2s',
                 }}
+                onClick={() => navigate('/admin/products?action=add' + (selectedCategoryId ? `&category=${selectedCategoryId}` : ''))}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = 'rgba(var(--primary-rgb), 0.05)';
                   e.currentTarget.style.transform = 'translateY(-4px)';
