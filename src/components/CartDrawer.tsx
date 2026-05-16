@@ -37,7 +37,7 @@ const CartDrawer: React.FC = () => {
       try {
         const { data, error: zonesError } = await supabase
           .from('delivery_zones')
-          .select('*')
+          .select('id, name, cost, is_active, order_index, zone_type')
           .eq('tenant_id', tenant.id)
           .eq('is_active', true)
           .order('order_index', { ascending: true });

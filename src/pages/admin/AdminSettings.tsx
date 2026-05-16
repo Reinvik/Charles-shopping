@@ -90,7 +90,7 @@ const AdminSettings = () => {
     setLoadingZones(true);
     const { data } = await supabase
       .from('delivery_zones')
-      .select('*')
+      .select('id, name, cost, is_active, order_index, zone_type, tenant_id')
       .eq('tenant_id', tenant.id)
       .order('order_index', { ascending: true });
     if (data) setZones(data);
