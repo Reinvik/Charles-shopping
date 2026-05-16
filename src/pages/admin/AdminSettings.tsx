@@ -71,33 +71,50 @@ const AdminSettings = () => {
       telegramChatId: settings.telegramChatId || ''
     });
 
-    const fetchFlowSettings = async () => {
-      if (!tenant) return;
-      const { data } = await supabase
-        .from('site_settings')
-        .select('value')
-        .eq('tenant_id', tenant.id)
-        .eq('key', 'flow_settings')
-        .maybeSingle();
-      
-      if (data && data.value) {
-        setFlowSettings(data.value as any);
-      }
-    };
+  const fetchFlowSettings = async () => {
+    if (!tenant) return;
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('tenant_id', tenant.id)
+      .eq('key', 'flow_settings')
+      .maybeSingle();
+    
+    if (data && data.value) {
+      setFlowSettings(data.value as any);
+    }
+  };
+
+  const fetchZones = async () => {
+    if (!tenant) return;
+    setLoadingZones(true);
+    const { data } = await supabase
+      .from('delivery_zones')
+      .select('*')
+      .eq('tenant_id', tenant.id)
+      .order('order_index', { ascending: true });
+    if (data) setZones(data);
+    setLoadingZones(false);
+  };
+
+  useEffect(() => {
+    setFormData({
+      primaryColor: settings.primaryColor,
+      borderRadius: settings.borderRadius,
+      siteName: settings.siteName,
+      logoUrl: settings.logoUrl,
+      faviconUrl: settings.faviconUrl,
+      announcementText: settings.announcementText || '',
+      siteDescription: settings.siteDescription || '',
+      freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
+      deliveryCost: settings.deliveryCost || 3500,
+      googleMapsApiKey: settings.googleMapsApiKey || '',
+      notificationPhone: settings.notificationPhone || '',
+      telegramToken: settings.telegramToken || '',
+      telegramChatId: settings.telegramChatId || ''
+    });
 
     fetchFlowSettings();
-
-    const fetchZones = async () => {
-      if (!tenant) return;
-      setLoadingZones(true);
-      const { data } = await supabase
-        .from('delivery_zones')
-        .select('*')
-        .eq('tenant_id', tenant.id)
-        .order('order_index', { ascending: true });
-      if (data) setZones(data);
-      setLoadingZones(false);
-    };
     fetchZones();
   }, [settings, tenant]);
 
@@ -193,10 +210,10 @@ const AdminSettings = () => {
             .from('delivery_zones')
             .insert({
               tenant_id: tenant.id,
-              name: zone.name,
-              cost: Number(zone.cost || zone.price || 0),
-              is_active: zone.is_active,
-              order_index: zone.order_index,
+              name: zone.name || 'Nueva Zona',
+              cost: Math.round(Number(String(zone.cost || 0).replace(/[^0-9.-]/g, ''))),
+              is_active: zone.is_active !== false,
+              order_index: zone.order_index || 0,
               zone_type: zone.zone_type || 'metropolitana'
             });
           if (insertError) throw insertError;
@@ -205,10 +222,11 @@ const AdminSettings = () => {
           const { error: zoneError } = await supabase
             .from('delivery_zones')
             .update({ 
-              cost: Number(zone.cost || zone.price || 0),
-              is_active: zone.is_active,
               name: zone.name,
-              zone_type: zone.zone_type || 'metropolitana'
+              cost: Math.round(Number(String(zone.cost || 0).replace(/[^0-9.-]/g, ''))),
+              is_active: zone.is_active,
+              order_index: zone.order_index,
+              updated_at: new Date().toISOString()
             })
             .eq('id', zone.id);
           if (zoneError) throw zoneError;
@@ -216,6 +234,8 @@ const AdminSettings = () => {
       }
 
       await refreshTheme();
+      await fetchFlowSettings();
+      await fetchZones();
       toast.success('Configuración guardada correctamente');
     } catch (error: any) {
       toast.error('Error al guardar: ' + error.message);
@@ -549,8 +569,7 @@ const AdminSettings = () => {
                     const newZone = {
                       id: `new-${Date.now()}`,
                       name: 'Nueva Zona',
-                      description: 'Comunas de esta zona',
-                      price: 0,
+                      cost: 0,
                       is_active: true,
                       order_index: zones.length
                     };
@@ -666,12 +685,10 @@ const AdminSettings = () => {
                         <span style={{ fontSize: '14px', fontWeight: 'bold' }}>$</span>
                         <input 
                           type="number" 
-                          value={zone.cost || zone.price || 0} 
+                          value={zone.cost || 0} 
                           onChange={(e) => {
                             const newZones = [...zones];
                             newZones[index].cost = e.target.value;
-                            // Mantener compatibilidad si se usa price en otros lados
-                            newZones[index].price = e.target.value; 
                             setZones(newZones);
                           }}
                           style={{ textAlign: 'right' }}
