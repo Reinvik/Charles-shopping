@@ -12,6 +12,10 @@ interface ThemeSettings {
   announcementText: string;
   freeDeliveryThreshold: number;
   deliveryCost: number;
+  googleMapsApiKey?: string;
+  notificationPhone?: string;
+  telegramToken?: string;
+  telegramChatId?: string;
 }
 
 interface ThemeContextType {

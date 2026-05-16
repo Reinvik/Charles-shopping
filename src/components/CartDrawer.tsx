@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Loader2, Mail, CheckCircle2, AlertCircle, Truck } from 'lucide-react';
+import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Loader2, Mail } from 'lucide-react';
 import Autocomplete from "react-google-autocomplete";
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -369,7 +369,7 @@ const CartDrawer: React.FC = () => {
                                       z.name.toLowerCase() === comunaName.toLowerCase() && z.is_active
                                     );
                                     if (matchingZone) {
-                                      setShippingDetails(prev => ({...prev, address: place.formatted_address || '', comuna: matchingZone.name}));
+                                      setShippingDetails((prev: any) => ({...prev, address: place.formatted_address || '', comuna: matchingZone.name}));
                                     }
                                   }
                                 }

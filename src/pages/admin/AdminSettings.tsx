@@ -14,7 +14,8 @@ import {
   Truck,
   Plus,
   Trash2,
-  AlertCircle
+  Send,
+  Hash
 } from 'lucide-react';
 
 import { useTenant } from '../../context/TenantContext';
@@ -54,22 +55,6 @@ const AdminSettings = () => {
 
   const [activeTab, setActiveTab] = useState('design');
 
-  useEffect(() => {
-    setFormData({
-      primaryColor: settings.primaryColor,
-      borderRadius: settings.borderRadius,
-      siteName: settings.siteName,
-      logoUrl: settings.logoUrl,
-      faviconUrl: settings.faviconUrl,
-      announcementText: settings.announcementText || '',
-      siteDescription: settings.siteDescription || '',
-      freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
-      deliveryCost: settings.deliveryCost || 3500,
-      googleMapsApiKey: settings.googleMapsApiKey || '',
-      notificationPhone: settings.notificationPhone || '',
-      telegramToken: settings.telegramToken || '',
-      telegramChatId: settings.telegramChatId || ''
-    });
 
   const fetchFlowSettings = async () => {
     if (!tenant) return;
