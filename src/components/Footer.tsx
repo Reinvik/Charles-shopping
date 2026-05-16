@@ -136,12 +136,12 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
         <span>© {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.</span>
         <span>|</span>
         <a href="https://smartlean.cl" target="_blank" rel="noopener noreferrer" style={{ 
-          color: '#999', 
+          color: '#0ea5e9', 
           textDecoration: 'none', 
           transition: 'color 0.2s ease'
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.color = '#0ea5e9'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.color = '#999'; }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = '#0284c7'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = '#0ea5e9'; }}
         >
           Powered by SmartLean
         </a>
