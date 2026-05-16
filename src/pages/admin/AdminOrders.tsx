@@ -89,6 +89,77 @@ export const AdminOrders = () => {
     fetchOrders();
   }, [statusFilter, tenant]);
 
+  const playNotificationSound = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.value = 0.3;
+      osc.start();
+      setTimeout(() => osc.stop(), 150);
+      
+      // Doble beep
+      setTimeout(() => {
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.type = 'sine';
+        osc2.frequency.value = 1100;
+        gain2.gain.value = 0.3;
+        osc2.start();
+        setTimeout(() => osc2.stop(), 150);
+      }, 200);
+    } catch (e) {
+      console.error('Error playing sound', e);
+    }
+  };
+
+  const showNotification = (order: Order) => {
+    if (Notification.permission === 'granted') {
+      new Notification('¡Nuevo Pedido Recibido!', {
+        body: `Pedido #${order.id.slice(0, 8)} por $${order.total.toLocaleString()}`,
+        silent: true // Usamos nuestro propio sonido generado
+      });
+    }
+    playNotificationSound();
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!tenant) return;
+
+    const channel = supabase
+      .channel('admin_orders_realtime')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'orders',
+        filter: `tenant_id=eq.${tenant.id}` 
+      }, payload => {
+        const newOrder = payload.new as Order;
+        setOrders(prev => [newOrder, ...prev]);
+        showNotification(newOrder);
+        toast.success(`¡Nuevo pedido recibido! #${newOrder.id.slice(0, 8)}`);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [tenant]);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const orderToOpen = params.get('open');
@@ -173,6 +244,43 @@ export const AdminOrders = () => {
     );
   }
 
+  const simulatePurchase = async () => {
+    if (!tenant) return;
+    const dummyToken = `SIMULATED_${Math.random().toString(36).substring(2, 11).toUpperCase()}`;
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .insert({
+          tenant_id: tenant.id,
+          total: 0,
+          status: 'paid',
+          customer_email: 'test@example.com',
+          flow_token: dummyToken,
+          items: [
+            { name: 'Producto de Prueba', price: 0, quantity: 1 }
+          ],
+          shipping_details: {
+            fullName: 'Cliente de Prueba',
+            phone: '56912345678',
+            address: 'Calle Falsa 123',
+            comuna: 'Santiago',
+            reference: 'Casa esquina'
+          }
+        });
+
+      if (error) throw error;
+
+      toast.success('Simulación iniciada. Abriendo pantalla de éxito...');
+      
+      // Abrir la pantalla de éxito en una nueva pestaña
+      window.open(`/checkout/success?token=${dummyToken}`, '_blank');
+      
+    } catch (error: any) {
+      toast.error('Error al simular: ' + error.message);
+    }
+  };
+
   const order = selectedOrder;
 
   return (
@@ -190,73 +298,33 @@ export const AdminOrders = () => {
           />
         </div>
 
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 w-full md:w-auto shadow-sm">
-          <Filter size={18} className="text-slate-400" />
-          <select
-            className="bg-transparent outline-none text-sm font-semibold w-full md:w-40"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-end">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 shadow-sm">
+            <Filter size={18} className="text-slate-400" />
+            <select
+              className="bg-transparent outline-none text-sm font-semibold w-40"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Todos los estados</option>
+              <option value="paid">Pagados</option>
+              <option value="pending">Pendientes</option>
+              <option value="rejected">Rechazados</option>
+            </select>
+          </div>
+
+          <button
+            onClick={simulatePurchase}
+            className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2"
           >
-            <option value="all">Todos los estados</option>
-            <option value="paid">Pagados</option>
-            <option value="pending">Pendientes</option>
-            <option value="rejected">Rechazados</option>
-          </select>
+            <ShoppingBag size={16} />
+            Simular Compra
+          </button>
         </div>
       </div>
 
-      {/* Mobile Card View */}
-      <div className="md:hidden space-y-4">
-        {filteredOrders.map((order) => (
-          <div 
-            key={order.id} 
-            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm active:scale-[0.98] transition-transform"
-            onClick={() => setSelectedOrder(order)}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex flex-col gap-1">
-                <span className="font-black text-slate-900 text-sm">#{order.id.slice(0, 8)}</span>
-                <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                  <Calendar size={10} />
-                  {new Date(order.created_at).toLocaleDateString('es-CL')}
-                </span>
-              </div>
-              <div className="text-right">
-                <p className="font-black text-primary text-base">${order.total.toLocaleString()}</p>
-                {getStatusBadge(order.status)}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-4 py-2 border-y border-slate-50">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                <Users size={14} className="text-slate-500" />
-              </div>
-              <div className="flex flex-col overflow-hidden">
-                <span className="text-[11px] font-bold text-slate-700 truncate">
-                  {order.shipping_details?.fullName || 'Cliente Anónimo'}
-                </span>
-                <span className="text-[10px] text-slate-400 truncate">{order.customer_email}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              {getDeliveryBadge(order)}
-              <button className="flex items-center gap-1 text-[11px] font-bold text-slate-400">
-                Ver más <Eye size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
-        {filteredOrders.length === 0 && !loading && (
-          <div className="py-12 text-center bg-white rounded-2xl border border-slate-100">
-            <Package size={40} className="mx-auto mb-2 opacity-20" />
-            <p className="text-slate-500 font-medium">No hay pedidos</p>
-          </div>
-        )}
-      </div>
-
-      {/* Desktop Table View */}
-      <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      {/* Table View */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>

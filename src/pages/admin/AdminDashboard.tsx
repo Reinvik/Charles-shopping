@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useTenant } from '../../context/TenantContext';
+import { toast } from 'sonner';
 import {
   ShoppingBag, Users, Loader2, Truck, MousePointer2, TrendingUp,
   Printer, Package, CheckCircle2, Clock, XCircle, Zap, BarChart3,
@@ -51,7 +52,7 @@ export const AdminDashboard = () => {
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-      const [prodRes, catRes, visitorsRes, recentVisitorsRes, ordersRes, cartsRes, topRes, recentOrdersRes] = await Promise.all([
+      const [prodRes, catRes, visitorsRes, recentVisitorsRes, ordersRes, cartsRes, topRes, recentOrdersRes, allPaidRes] = await Promise.all([
         supabase.from('products').select('id, is_active').eq('tenant_id', tenant.id),
         supabase.from('categories').select('id').eq('tenant_id', tenant.id),
         supabase.from('store_visits').select('id', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
@@ -60,6 +61,7 @@ export const AdminDashboard = () => {
         supabase.from('cart_events').select('session_id', { count: 'exact', head: true }).eq('tenant_id', tenant.id),
         supabase.from('cart_events').select('product_name').eq('tenant_id', tenant.id),
         supabase.from('orders').select('id, total, status, customer_email, created_at').eq('tenant_id', tenant.id).order('created_at', { ascending: false }).limit(5),
+        supabase.from('orders').select('total').eq('tenant_id', tenant.id).eq('status', 'paid'),
       ]);
 
       // Historical data for charts
@@ -102,8 +104,7 @@ export const AdminDashboard = () => {
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count).slice(0, 5);
 
-      const paidOrders = (recentOrdersRes.data || []).filter((o: any) => o.status === 'paid');
-      const totalRevenue = paidOrders.reduce((s: number, o: any) => s + (o.total || 0), 0);
+      const totalRevenue = (allPaidRes.data || []).reduce((s: number, o: any) => s + (o.total || 0), 0);
 
       setChartData(Object.values(days));
       setStats({
@@ -115,12 +116,115 @@ export const AdminDashboard = () => {
         conversionRate: Number(conversionRate.toFixed(2)),
         carts: cartsRes.count || 0,
         topProducts,
-        recentOrders: (recentOrdersRes.data || []) as RecentOrder[],
+        recentOrders: (() => {
+          let seenTest = false;
+          return (recentOrdersRes.data || []).filter((o: any) => {
+            if (o.customer_email === 'test@example.com') {
+              if (seenTest) return false;
+              seenTest = true;
+              return true;
+            }
+            return true;
+          }) as RecentOrder[];
+        })(),
         totalRevenue,
       });
       setLoading(false);
     };
     fetchStats();
+  }, [tenant]);
+
+  const playNotificationSound = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.value = 0.3;
+      osc.start();
+      setTimeout(() => osc.stop(), 150);
+      
+      // Doble beep
+      setTimeout(() => {
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.type = 'sine';
+        osc2.frequency.value = 1100;
+        gain2.gain.value = 0.3;
+        osc2.start();
+        setTimeout(() => osc2.stop(), 150);
+      }, 200);
+    } catch (e) {
+      console.error('Error playing sound:', e);
+    }
+  };
+
+  const showNotification = (order: any) => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      new Notification('¡Nuevo Pedido Recibido!', {
+        body: `Pedido #${order.id.slice(0, 8)} por $${order.total.toLocaleString()}`,
+        silent: true
+      });
+    }
+    playNotificationSound();
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!tenant) return;
+
+    const channel = supabase
+      .channel('admin_dashboard_realtime')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'orders',
+        filter: `tenant_id=eq.${tenant.id}` 
+      }, payload => {
+        const newOrder = payload.new as RecentOrder;
+        showNotification(newOrder);
+        toast.success(`¡Nuevo pedido recibido! #${newOrder.id.slice(0, 8)}`);
+        
+        // Actualizar la lista en tiempo real
+        setStats(prev => {
+          let updatedOrders = [newOrder, ...prev.recentOrders];
+          let seenTest = false;
+          updatedOrders = updatedOrders.filter((o: any) => {
+            if (o.customer_email === 'test@example.com') {
+              if (seenTest) return false;
+              seenTest = true;
+              return true;
+            }
+            return true;
+          }).slice(0, 5);
+          
+          const paidOrders = updatedOrders.filter((o: any) => o.status === 'paid');
+          const totalRevenue = paidOrders.reduce((s: number, o: any) => s + (o.total || 0), 0);
+          
+          return {
+            ...prev,
+            recentOrders: updatedOrders,
+            totalRevenue
+          };
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [tenant]);
 
   const handlePrintLatestLabel = async () => {

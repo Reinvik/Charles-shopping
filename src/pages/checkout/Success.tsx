@@ -106,7 +106,7 @@ const CheckoutSuccess: React.FC = () => {
               <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '16px' }}>¡Pago Exitoso!</h1>
               
               <p style={{ color: '#666', fontSize: '18px', marginBottom: '32px', lineHeight: '1.6' }}>
-                Gracias por tu compra. Hemos recibido tu pago y estamos preparando tu pedido.
+                ¡Muchas gracias por tu compra! Hemos recibido tu pago con éxito y ya estamos preparando tu pedido. Lo estaremos enviando dentro de las próximas 24 horas.
               </p>
 
               <div style={{ 

@@ -94,7 +94,7 @@ serve(async (req) => {
         status: dbStatus,
         updated_at: new Date().toISOString()
       })
-      .eq('id', statusData.commerceOrder)
+      .eq('flow_token', token)
 
     if (updateError) throw updateError
 

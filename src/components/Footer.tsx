@@ -132,8 +132,36 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
         </div>
       </div>
       
-      <div className="container" style={{ marginTop: '60px', borderTop: '1px solid #f0f0f0', paddingTop: '30px', textAlign: 'center', fontSize: '12px', color: '#999' }}>
-        © {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.
+      <div className="container" style={{ marginTop: '60px', borderTop: '1px solid #f0f0f0', paddingTop: '30px', textAlign: 'center', fontSize: '12px', color: '#999', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <div>
+          © {new Date().getFullYear()} {settings.siteName}. Todos los derechos reservados.
+        </div>
+        <a href="https://smartlean.cl" target="_blank" rel="noopener noreferrer" style={{ 
+          color: '#0ea5e9', 
+          textDecoration: 'none', 
+          fontSize: '11px', 
+          fontWeight: '600',
+          letterSpacing: '0.05em',
+          textTransform: 'uppercase',
+          border: '1px solid rgba(14, 165, 233, 0.2)',
+          padding: '4px 10px',
+          borderRadius: '4px',
+          backgroundColor: 'rgba(14, 165, 233, 0.05)',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'var(--primary)';
+          e.currentTarget.style.color = '#fff';
+          e.currentTarget.style.borderColor = 'var(--primary)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(14, 165, 233, 0.05)';
+          e.currentTarget.style.color = '#0ea5e9';
+          e.currentTarget.style.borderColor = 'rgba(14, 165, 233, 0.2)';
+        }}
+        >
+          Powered by SmartLean
+        </a>
       </div>
     </footer>
   );
