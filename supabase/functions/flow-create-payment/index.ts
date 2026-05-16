@@ -66,7 +66,7 @@ serve(async (req) => {
       email: email,
       subject: `Pedido #${order.id.toString().slice(0, 8)} - ${siteName}`,
       urlConfirmation: `${Deno.env.get('SUPABASE_URL')}/functions/v1/flow-webhook`,
-      urlReturn: `${req.headers.get('origin')}/checkout/success`,
+      urlReturn: `${Deno.env.get('SUPABASE_URL')}/functions/v1/flow-return?origin=${encodeURIComponent(req.headers.get('origin') || '')}`,
       urlError: `${req.headers.get('origin')}/checkout/failure`,
     }
 
