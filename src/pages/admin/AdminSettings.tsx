@@ -37,7 +37,10 @@ const AdminSettings = () => {
     siteDescription: settings.siteDescription || '',
     freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
     deliveryCost: settings.deliveryCost || 3500,
-    googleMapsApiKey: ''
+    googleMapsApiKey: '',
+    notificationPhone: '',
+    telegramToken: '',
+    telegramChatId: ''
   });
 
   const [flowSettings, setFlowSettings] = useState({
@@ -62,7 +65,10 @@ const AdminSettings = () => {
       siteDescription: settings.siteDescription || '',
       freeDeliveryThreshold: settings.freeDeliveryThreshold || 30000,
       deliveryCost: settings.deliveryCost || 3500,
-      googleMapsApiKey: settings.googleMapsApiKey || ''
+      googleMapsApiKey: settings.googleMapsApiKey || '',
+      notificationPhone: settings.notificationPhone || '',
+      telegramToken: settings.telegramToken || '',
+      telegramChatId: settings.telegramChatId || ''
     });
 
     const fetchFlowSettings = async () => {
@@ -150,7 +156,10 @@ const AdminSettings = () => {
         siteDescription: formData.siteDescription,
         freeDeliveryThreshold: Number(formData.freeDeliveryThreshold),
         deliveryCost: Number(formData.deliveryCost),
-        googleMapsApiKey: formData.googleMapsApiKey
+        googleMapsApiKey: formData.googleMapsApiKey,
+        notificationPhone: formData.notificationPhone,
+        telegramToken: formData.telegramToken,
+        telegramChatId: formData.telegramChatId
       };
 
       const { error: themeError } = await supabase
@@ -480,6 +489,51 @@ const AdminSettings = () => {
                 <p style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
                   Deja en blanco para usar el input de dirección tradicional.
                 </p>
+              </div>
+            </section>
+
+            <section className="settings-card">
+              <div className="section-header">
+                <div style={{ backgroundColor: '#0088cc', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', width: '32px', height: '32px' }}>
+                  <Send size={20} />
+                </div>
+                <h2>Notificaciones Telegram</h2>
+              </div>
+
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Telegram Bot Token</label>
+                  <div className="input-with-icon">
+                    <KeyRound size={18} />
+                    <input 
+                      type="password" 
+                      name="telegramToken" 
+                      value={formData.telegramToken} 
+                      onChange={handleInputChange}
+                      placeholder="Ej: 123456:ABC-DEF..."
+                    />
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
+                    Obtén esto de @BotFather en Telegram.
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label>Tu Chat ID</label>
+                  <div className="input-with-icon">
+                    <Hash size={18} />
+                    <input 
+                      type="text" 
+                      name="telegramChatId" 
+                      value={formData.telegramChatId} 
+                      onChange={handleInputChange}
+                      placeholder="Ej: 987654321"
+                    />
+                  </div>
+                  <p style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
+                    Tu ID personal de Telegram (consíguelo con @userinfobot).
+                  </p>
+                </div>
               </div>
             </section>
 
