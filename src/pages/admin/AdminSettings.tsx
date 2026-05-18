@@ -15,7 +15,9 @@ import {
   Plus,
   Trash2,
   Send,
-  Hash
+  Hash,
+  Link2,
+  Star
 } from 'lucide-react';
 
 import { useTenant } from '../../context/TenantContext';
@@ -44,6 +46,8 @@ const AdminSettings = () => {
     telegramChatId: ''
   });
 
+  const [googleReviewLink, setGoogleReviewLink] = useState('');
+
   const [flowSettings, setFlowSettings] = useState({
     apiKey: '',
     secret: '',
@@ -67,6 +71,20 @@ const AdminSettings = () => {
     
     if (data && data.value) {
       setFlowSettings(data.value as any);
+    }
+  };
+
+  const fetchGoogleReviewLink = async () => {
+    if (!tenant) return;
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('tenant_id', tenant.id)
+      .eq('key', 'google_review_link')
+      .maybeSingle();
+    
+    if (data && data.value) {
+      setGoogleReviewLink(data.value as string);
     }
   };
 
@@ -100,6 +118,7 @@ const AdminSettings = () => {
     });
 
     fetchFlowSettings();
+    fetchGoogleReviewLink();
     fetchZones();
   }, [settings, tenant]);
 
@@ -186,6 +205,18 @@ const AdminSettings = () => {
         }, { onConflict: 'key,tenant_id' });
 
       if (flowError) throw flowError;
+
+      // Guardar Link de Reseñas de Google
+      const { error: googleError } = await supabase
+        .from('site_settings')
+        .upsert({
+          tenant_id: tenant.id,
+          key: 'google_review_link',
+          value: googleReviewLink,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key,tenant_id' });
+
+      if (googleError) throw googleError;
 
       // 3. Guardar Zonas de Despacho
       for (const zone of zones) {
@@ -450,6 +481,22 @@ const AdminSettings = () => {
                     placeholder="Ej: DESPACHOS GRATIS POR COMPRAS SOBRE $30.000"
                   />
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label>Link para Reseñas de Google (5 Estrellas)</label>
+                <div className="input-with-icon">
+                  <Star size={18} />
+                  <input 
+                    type="text" 
+                    value={googleReviewLink} 
+                    onChange={(e) => setGoogleReviewLink(e.target.value)}
+                    placeholder="Ej: https://g.page/r/your-id/review"
+                  />
+                </div>
+                <p style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                  Este link se incluirá en los mensajes de WhatsApp para solicitar calificaciones.
+                </p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>

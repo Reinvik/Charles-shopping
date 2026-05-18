@@ -378,8 +378,35 @@ export const AdminOrders = () => {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
+                        onClick={async (e) => { 
+                          e.stopPropagation(); 
+                          const clientName = order.shipping_details?.fullName || 'Cliente';
+                          const phone = order.shipping_details?.phone?.replace(/\D/g, '') || '';
+                          const storeName = tenant?.display_name || 'nuestra tienda';
+                          
+                          // Cargar link de reseñas
+                          const { data } = await supabase
+                            .from('site_settings')
+                            .select('value')
+                            .eq('tenant_id', tenant?.id)
+                            .eq('key', 'google_review_link')
+                            .maybeSingle();
+                          
+                          const reviewLink = data?.value || '';
+                          const reviewText = reviewLink ? `\n\nSi te gustó nuestro servicio, nos ayudarías mucho dejándonos 5 estrellas aquí: ${reviewLink}` : '';
+                          
+                          const message = encodeURIComponent(`¡Hola ${clientName}! Te escribo de ${storeName}. 🏠 Te informamos que tu pedido #${order.id.slice(0, 8)} ya ha sido despachado y va en camino. ¡Pronto estará en tus manos! 😊${reviewText}`);
+                          window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
+                        }}
+                        className="p-2 text-slate-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Notificar Despacho"
+                      >
+                        <MessageCircle size={18} />
+                      </button>
+                      <button 
                         onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
                         className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                        title="Ver Detalles"
                       >
                         <Eye size={18} />
                       </button>
