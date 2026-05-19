@@ -69,8 +69,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (storeParam) {
         query = query.eq('slug', storeParam);
       } 
-      // 2. Subdominio (ej: charlyhome.tiendasmart.cl)
-      else if (hostname.endsWith('.tiendasmart.cl') || hostname.endsWith('.vercel.app')) {
+      // 2. Subdominio (ej: charlyhome.tiendasmart.cl o pasionporlosano.smartlean.cl)
+      else if (hostname.endsWith('.tiendasmart.cl') || hostname.endsWith('.smartlean.cl') || hostname.endsWith('.vercel.app')) {
         const parts = hostname.split('.');
         const slug = parts[0];
         query = query.eq('slug', slug);
