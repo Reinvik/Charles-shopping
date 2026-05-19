@@ -503,7 +503,10 @@ export const AdminOrders = () => {
                   </div>
                   <span style={{ color: '#fff', fontWeight: 900, fontSize: 'clamp(1.1rem, 4vw, 1.5rem)', letterSpacing: '-0.03em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Detalles del Pedido</span>
                 </div>
-                <p style={{ color: '#94a3b8', fontSize: '0.65rem', fontFamily: 'monospace', margin: 0 }}>REF: {selectedOrder.id.toUpperCase()}</p>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <p style={{ color: '#94a3b8', fontSize: '0.65rem', fontFamily: 'monospace', margin: 0 }}>REF: {selectedOrder.id.toUpperCase()}</p>
+                  <p style={{ color: '#38bdf8', fontSize: '0.75rem', fontWeight: 'bold', margin: 0 }}>CÓDIGO RASTREO: {selectedOrder.id.slice(0, 8).toUpperCase()}</p>
+                </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(0.5rem, 2vw, 1rem)', marginLeft: '1rem' }}>
                 <div className="desktop-only">{getStatusBadge(selectedOrder.status, true)}</div>
