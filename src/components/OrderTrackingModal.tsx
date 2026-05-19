@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Package, Search, Truck, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTenant } from '../context/TenantContext';
@@ -14,8 +15,13 @@ export const OrderTrackingModal = ({ isOpen, onClose }: OrderTrackingModalProps)
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState<any>(null);
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,19 +37,36 @@ export const OrderTrackingModal = ({ isOpen, onClose }: OrderTrackingModalProps)
         cleanId = cleanId.replace('charlyhome-order-', '');
       }
 
-      const { data, error: fetchError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('id', cleanId)
-        .eq('tenant_id', tenant.id)
-        .maybeSingle();
+      const isFullUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
 
-      if (fetchError) throw fetchError;
-      
-      if (!data) {
-        setError('No se encontró ningún pedido con ese ID. Verifica e intenta nuevamente.');
+      let foundOrder = null;
+
+      if (isFullUUID) {
+        const { data, error: fetchError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', cleanId)
+          .eq('tenant_id', tenant.id)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+        foundOrder = data;
       } else {
-        setOrder(data);
+        const { data, error: fetchError } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('tenant_id', tenant.id)
+          .order('created_at', { ascending: false })
+          .limit(1000);
+
+        if (fetchError) throw fetchError;
+        foundOrder = data?.find(o => o.id.startsWith(cleanId)) || null;
+      }
+      
+      if (!foundOrder) {
+        setError('No se encontró ningún pedido con ese código. Verifica e intenta nuevamente.');
+      } else {
+        setOrder(foundOrder);
       }
     } catch (err: any) {
       setError('Ocurrió un error al buscar el pedido: ' + err.message);
@@ -67,16 +90,22 @@ export const OrderTrackingModal = ({ isOpen, onClose }: OrderTrackingModalProps)
     }
   };
 
-  return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
-    }}>
-      <div style={{
-        backgroundColor: '#fff', borderRadius: '20px', width: '100%', maxWidth: '500px',
-        padding: '30px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
-      }}>
+  const modalContent = (
+    <div 
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 999999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          backgroundColor: '#fff', borderRadius: '20px', width: '100%', maxWidth: '500px',
+          padding: '30px', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <button 
           onClick={onClose}
           style={{ position: 'absolute', top: '20px', right: '20px', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
@@ -151,4 +180,6 @@ export const OrderTrackingModal = ({ isOpen, onClose }: OrderTrackingModalProps)
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
