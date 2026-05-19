@@ -1,4 +1,4 @@
-import { Search, ShoppingCart, User, Settings, Plus, Pencil, Trash2, Check, X } from 'lucide-react';
+import { Search, ShoppingCart, User, Settings, Plus, Pencil, Trash2, Check, X, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -44,6 +44,8 @@ interface HeaderProps {
   onCategorySelect?: (id: string | null) => void;
 }
 
+import { OrderTrackingModal } from './OrderTrackingModal';
+
 const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
   const { user, isAdmin } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
@@ -55,6 +57,7 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
   const [newCatName, setNewCatName] = useState('');
   const [isAddingCat, setIsAddingCat] = useState(false);
   const [tempName, setTempName] = useState('');
+  const [isTrackingOpen, setIsTrackingOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -189,11 +192,20 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
             <Search size={22} color="var(--slate-600)" />
           </div>
           {isAdmin && (
-            <Link to="/admin" className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '700', fontSize: '14px' }}>
+            <Link to="/admin" className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '700', fontSize: '14px', textDecoration: 'none' }}>
               <Settings size={20} />
               <span>Admin</span>
             </Link>
           )}
+          
+          <button 
+            onClick={() => setIsTrackingOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: 'inherit', background: 'none', border: 'none', padding: 0 }}
+          >
+            <Package size={22} />
+            <span className="desktop-only" style={{ fontSize: '14px', fontWeight: '600' }}>Rastrear Pedido</span>
+          </button>
+
           <Link to="/login" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'inherit', textDecoration: 'none' }}>
             <User size={22} />
             <span className="desktop-only" style={{ fontSize: '14px', fontWeight: '600' }}>{user ? 'Mi Cuenta' : 'Ingresar'}</span>
@@ -363,6 +375,8 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
           transform: scale(1.1);
         }
       `}</style>
+
+      <OrderTrackingModal isOpen={isTrackingOpen} onClose={() => setIsTrackingOpen(false)} />
     </header>
   );
 };
