@@ -16,7 +16,6 @@ import {
   Trash2,
   Send,
   Hash,
-  Link2,
   Star
 } from 'lucide-react';
 
