@@ -245,9 +245,11 @@ import CheckoutFailure from './pages/checkout/Failure';
 import { ProductDetail } from './pages/ProductDetail';
 import { DynamicPage } from './pages/DynamicPage';
 import DeliveryPortal from './pages/DeliveryPortal';
+import { useTheme } from './context/ThemeContext';
 
 function App() {
-  const { tenant } = useTenant();
+  const { tenant, loading: tenantLoading } = useTenant();
+  const { loading: themeLoading } = useTheme();
 
   React.useEffect(() => {
     const trackVisit = async () => {
@@ -273,6 +275,14 @@ function App() {
     
     trackVisit();
   }, [tenant]);
+
+  if (tenantLoading || themeLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc' }}>
+        <Loader2 className="animate-spin" size={48} color="#94a3b8" />
+      </div>
+    );
+  }
 
   return (
     <CartProvider>
