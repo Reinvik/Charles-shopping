@@ -17,6 +17,7 @@ interface Order {
   total: number;
   status: string;
   is_delivered?: boolean;
+  delivery_status?: string;
   customer_email: string;
   items: any[];
   flow_token?: string;
@@ -65,20 +66,38 @@ export const AdminOrders = () => {
     }
   };
 
-  const toggleDelivery = async (orderId: string, currentStatus: boolean) => {
+  const cycleDeliveryStatus = async (orderId: string, currentDeliveryStatus: string = 'Por preparar', isDelivered: boolean) => {
     if (!tenant) return;
+    
+    if (currentDeliveryStatus === 'Entregado' || isDelivered) {
+       if (!confirm('Este pedido ya fue entregado mediante el QR. ¿Deseas resetear el estado a "Por preparar"?')) return;
+    }
+    
+    let nextStatus = 'Por preparar';
+    if (currentDeliveryStatus === 'Por preparar') nextStatus = 'Preparado';
+    else if (currentDeliveryStatus === 'Preparado') nextStatus = 'Despachado';
+    else if (currentDeliveryStatus === 'Despachado') nextStatus = 'Por preparar';
+    else if (currentDeliveryStatus === 'Entregado') nextStatus = 'Por preparar';
+
     try {
       const { error, count } = await supabase
         .from('orders')
-        .update({ is_delivered: !currentStatus }, { count: 'exact' })
+        .update({ 
+          delivery_status: nextStatus,
+          is_delivered: nextStatus === 'Entregado'
+        }, { count: 'exact' })
         .eq('id', orderId)
         .eq('tenant_id', tenant.id);
       
       if (error) throw error;
       if (count === 0) throw new Error("No se pudo actualizar el pedido. Verifica tus permisos de administrador.");
       
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, is_delivered: !currentStatus } : o));
-      toast.success(!currentStatus ? 'Pedido marcado como entregado' : 'Pedido marcado como pendiente de entrega');
+      setOrders(prev => prev.map(o => o.id === orderId ? { 
+        ...o, 
+        delivery_status: nextStatus,
+        is_delivered: nextStatus === 'Entregado'
+      } : o));
+      toast.success(`Estado de entrega actualizado a: ${nextStatus}`);
     } catch (error: any) {
       console.error('Update error:', error);
       toast.error('Error: ' + (error.message || 'Error desconocido al actualizar'));
@@ -202,27 +221,36 @@ export const AdminOrders = () => {
   };
 
   const getDeliveryBadge = (order: Order, isDark: boolean = false) => {
+    const deliveryStatus = order.delivery_status || 'Por preparar';
     const isDelivered = order.is_delivered || false;
-    const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all whitespace-nowrap";
+    const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all whitespace-nowrap cursor-pointer";
     
     let stateClasses = "";
-    if (isDelivered) {
-      stateClasses = isDark 
-        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/40' 
-        : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100';
-    } else {
+    if (deliveryStatus === 'Por preparar') {
       stateClasses = isDark 
         ? 'bg-slate-100/10 text-slate-300 border-slate-100/20 hover:text-white hover:bg-slate-100/20' 
         : 'bg-slate-50 text-slate-400 border-slate-100 hover:text-slate-600 hover:bg-slate-100';
+    } else if (deliveryStatus === 'Preparado') {
+      stateClasses = isDark 
+        ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/40' 
+        : 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100';
+    } else if (deliveryStatus === 'Despachado') {
+      stateClasses = isDark 
+        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/40' 
+        : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100';
+    } else if (deliveryStatus === 'Entregado' || isDelivered) {
+      stateClasses = isDark 
+        ? 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/40' 
+        : 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100';
     }
 
     const deliveryText = (isDelivered && order.status.startsWith('Entregado a')) 
       ? order.status 
-      : (isDelivered ? 'Entregado' : 'Pendiente');
+      : deliveryStatus;
 
     return (
       <button 
-        onClick={(e) => { e.stopPropagation(); toggleDelivery(order.id, isDelivered); }}
+        onClick={(e) => { e.stopPropagation(); cycleDeliveryStatus(order.id, deliveryStatus, isDelivered); }}
         className={`${baseClasses} ${stateClasses}`}
         style={{ whiteSpace: 'normal', textAlign: 'left', minWidth: '100px' }}
       >
@@ -395,11 +423,24 @@ export const AdminOrders = () => {
                           const reviewLink = data?.value || '';
                           const reviewText = reviewLink ? `\n\nSi te gustó nuestro servicio, nos ayudarías mucho dejándonos 5 estrellas aquí: ${reviewLink}` : '';
                           
-                          const message = encodeURIComponent(`¡Hola ${clientName}! Te escribo de ${storeName}. 🏠 Te informamos que tu pedido #${order.id.slice(0, 8)} ya ha sido despachado y va en camino. ¡Pronto estará en tus manos! 😊${reviewText}`);
+                          const isPreparado = order.delivery_status === 'Preparado';
+                          const isDespachado = order.delivery_status === 'Despachado';
+                          const isEntregado = order.delivery_status === 'Entregado' || order.is_delivered;
+                          
+                          let notifyStatusText = `está siendo procesado. Te avisaremos cuando haya novedades. ⏳`;
+                          if (isPreparado) {
+                            notifyStatusText = `ha sido preparado y está listo para ser despachado. ¡Atento a nuestras novedades! 📦`;
+                          } else if (isDespachado) {
+                            notifyStatusText = `ya ha sido despachado y va en camino. ¡Pronto estará en tus manos! 🚚`;
+                          } else if (isEntregado) {
+                            notifyStatusText = `ha sido entregado con éxito. ¡Esperamos que lo disfrutes! 🎉`;
+                          }
+                          
+                          const message = encodeURIComponent(`¡Hola ${clientName}! Te escribo de ${storeName}. 🏠 Te informamos que tu pedido #${order.id.slice(0, 8)} ${notifyStatusText}${reviewText}`);
                           window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
                         }}
                         className="p-2 text-slate-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Notificar Despacho"
+                        title="Notificar Estado por WhatsApp"
                       >
                         <MessageCircle size={18} />
                       </button>

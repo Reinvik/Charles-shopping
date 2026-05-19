@@ -68,7 +68,8 @@ const DeliveryPortal = () => {
         .from('orders')
         .update({ 
           is_delivered: true,
-          status: newStatus 
+          status: newStatus,
+          delivery_status: 'Entregado'
         })
         .eq('id', order?.id);
 
