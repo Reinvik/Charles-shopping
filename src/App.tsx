@@ -7,7 +7,7 @@ import { Login } from './pages/Login';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { useAuth } from './context/AuthContext';
 import { supabase } from './lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Pencil, Check, X } from 'lucide-react';
 import { CartProvider } from './context/CartContext';
 import CartDrawer from './components/CartDrawer';
 import { Toaster } from 'sonner';
@@ -23,7 +23,45 @@ const HomePage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = React.useState<any>(null);
   const { isAdmin } = useAuth();
   const { tenant } = useTenant();
+  const { settings, refreshTheme } = useTheme();
   const navigate = useNavigate();
+
+  const [isEditingDesc, setIsEditingDesc] = React.useState(false);
+  const [descInput, setDescInput] = React.useState(settings.siteDescription || '');
+  const [savingDesc, setSavingDesc] = React.useState(false);
+
+  React.useEffect(() => {
+    setDescInput(settings.siteDescription || '');
+  }, [settings.siteDescription]);
+
+  const handleSaveDescription = async () => {
+    if (!tenant) return;
+    try {
+      setSavingDesc(true);
+      const updatedTheme = {
+        ...settings,
+        siteDescription: descInput
+      };
+      
+      const { error } = await supabase
+        .from('site_settings')
+        .upsert({
+          tenant_id: tenant.id,
+          key: 'theme',
+          value: updatedTheme,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key,tenant_id' });
+
+      if (error) throw error;
+      
+      await refreshTheme();
+      setIsEditingDesc(false);
+    } catch (err: any) {
+      alert('Error al guardar la descripción: ' + err.message);
+    } finally {
+      setSavingDesc(false);
+    }
+  };
 
   const seoData = {
     title: selectedCategory ? selectedCategory.name : (tenant?.display_name || 'Inicio'),
@@ -107,11 +145,93 @@ const HomePage: React.FC = () => {
           <h1 style={{ fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '800', marginBottom: '8px' }}>
             {selectedCategory ? selectedCategory.name : 'Catálogo Completo'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '600px' }}>
-            {selectedCategory 
-              ? `Explora nuestra selección de ${selectedCategory.name.toLowerCase()} con los mejores precios y stock garantizado.`
-              : 'Descubre nuestra selección de productos de aseo y papelería de las mejores marcas con envío a domicilio.'}
-          </p>
+          {isEditingDesc ? (
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px', maxWidth: '600px', flexDirection: 'column' }}>
+              <textarea
+                value={descInput}
+                onChange={(e) => setDescInput(e.target.value)}
+                style={{
+                  width: '100%',
+                  minHeight: '80px',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)',
+                  fontSize: '14px',
+                  outline: 'none',
+                  fontFamily: 'inherit'
+                }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={handleSaveDescription}
+                  disabled={savingDesc}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Check size={14} /> {savingDesc ? 'Guardando...' : 'Guardar'}
+                </button>
+                <button
+                  onClick={() => {
+                    setIsEditingDesc(false);
+                    setDescInput(settings.siteDescription || '');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    backgroundColor: '#e2e8f0',
+                    color: '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '6px 12px',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <X size={14} /> Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p style={{ color: 'var(--text-muted)', fontSize: '14px', maxWidth: '600px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span>
+                {selectedCategory 
+                  ? `Explora nuestra selección de ${selectedCategory.name.toLowerCase()} con los mejores precios y stock garantizado.`
+                  : (settings.siteDescription || 'Descubre nuestra selección de productos de aseo y papelería de las mejores marcas con envío a domicilio.')}
+              </span>
+              {isAdmin && !selectedCategory && (
+                <button
+                  onClick={() => setIsEditingDesc(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--primary)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '4px',
+                    borderRadius: '4px',
+                    backgroundColor: '#fee2e2',
+                  }}
+                  title="Editar descripción"
+                >
+                  <Pencil size={14} />
+                </button>
+              )}
+            </p>
+          )}
         </div>
 
         <div style={{ 
