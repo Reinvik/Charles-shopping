@@ -19,7 +19,8 @@ import {
   Sliders,
   ShoppingBag,
   Store,
-  Users
+  Users,
+  CreditCard
 } from 'lucide-react';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -44,6 +45,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'Newsletter', icon: Mail, path: '/admin/newsletter' },
     { label: 'Configuración', icon: Sliders, path: '/admin/settings' },
     ...(isPlatformAdmin ? [
+      { label: 'Transacciones', icon: CreditCard, path: '/admin/transactions' },
       { label: 'Tiendas', icon: Store, path: '/admin/tenants' },
       { label: 'Usuarios', icon: Users, path: '/admin/users' },
     ] : []),

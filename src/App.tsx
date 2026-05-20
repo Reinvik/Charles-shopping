@@ -359,6 +359,7 @@ import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminDelivery } from './pages/admin/AdminDelivery';
 import { AdminTenants } from './pages/admin/AdminTenants';
 import { AdminUsers } from './pages/admin/AdminUsers';
+import { AdminTransactions } from './pages/admin/AdminTransactions';
 import AdminSettings from './pages/admin/AdminSettings';
 import CheckoutSuccess from './pages/checkout/Success';
 import CheckoutFailure from './pages/checkout/Failure';
@@ -431,6 +432,7 @@ function App() {
                   <Route path="/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
                   <Route path="/tenants" element={<AdminLayout><AdminTenants /></AdminLayout>} />
                   <Route path="/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+                  <Route path="/transactions" element={<AdminLayout><AdminTransactions /></AdminLayout>} />
                 </Routes>
               </ProtectedRoute>
             } 

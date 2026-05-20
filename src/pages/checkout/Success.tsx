@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ShoppingBag, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, ShoppingBag, Clock, Loader2, AlertCircle, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import Header from '../../components/Header';
@@ -10,7 +10,7 @@ import { useCart } from '../../context/CartContext';
 const CheckoutSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  const [status, setStatus] = useState<'verifying' | 'paid' | 'error'>('verifying');
+  const [status, setStatus] = useState<'verifying' | 'paid' | 'pending' | 'rejected' | 'error'>('verifying');
   const [attempts, setAttempts] = useState(0);
   const { clearCart } = useCart();
 
@@ -22,6 +22,26 @@ const CheckoutSuccess: React.FC = () => {
 
     const checkStatus = async () => {
       try {
+        // Try to sync status directly with Flow (via our edge function) up to 3 times
+        if (attempts < 3) {
+          const { data: syncData } = await supabase.functions.invoke('flow-check-status', {
+            body: { flowToken: token }
+          });
+
+          if (syncData?.order) {
+            const orderStatus = syncData.order.status;
+            if (orderStatus === 'paid') {
+              setStatus('paid');
+              clearCart();
+              return;
+            } else if (orderStatus === 'rejected') {
+              setStatus('rejected');
+              return;
+            }
+          }
+        }
+
+        // Fallback: check database directly
         const { data, error } = await supabase
           .from('orders')
           .select('status')
@@ -33,21 +53,23 @@ const CheckoutSuccess: React.FC = () => {
         if (data.status === 'paid') {
           setStatus('paid');
           clearCart();
+        } else if (data.status === 'rejected') {
+          setStatus('rejected');
         } else if (attempts < 10) {
-          // Poll every 2 seconds for up to 20 seconds
+          // Poll every 3 seconds for up to 30 seconds
           setTimeout(() => {
             setAttempts(prev => prev + 1);
-          }, 2000);
+          }, 3000);
         } else {
-          // If after 20 seconds it's still not 'paid', we show error or just stay verifying
-          // Webhooks can sometimes be slow. 
-          setStatus('paid'); // Fallback: If they got back to the success page, it's highly likely it worked
-          clearCart();
+          // After 10 attempts (~30s), show pending state — not success
+          setStatus('pending');
         }
       } catch (err) {
         console.error('Error checking status:', err);
         if (attempts < 5) {
-          setTimeout(() => setAttempts(prev => prev + 1), 2000);
+          setTimeout(() => setAttempts(prev => prev + 1), 3000);
+        } else {
+          setStatus('pending');
         }
       }
     };
@@ -69,12 +91,16 @@ const CheckoutSuccess: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              style={{ textAlign: 'center' }}
+              style={{ textAlign: 'center', maxWidth: '400px' }}
             >
               <Loader2 className="animate-spin" size={48} color="var(--primary)" style={{ margin: '0 auto 24px' }} />
               <h1 style={{ fontSize: '24px', fontWeight: '800' }}>Verificando pago...</h1>
               <p style={{ color: '#666', marginTop: '8px' }}>Estamos confirmando tu transacción con Flow.</p>
+              {attempts > 0 && (
+                <p style={{ color: '#999', fontSize: '13px', marginTop: '8px' }}>Intento {attempts}/10...</p>
+              )}
             </motion.div>
+
           ) : status === 'paid' ? (
             <motion.div 
               key="success"
@@ -106,20 +132,17 @@ const CheckoutSuccess: React.FC = () => {
               <h1 style={{ fontSize: '32px', fontWeight: '800', marginBottom: '16px' }}>¡Pago Exitoso!</h1>
               
               <p style={{ color: '#666', fontSize: '18px', marginBottom: '32px', lineHeight: '1.6' }}>
-                ¡Muchas gracias por tu compra! Hemos recibido tu pago con éxito y ya estamos preparando tu pedido. Lo estaremos enviando dentro de las próximas 24 horas.
+                ¡Muchas gracias por tu compra! Hemos recibido tu pago con éxito. Recibirás la confirmación en tu correo y estaremos despachando tu pedido en las próximas horas.
               </p>
 
               <div style={{ 
-                backgroundColor: '#f8fafc', borderRadius: '16px', padding: '24px', 
-                marginBottom: '32px', textAlign: 'left'
+                backgroundColor: '#f0fdf4', borderRadius: '16px', padding: '20px', 
+                marginBottom: '32px', textAlign: 'left', border: '1px solid #bbf7d0'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                  <Mail size={18} color="var(--primary)" />
-                  <span style={{ fontWeight: '600' }}>Confirmación enviada</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <CheckCircle2 size={18} color="#059669" />
+                  <span style={{ fontWeight: '600', color: '#166534' }}>Confirmación enviada a tu correo</span>
                 </div>
-                <p style={{ fontSize: '14px', color: '#64748b' }}>
-                  Recibirás los detalles de tu compra en tu correo electrónico.
-                </p>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -129,6 +152,63 @@ const CheckoutSuccess: React.FC = () => {
                 </Link>
               </div>
             </motion.div>
+
+          ) : status === 'rejected' ? (
+            <motion.div 
+              key="rejected"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ 
+                textAlign: 'center', maxWidth: '500px', backgroundColor: '#fff',
+                padding: '48px', borderRadius: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.05)'
+              }}
+            >
+              <div style={{
+                width: '80px', height: '80px', backgroundColor: '#fef2f2',
+                borderRadius: '50%', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', margin: '0 auto 24px', border: '2px solid #fca5a5'
+              }}>
+                <XCircle size={48} color="#dc2626" />
+              </div>
+              <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#dc2626' }}>Pago Rechazado</h1>
+              <p style={{ color: '#666', marginTop: '12px', lineHeight: '1.6' }}>
+                Tu pago no pudo procesarse. Esto puede deberse a fondos insuficientes, datos incorrectos o rechazo por el banco. No se realizó ningún cargo.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }}>
+                <Link to="/" className="btn-primary" style={{ padding: '14px', borderRadius: '12px' }}>
+                  Volver e intentar de nuevo
+                </Link>
+              </div>
+            </motion.div>
+
+          ) : status === 'pending' ? (
+            <motion.div 
+              key="pending"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              style={{ 
+                textAlign: 'center', maxWidth: '500px', backgroundColor: '#fff',
+                padding: '48px', borderRadius: '24px', boxShadow: '0 20px 50px rgba(0,0,0,0.05)'
+              }}
+            >
+              <div style={{
+                width: '80px', height: '80px', backgroundColor: '#fffbeb',
+                borderRadius: '50%', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', margin: '0 auto 24px', border: '2px solid #fcd34d'
+              }}>
+                <Clock size={48} color="#d97706" />
+              </div>
+              <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#d97706' }}>Pago Pendiente</h1>
+              <p style={{ color: '#666', marginTop: '12px', lineHeight: '1.6' }}>
+                Tu pago está siendo procesado. Si completaste el pago en Flow, la confirmación llegará en unos minutos a tu correo electrónico. Si no completaste el pago, puedes volver e intentar de nuevo.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '32px' }}>
+                <Link to="/" className="btn-primary" style={{ padding: '14px', borderRadius: '12px' }}>
+                  Volver al inicio
+                </Link>
+              </div>
+            </motion.div>
+
           ) : (
             <motion.div 
               key="error"
