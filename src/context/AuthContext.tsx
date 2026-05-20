@@ -51,7 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq('id', currentUser.id)
       .single();
 
-    const isPlatform = currentUser.email === 'ariel.mellag@gmail.com' || (data?.role === 'superuser' || data?.role === 'superadmin');
+    const isPlatform = 
+      currentUser.email === 'ariel.mellag@gmail.com' || 
+      data?.role === 'nexusowner' ||
+      data?.role === 'superuser' || 
+      data?.role === 'superadmin';
     
     setIsPlatformAdmin(isPlatform);
     setIsAdmin(isPlatform || data?.role === 'admin' || data?.role === 'manager');
