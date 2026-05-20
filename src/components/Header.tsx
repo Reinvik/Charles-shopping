@@ -160,7 +160,7 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
               alt={settings.siteName} 
               className="site-logo"
               style={{ 
-                height: 'clamp(50px, 12vw, 100px)', 
+                height: 'clamp(80px, 15vw, 140px)', 
                 width: 'auto', 
                 cursor: 'pointer', 
                 transition: 'var(--transition)' 
