@@ -54,7 +54,12 @@ export const AdminDelivery = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: name === 'announcementText' ? value : Number(value) }));
+    if (name === 'announcementText') {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    } else {
+      const cleanVal = value.replace(/\D/g, '');
+      setFormData(prev => ({ ...prev, [name]: cleanVal ? Number(cleanVal) : 0 }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -176,9 +181,10 @@ export const AdminDelivery = () => {
           <div className="form-group">
             <label style={{ fontSize: '16px', fontWeight: 'bold' }}>Monto para Envío Gratis ($)</label>
             <input 
-              type="number" 
+              type="text" 
+              inputMode="numeric"
               name="freeDeliveryThreshold" 
-              value={formData.freeDeliveryThreshold} 
+              value={formData.freeDeliveryThreshold || ''} 
               onChange={handleInputChange}
               className="settings-input"
               style={{ padding: '12px', fontSize: '15px' }}
@@ -192,9 +198,10 @@ export const AdminDelivery = () => {
           <div className="form-group">
             <label style={{ fontSize: '16px', fontWeight: 'bold' }}>Costo Fijo de Despacho ($)</label>
             <input 
-              type="number" 
+              type="text" 
+              inputMode="numeric"
               name="deliveryCost" 
-              value={formData.deliveryCost} 
+              value={formData.deliveryCost || ''} 
               onChange={handleInputChange}
               className="settings-input"
               style={{ padding: '12px', fontSize: '15px' }}
@@ -255,9 +262,13 @@ export const AdminDelivery = () => {
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label style={{ fontSize: '13px' }}>Costo ($)</label>
               <input 
-                type="number" 
-                value={newZone.cost}
-                onChange={e => setNewZone({...newZone, cost: Number(e.target.value)})}
+                type="text" 
+                inputMode="numeric"
+                value={newZone.cost || ''}
+                onChange={e => {
+                  const cleanVal = e.target.value.replace(/\D/g, '');
+                  setNewZone({...newZone, cost: cleanVal ? Number(cleanVal) : 0});
+                }}
                 className="settings-input"
                 style={{ padding: '8px' }}
               />
@@ -265,9 +276,13 @@ export const AdminDelivery = () => {
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label style={{ fontSize: '13px' }}>Envío Gratis ($)</label>
               <input 
-                type="number" 
-                value={newZone.free_shipping_threshold}
-                onChange={e => setNewZone({...newZone, free_shipping_threshold: Number(e.target.value)})}
+                type="text" 
+                inputMode="numeric"
+                value={newZone.free_shipping_threshold || ''}
+                onChange={e => {
+                  const cleanVal = e.target.value.replace(/\D/g, '');
+                  setNewZone({...newZone, free_shipping_threshold: cleanVal ? Number(cleanVal) : 0});
+                }}
                 placeholder="Opcional"
                 className="settings-input"
                 style={{ padding: '8px' }}

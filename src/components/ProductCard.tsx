@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Plus, Minus, Check, Flame } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { useCroppedImage } from '../hooks/useCroppedImage';
 
 interface ProductProps {
   id: string | number;
@@ -19,6 +20,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
   const [added, setAdded] = useState(false);
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const croppedImage = useCroppedImage(image);
 
   const handleIncrement = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -93,7 +95,7 @@ const ProductCard: React.FC<ProductProps> = ({ id, name, image, price, oldPrice,
         backgroundColor: '#fff'
       }}>
         <img 
-          src={image} 
+          src={croppedImage} 
           alt={name} 
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />

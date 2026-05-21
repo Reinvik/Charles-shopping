@@ -8,6 +8,8 @@ import { SEO } from '../hooks/useSEO';
 import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import logoImg from '../assets/logo.png';
+import { useCroppedImage } from '../hooks/useCroppedImage';
+
 
 export const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +39,9 @@ export const ProductDetail = () => {
   const [editIsActive, setEditIsActive] = useState<boolean>(true);
   const [editIsOnOffer, setEditIsOnOffer] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const croppedSelectedImage = useCroppedImage(selectedImage);
+  const croppedEditImageUrl = useCroppedImage(editImageUrl);
 
   // Default placeholder image
   const PLACEHOLDER_IMAGE = logoImg;
@@ -524,21 +529,37 @@ export const ProductDetail = () => {
               animate={{ opacity: 1, scale: 1 }}
               className={`product-image-viewer ${isEditing ? 'editable' : ''}`}
               onClick={handleImageClick}
+              style={{ position: 'relative', overflow: 'hidden' }}
             >
+              {/* Background blurred image for premium ambient effect on vertical or letterboxed images */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `url(${(isEditing ? croppedEditImageUrl : croppedSelectedImage) || PLACEHOLDER_IMAGE})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'blur(30px) brightness(0.65) saturate(1.3)',
+                opacity: 0.5,
+                zIndex: 0,
+                transform: 'scale(1.2)',
+                pointerEvents: 'none'
+              }} />
+
               {product.discount_badge && (
-                <div className="detail-badge-sale">{product.discount_badge}</div>
+                <div className="detail-badge-sale" style={{ zIndex: 2 }}>{product.discount_badge}</div>
               )}
               
               <AnimatePresence mode="wait">
                 <motion.img 
-                  key={isEditing ? editImageUrl : selectedImage}
+                  key={isEditing ? croppedEditImageUrl : croppedSelectedImage}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  src={isEditing ? editImageUrl : selectedImage} 
+                  src={(isEditing ? croppedEditImageUrl : croppedSelectedImage) || PLACEHOLDER_IMAGE} 
                   alt={product.name} 
                   className="main-display-image"
+                  style={{ zIndex: 1, position: 'relative' }}
                 />
               </AnimatePresence>
 
@@ -729,9 +750,13 @@ export const ProductDetail = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontWeight: 'bold' }}>$</span>
                       <input 
-                        type="number"
-                        value={editPrice}
-                        onChange={(e) => setEditPrice(Number(e.target.value))}
+                        type="text"
+                        inputMode="numeric"
+                        value={editPrice === 0 ? '' : editPrice}
+                        onChange={(e) => {
+                          const cleanVal = e.target.value.replace(/\D/g, '');
+                          setEditPrice(cleanVal ? Number(cleanVal) : 0);
+                        }}
                         className="edit-input-price"
                         placeholder="Precio"
                       />

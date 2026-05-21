@@ -9,6 +9,12 @@ import {
 import { Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTenant } from '../../context/TenantContext';
+import { useCroppedImage } from '../../hooks/useCroppedImage';
+
+const CroppedProductImage = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const cropped = useCroppedImage(src);
+  return <img src={cropped} alt={alt} className={className} />;
+};
 
 interface Product {
   id: string;
@@ -366,7 +372,7 @@ export const AdminProducts = () => {
               </button>
             </div>
             <div className="relative aspect-square bg-slate-50 overflow-hidden">
-              <img 
+              <CroppedProductImage 
                 src={product.image_url} 
                 alt={product.name}
                 className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
@@ -534,9 +540,13 @@ export const AdminProducts = () => {
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-primary transition-colors">$</span>
                           <input
                             required
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={formData.price || ''}
-                            onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                            onChange={(e) => {
+                              const cleanVal = e.target.value.replace(/\D/g, '');
+                              setFormData({ ...formData, price: cleanVal ? Number(cleanVal) : 0 });
+                            }}
                             className="w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm font-bold text-slate-700"
                           />
                         </div>
@@ -562,9 +572,13 @@ export const AdminProducts = () => {
                         <div className="relative group">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 font-bold">$</span>
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
                             value={formData.original_price || ''}
-                            onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })}
+                            onChange={(e) => {
+                              const cleanVal = e.target.value.replace(/\D/g, '');
+                              setFormData({ ...formData, original_price: cleanVal ? Number(cleanVal) : 0 });
+                            }}
                             placeholder="Sin descuento"
                             className="w-full pl-8 pr-4 py-3 bg-slate-50/50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm text-slate-500"
                           />
@@ -663,7 +677,7 @@ export const AdminProducts = () => {
                           value={img}
                           className="relative aspect-square rounded-2xl overflow-hidden border border-slate-200 bg-white group shadow-sm cursor-grab active:cursor-grabbing hover:border-primary/50 transition-colors"
                         >
-                          <img src={img} className="w-full h-full object-contain p-2" alt={`Gallery ${idx}`} />
+                          <CroppedProductImage src={img} className="w-full h-full object-contain p-2" alt={`Gallery ${idx}`} />
                           <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                             {idx === 0 && <span className="text-[8px] bg-primary text-white px-2 py-0.5 rounded font-bold uppercase tracking-tighter">Principal</span>}
                             <button

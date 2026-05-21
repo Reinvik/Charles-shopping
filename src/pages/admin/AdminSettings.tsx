@@ -504,10 +504,14 @@ const AdminSettings = () => {
                   <div className="input-with-icon">
                     <span style={{ fontSize: '16px', fontWeight: 'bold' }}>$</span>
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputMode="numeric"
                       name="freeDeliveryThreshold" 
-                      value={formData.freeDeliveryThreshold} 
-                      onChange={handleInputChange}
+                      value={formData.freeDeliveryThreshold || ''} 
+                      onChange={(e) => {
+                        const cleanVal = e.target.value.replace(/\D/g, '');
+                        setFormData(prev => ({ ...prev, freeDeliveryThreshold: cleanVal ? Number(cleanVal) : 0 }));
+                      }}
                     />
                   </div>
                 </div>
@@ -517,10 +521,14 @@ const AdminSettings = () => {
                   <div className="input-with-icon">
                     <span style={{ fontSize: '16px', fontWeight: 'bold' }}>$</span>
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputMode="numeric"
                       name="deliveryCost" 
-                      value={formData.deliveryCost} 
-                      onChange={handleInputChange}
+                      value={formData.deliveryCost || ''} 
+                      onChange={(e) => {
+                        const cleanVal = e.target.value.replace(/\D/g, '');
+                        setFormData(prev => ({ ...prev, deliveryCost: cleanVal ? Number(cleanVal) : 0 }));
+                      }}
                     />
                   </div>
                 </div>
@@ -716,11 +724,13 @@ const AdminSettings = () => {
                       <div className="input-with-icon" style={{ width: '150px', backgroundColor: '#fff', alignSelf: 'flex-end' }}>
                         <span style={{ fontSize: '14px', fontWeight: 'bold' }}>$</span>
                         <input 
-                          type="number" 
-                          value={zone.cost || 3500} 
+                          type="text" 
+                          inputMode="numeric"
+                          value={zone.cost || ''} 
                           onChange={(e) => {
+                            const cleanVal = e.target.value.replace(/\D/g, '');
                             const newZones = [...zones];
-                            newZones[index].cost = e.target.value;
+                            newZones[index].cost = cleanVal ? Number(cleanVal) : 0;
                             setZones(newZones);
                           }}
                           style={{ textAlign: 'right' }}
