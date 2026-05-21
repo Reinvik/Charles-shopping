@@ -7,15 +7,13 @@ import {
   CheckCircle, 
   XCircle, 
   HelpCircle, 
-  ChevronRight, 
   Eye, 
   Building,
   CreditCard,
   Calendar,
   Mail,
   DollarSign,
-  Loader2,
-  FileText
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
