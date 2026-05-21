@@ -7,7 +7,7 @@ import {
   ShoppingBag, Calendar, Mail, 
   CheckCircle2, Clock, XCircle,
   Users, Eye, Package, Printer, Phone, MapPin,
-  MessageCircle, Truck
+  MessageCircle, Truck, CreditCard, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTenant } from '../../context/TenantContext';
@@ -36,6 +36,7 @@ export const AdminOrders = () => {
   const location = useLocation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingFlowTest, setLoadingFlowTest] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -309,6 +310,54 @@ export const AdminOrders = () => {
     }
   };
 
+  const testFlowPayment = async () => {
+    if (!tenant) return;
+    if (!confirm('Se creará un pago REAL de $350 CLP en Flow (sandbox o producción según tu configuración). ¿Continuar?')) return;
+    
+    setLoadingFlowTest(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
+      const response = await fetch(`${supabaseUrl}/functions/v1/flow-create-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          tenantId: tenant.id,
+          email: session?.user?.email || 'test@admin.com',
+          total: 350,
+          items: [{ name: 'Test Flow $350', price: 350, quantity: 1 }],
+          shippingDetails: {
+            fullName: 'Admin Test',
+            phone: '56900000000',
+            address: 'Calle de Prueba 123',
+            comuna: 'Santiago',
+            shippingCost: 0,
+            reference: 'Prueba integración Flow'
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Error al crear el pago en Flow');
+      }
+
+      toast.success('¡Pago creado en Flow! Abriendo pasarela de pago...');
+      window.open(data.url, '_blank');
+
+    } catch (error: any) {
+      toast.error('Error: ' + error.message);
+    } finally {
+      setLoadingFlowTest(false);
+    }
+  };
+
   const order = selectedOrder;
 
   return (
@@ -347,6 +396,21 @@ export const AdminOrders = () => {
           >
             <ShoppingBag size={16} />
             Simular Compra
+          </button>
+
+          <button
+            onClick={testFlowPayment}
+            disabled={loadingFlowTest}
+            className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            title="Crea un pago REAL de $350 en Flow para probar la integración completa"
+          >
+            {loadingFlowTest ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <CreditCard size={16} />
+            )}
+            Pagar $350 en Flow
+            <ExternalLink size={12} />
           </button>
         </div>
       </div>
