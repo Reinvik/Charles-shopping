@@ -194,29 +194,38 @@ export const AdminOrders = () => {
   }, [location.search, orders]);
 
   const getStatusBadge = (status: string, isDark: boolean = false) => {
-    const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap";
+    const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border whitespace-nowrap shadow-sm transition-all duration-200";
     switch (status) {
       case 'paid':
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-green-50 text-green-700 border-green-100'}`}>
-            <CheckCircle2 size={12} /> Pagado
+          <span className={`${baseClasses} ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'}`}>
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            Pagado
           </span>
         );
       case 'pending':
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
-            <Clock size={12} /> Pendiente
+          <span className={`${baseClasses} ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200/80'}`}>
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+            </span>
+            Pendiente
           </span>
         );
       case 'rejected':
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-red-50 text-red-700 border-red-100'}`}>
-            <XCircle size={12} /> Fallido
+          <span className={`${baseClasses} ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-700 border-red-200/80'}`}>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+            Fallido
           </span>
         );
       default:
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-slate-500/20 text-slate-400 border-slate-500/30' : 'bg-slate-50 text-slate-700 border-slate-100'}`}>
+          <span className={`${baseClasses} ${isDark ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' : 'bg-slate-50 text-slate-700 border-slate-200/80'}`}>
             {status}
           </span>
         );
@@ -242,33 +251,33 @@ export const AdminOrders = () => {
         stepLabel = '1/4';
         statusText = 'Sin Preparar';
         badgeStyles = isDark 
-          ? 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white shadow-sm'
-          : 'bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100 hover:text-slate-800 hover:border-slate-300 shadow-sm';
-        numberStyles = isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200/80 text-slate-600';
+          ? 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white shadow-sm hover:border-slate-600'
+          : 'bg-slate-100 text-slate-600 border-slate-200/80 hover:bg-slate-200/70 hover:text-slate-800 hover:border-slate-300 shadow-sm';
+        numberStyles = isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200/80 text-slate-700 font-extrabold';
         break;
       case 'Preparado':
         stepLabel = '2/4';
         statusText = 'Preparado';
         badgeStyles = isDark
           ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
-          : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100/80 hover:text-amber-800 hover:border-amber-300 shadow-sm';
-        numberStyles = isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-200/80 text-amber-800';
+          : 'bg-amber-50/80 text-amber-700 border-amber-200/80 hover:bg-amber-100/80 hover:text-amber-800 hover:border-amber-300 shadow-sm';
+        numberStyles = isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-200/70 text-amber-800 font-extrabold';
         break;
       case 'Despachado':
         stepLabel = '3/4';
         statusText = 'Despachado';
         badgeStyles = isDark
           ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:text-blue-300'
-          : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100/80 hover:text-blue-800 hover:border-blue-300 shadow-sm';
-        numberStyles = isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-200/80 text-blue-800';
+          : 'bg-blue-50/80 text-blue-700 border-blue-200/80 hover:bg-blue-100/80 hover:text-blue-800 hover:border-blue-300 shadow-sm';
+        numberStyles = isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-200/70 text-blue-800 font-extrabold';
         break;
       case 'Entregado':
         stepLabel = '4/4';
         statusText = 'Entregado';
         badgeStyles = isDark
           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
-          : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 hover:text-emerald-800 hover:border-emerald-300 shadow-sm';
-        numberStyles = isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-200/80 text-emerald-800';
+          : 'bg-emerald-50/80 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100/80 hover:text-emerald-800 hover:border-emerald-300 shadow-sm';
+        numberStyles = isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-200/70 text-emerald-800 font-extrabold';
         break;
       default:
         stepLabel = '1/4';
@@ -282,15 +291,15 @@ export const AdminOrders = () => {
     return (
       <button 
         onClick={(e) => { e.stopPropagation(); cycleDeliveryStatus(order.id, statusKey, isDelivered); }}
-        className={`inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer select-none ${badgeStyles}`}
+        className={`inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full text-xs font-bold border transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer select-none group ${badgeStyles}`}
         title="Haz clic para avanzar el estado de entrega"
-        style={{ minWidth: '125px' }}
+        style={{ minWidth: '135px' }}
       >
-        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black tracking-tight ${numberStyles}`}>
+        <span className={`px-2 py-0.5 rounded-full text-[10px] tracking-tight ${numberStyles}`}>
           {stepLabel}
         </span>
-        <div className="flex items-center gap-1">
-          <Truck size={12} className="opacity-80 shrink-0" />
+        <div className="flex items-center gap-1.5">
+          <Truck size={13} className="opacity-80 shrink-0 transform group-hover:translate-x-0.5 transition-transform duration-200" />
           <span className="tracking-wide whitespace-nowrap">{statusText}</span>
         </div>
       </button>
@@ -438,16 +447,16 @@ export const AdminOrders = () => {
           <button
             onClick={testFlowPayment}
             disabled={loadingFlowTest}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:from-emerald-600 hover:to-teal-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm transition-all duration-200 flex items-center gap-2 group disabled:opacity-60 disabled:cursor-not-allowed"
             title="Crea un pago REAL de $350 en Flow para probar la integración completa"
           >
             {loadingFlowTest ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              <CreditCard size={16} />
+              <CreditCard size={16} className="transform group-hover:scale-110 transition-transform" />
             )}
-            Pagar $350 en Flow
-            <ExternalLink size={12} />
+            <span>Pagar $350 en Flow</span>
+            <ExternalLink size={12} className="transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200" />
           </button>
         </div>
       </div>
@@ -505,7 +514,7 @@ export const AdminOrders = () => {
                     ${order.total.toLocaleString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2.5">
                       <button 
                         onClick={async (e) => { 
                           e.stopPropagation(); 
@@ -540,17 +549,17 @@ export const AdminOrders = () => {
                           const message = encodeURIComponent(`¡Hola ${clientName}! Te escribo de ${storeName}. 🏠 Te informamos que tu pedido #${order.id.slice(0, 8)} ${notifyStatusText}${reviewText}`);
                           window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
                         }}
-                        className="p-2 text-slate-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                        className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-100 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow bg-slate-50/50 flex items-center justify-center"
                         title="Notificar Estado por WhatsApp"
                       >
-                        <MessageCircle size={18} />
+                        <MessageCircle size={17} />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }}
-                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                        className="p-2.5 text-slate-400 hover:text-primary hover:bg-primary/5 border border-slate-100 hover:border-primary/10 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow bg-slate-50/50 flex items-center justify-center"
                         title="Ver Detalles"
                       >
-                        <Eye size={18} />
+                        <Eye size={17} />
                       </button>
                     </div>
                   </td>
