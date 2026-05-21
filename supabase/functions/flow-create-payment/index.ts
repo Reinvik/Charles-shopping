@@ -18,7 +18,19 @@ serve(async (req) => {
       throw new Error('No se proporcionó tenantId en la solicitud.')
     }
 
-    // 1. Create client
+    if (!items || items.length === 0) {
+      throw new Error('El carrito no puede estar vacío.')
+    }
+
+    if (!email) {
+      throw new Error('Se requiere el correo del comprador.')
+    }
+
+    if (!total || total <= 0) {
+      throw new Error('El total debe ser mayor a 0.')
+    }
+
+    // 1. Create client with service role
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -49,6 +61,7 @@ serve(async (req) => {
     const FLOW_URL = isSandbox ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api"
 
     // 3. Insert order WITH tenant_id
+    // NOTE: flow_token se llenará después de obtener respuesta de Flow
     const { data: order, error: orderError } = await supabaseClient
       .from('orders')
       .insert({
@@ -64,7 +77,11 @@ serve(async (req) => {
       .select()
       .single()
 
-    if (orderError) throw orderError
+    if (orderError) {
+      throw new Error(`Error al crear el pedido: ${orderError.message}`)
+    }
+
+    console.log(`[flow-create-payment] Order created: ${order.id} for tenant: ${tenantId}`)
 
     // Determine return origin (site origin or subdomain)
     const requestOrigin = req.headers.get('origin') || ''
@@ -115,6 +132,7 @@ serve(async (req) => {
       formData.append(k, params[k])
     }
 
+    console.log(`[flow-create-payment] Calling Flow API (${isSandbox ? 'SANDBOX' : 'PRODUCTION'})`)
     const flowResponse = await fetch(`${FLOW_URL}/payment/create`, {
       method: "POST",
       body: formData,
@@ -123,16 +141,31 @@ serve(async (req) => {
     const flowData = await flowResponse.json()
 
     if (!flowResponse.ok) {
+      // Marcar pedido como fallido si Flow rechaza la creación
+      await supabaseClient
+        .from('orders')
+        .update({ status: 'rejected', updated_at: new Date().toISOString() })
+        .eq('id', order.id)
       throw new Error(`Error de Flow: ${JSON.stringify(flowData)}`)
     }
 
-    // 6. Update order with flow_token
-    await supabaseClient
+    // 6. Update order with flow_token IMMEDIATELY (crucial: debe hacerse antes de retornar al cliente)
+    const { error: tokenUpdateError } = await supabaseClient
       .from('orders')
-      .update({ flow_token: flowData.token })
+      .update({ 
+        flow_token: flowData.token,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', order.id)
 
-    // 7. Send Telegram notification (new order received)
+    if (tokenUpdateError) {
+      console.error(`[flow-create-payment] Failed to update flow_token:`, tokenUpdateError)
+      // No lanzamos error aquí porque Flow ya creó el pago — el webhook puede recuperar por commerceOrder
+    } else {
+      console.log(`[flow-create-payment] flow_token saved: ${flowData.token}`)
+    }
+
+    // 7. Send Telegram notification (nuevo pedido iniciado)
     if (telegramToken && telegramChatId) {
       try {
         const productList = items.map((i: any) => `  • ${i.name} x${i.quantity} — $${(i.price * i.quantity).toLocaleString('es-CL')}`).join('\n')
@@ -142,7 +175,7 @@ serve(async (req) => {
         const phone = shippingDetails?.phone || 'Sin teléfono'
         const shippingCost = shippingDetails?.shippingCost || 0
 
-        const telegramMsg = `🛒 *NUEVO PEDIDO — ${siteName}*\n\n` +
+        const telegramMsg = `🛒 *NUEVO PEDIDO INICIADO — ${siteName}*\n\n` +
           `👤 Cliente: ${fullName}\n` +
           `📧 Correo: ${email}\n` +
           `📞 Teléfono: ${phone}\n` +
@@ -150,6 +183,7 @@ serve(async (req) => {
           `🛍️ *Productos:*\n${productList}\n\n` +
           `🚚 Despacho: $${shippingCost.toLocaleString('es-CL')}\n` +
           `💰 *TOTAL: $${Math.round(total).toLocaleString('es-CL')} CLP*\n\n` +
+          `⏳ Estado: Esperando confirmación de pago...\n` +
           `🔗 ID Pedido: \`${order.id}\``
 
         await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
@@ -172,9 +206,10 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error en flow-create-payment:', error.message)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error en flow-create-payment:', errorMessage)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

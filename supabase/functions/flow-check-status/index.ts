@@ -18,7 +18,7 @@ serve(async (req) => {
       throw new Error("Se requiere orderId o flowToken")
     }
 
-    // 1. Create client
+    // 1. Create client with service role
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const { data: order, error: orderError } = await queryBuilder.single()
     if (orderError || !order) {
-      throw new Error('Pedido no encontrado en la base de datos.')
+      throw new Error(`Pedido no encontrado en la base de datos. ${orderId ? `orderId: ${orderId}` : `flowToken: ${flowToken}`}`)
     }
 
     if (!order.flow_token) {
@@ -50,10 +50,15 @@ serve(async (req) => {
       .single()
 
     if (settingsError || !settingsData?.value) {
-      throw new Error('Configuración de Flow no encontrada para la tienda.')
+      throw new Error(`Configuración de Flow no encontrada para la tienda (tenant_id: ${order.tenant_id})`)
     }
 
     const { apiKey, secret, isSandbox } = settingsData.value as any
+
+    if (!apiKey || !secret) {
+      throw new Error('La tienda no tiene apiKey o secret de Flow configurados.')
+    }
+
     const FLOW_URL = isSandbox ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api"
 
     // 4. Verify payment status with Flow
@@ -122,9 +127,10 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error("Error en flow-check-status:", error.message)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error("Error en flow-check-status:", errorMessage)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
