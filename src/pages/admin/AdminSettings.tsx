@@ -42,7 +42,8 @@ const AdminSettings = () => {
     googleMapsApiKey: '',
     notificationPhone: '',
     telegramToken: '',
-    telegramChatId: ''
+    telegramChatId: '',
+    defaultProductDescription: settings.defaultProductDescription || ''
   });
 
   const [googleReviewLink, setGoogleReviewLink] = useState('');
@@ -113,7 +114,8 @@ const AdminSettings = () => {
       googleMapsApiKey: settings.googleMapsApiKey || '',
       notificationPhone: settings.notificationPhone || '',
       telegramToken: settings.telegramToken || '',
-      telegramChatId: settings.telegramChatId || ''
+      telegramChatId: settings.telegramChatId || '',
+      defaultProductDescription: settings.defaultProductDescription || ''
     });
 
     fetchFlowSettings();
@@ -179,7 +181,8 @@ const AdminSettings = () => {
         googleMapsApiKey: formData.googleMapsApiKey,
         notificationPhone: formData.notificationPhone,
         telegramToken: formData.telegramToken,
-        telegramChatId: formData.telegramChatId
+        telegramChatId: formData.telegramChatId,
+        defaultProductDescription: formData.defaultProductDescription
       };
 
       const { error: themeError } = await supabase
@@ -369,6 +372,28 @@ const AdminSettings = () => {
                 />
               </div>
 
+              <div className="form-group">
+                <label>Descripción de Producto por Defecto</label>
+                <textarea 
+                  name="defaultProductDescription" 
+                  value={formData.defaultProductDescription} 
+                  onChange={(e) => setFormData(prev => ({ ...prev, defaultProductDescription: e.target.value }))}
+                  placeholder="Texto que se muestra cuando un producto no tiene descripción propia..."
+                  style={{ 
+                    width: '100%', 
+                    padding: '12px', 
+                    borderRadius: '0.5rem', 
+                    border: '1px solid #ddd',
+                    minHeight: '100px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'inherit'
+                  }}
+                />
+                <p style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
+                  Este texto se mostrará automáticamente en la página de detalle de cualquier producto que no tenga una descripción propia cargada.
+                </p>
+              </div>
+
               <div className="upload-section">
                 <div className="upload-box">
                   <label>Logo Principal</label>
@@ -550,7 +575,8 @@ const AdminSettings = () => {
                   Deja en blanco para usar el input de dirección tradicional.
                 </p>
               </div>
-            </section>
+
+             </section>
 
             <section className="settings-card">
               <div className="section-header">

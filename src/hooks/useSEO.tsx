@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTheme } from '../context/ThemeContext';
 
 interface SEOProps {
   title?: string;
@@ -14,32 +15,37 @@ export const SEO: React.FC<SEOProps> = ({
   title, 
   description, 
   keywords, 
-  image = 'https://charlyhome.cl/og-image.png',
-  url = 'https://charlyhome.cl',
+  image,
+  url,
   type = 'website'
 }) => {
-  const fullTitle = title ? `${title} | Charly Home` : 'Charly Home | Productos de Aseo y Papelería';
+  const { settings } = useTheme();
+  
+  const fullTitle = title ? `${title} | ${settings.siteName}` : `${settings.siteName} | ${settings.siteDescription || 'Productos al mejor precio'}`;
+  const seoImage = image || settings.logoUrl || '';
+  const seoUrl = url || window.location.href;
+  const seoDescription = description || settings.siteDescription || '';
   
   return (
     <Helmet>
       <title>{fullTitle}</title>
-      {description && <meta name="description" content={description} />}
+      {seoDescription && <meta name="description" content={seoDescription} />}
       {keywords && <meta name="keywords" content={keywords} />}
       
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
-      {description && <meta property="og:description" content={description} />}
+      {seoDescription && <meta property="og:description" content={seoDescription} />}
       <meta property="og:type" content={type} />
-      <meta property="og:url" content={url} />
-      <meta property="og:image" content={image} />
+      <meta property="og:url" content={seoUrl} />
+      {seoImage && <meta property="og:image" content={seoImage} />}
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={fullTitle} />
-      {description && <meta name="twitter:description" content={description} />}
-      <meta name="twitter:image" content={image} />
+      {seoDescription && <meta name="twitter:description" content={seoDescription} />}
+      {seoImage && <meta name="twitter:image" content={seoImage} />}
       
-      <link rel="canonical" href={url} />
+      <link rel="canonical" href={seoUrl} />
     </Helmet>
   );
 };

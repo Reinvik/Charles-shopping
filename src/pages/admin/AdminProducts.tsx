@@ -542,7 +542,7 @@ export const AdminProducts = () => {
                             required
                             type="text"
                             inputMode="numeric"
-                            value={formData.price || ''}
+                            value={formData.price ? formData.price.toLocaleString('es-CL') : ''}
                             onChange={(e) => {
                               const cleanVal = e.target.value.replace(/\D/g, '');
                               setFormData({ ...formData, price: cleanVal ? Number(cleanVal) : 0 });
@@ -574,7 +574,7 @@ export const AdminProducts = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={formData.original_price || ''}
+                            value={formData.original_price ? formData.original_price.toLocaleString('es-CL') : ''}
                             onChange={(e) => {
                               const cleanVal = e.target.value.replace(/\D/g, '');
                               setFormData({ ...formData, original_price: cleanVal ? Number(cleanVal) : 0 });

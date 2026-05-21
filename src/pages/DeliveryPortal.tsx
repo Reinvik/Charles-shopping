@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from '../context/ThemeContext';
 
 interface Order {
   id: string;
@@ -24,6 +25,7 @@ const DeliveryPortal = () => {
   const [submitting, setSubmitting] = useState(false);
   const [receiverName, setReceiverName] = useState('');
   const [receiverRut, setReceiverRut] = useState('');
+  const { settings } = useTheme();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -80,7 +82,7 @@ const DeliveryPortal = () => {
       const rawPhone = order?.shipping_details?.phone || '';
       const phone = rawPhone.replace(/\D/g, '') || '';
       
-      const message = `Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${receiverName}\nRut: ${receiverRut}\n\n¡Gracias por confiar en Charly Home!`;
+      const message = `Hola ${clientName}, te informamos que el pedido ha sido recibido con éxito:\n${productList}\n\nRecibido por: ${receiverName}\nRut: ${receiverRut}\n\n¡Gracias por confiar en ${settings.siteName}!`;
       
       if (phone) {
         const whatsappUrl = `https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${encodeURIComponent(message)}`;
@@ -125,8 +127,8 @@ const DeliveryPortal = () => {
         span, p, h1, h2, label { color: black !important; }
       `}</style>
 
-      <div style={{ backgroundColor: '#E60000', padding: '40px 20px', color: 'white', textAlign: 'center', borderRadius: '0 0 30px 30px', boxShadow: '0 4px 15px rgba(230, 0, 0, 0.2)' }}>
-        <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: '900', letterSpacing: '1px' }}>CHARLY HOME</h1>
+      <div style={{ backgroundColor: settings.primaryColor || '#E60000', padding: '40px 20px', color: 'white', textAlign: 'center', borderRadius: '0 0 30px 30px', boxShadow: `0 4px 15px ${settings.primaryColor}33` }}>
+        <h1 style={{ color: 'white', margin: 0, fontSize: '28px', fontWeight: '900', letterSpacing: '1px' }}>{settings.siteName.toUpperCase()}</h1>
         <p style={{ color: 'white', opacity: 0.9, fontSize: '12px', fontWeight: 'bold', marginTop: '5px', letterSpacing: '2px' }}>CONFIRMACIÓN DE ENTREGA</p>
       </div>
 

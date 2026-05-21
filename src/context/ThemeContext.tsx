@@ -16,6 +16,7 @@ interface ThemeSettings {
   notificationPhone?: string;
   telegramToken?: string;
   telegramChatId?: string;
+  defaultProductDescription: string;
 }
 
 interface ThemeContextType {
@@ -33,7 +34,8 @@ const defaultSettings: ThemeSettings = {
   siteDescription: 'Tu tienda de confianza para productos de aseo y papelería. Despachos rápidos y seguros a todo Santiago.',
   announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
   freeDeliveryThreshold: 30000,
-  deliveryCost: 3500
+  deliveryCost: 3500,
+  defaultProductDescription: 'Este producto te garantiza la mejor calidad para tus compras en Charly Home. Ideal para tu hogar o tu empresa, contamos con el mejor stock de la ciudad.'
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

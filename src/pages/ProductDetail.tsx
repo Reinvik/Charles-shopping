@@ -9,6 +9,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { toast } from 'sonner';
 import logoImg from '../assets/logo.png';
 import { useCroppedImage } from '../hooks/useCroppedImage';
+import { useTheme } from '../context/ThemeContext';
 
 
 export const ProductDetail = () => {
@@ -16,6 +17,7 @@ export const ProductDetail = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isAdmin } = useAuth();
+  const { settings } = useTheme();
   
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -285,7 +287,7 @@ export const ProductDetail = () => {
     "description": product.description,
     "brand": {
       "@type": "Brand",
-      "name": "Charly Home"
+      "name": settings.siteName
     },
     "offers": {
       "@type": "Offer",
@@ -752,7 +754,7 @@ export const ProductDetail = () => {
                       <input 
                         type="text"
                         inputMode="numeric"
-                        value={editPrice === 0 ? '' : editPrice}
+                        value={editPrice ? editPrice.toLocaleString('es-CL') : ''}
                         onChange={(e) => {
                           const cleanVal = e.target.value.replace(/\D/g, '');
                           setEditPrice(cleanVal ? Number(cleanVal) : 0);
@@ -809,7 +811,7 @@ export const ProductDetail = () => {
                 />
               ) : (
                 <p>
-                  {product.description || "Este producto te garantiza la mejor calidad para tus compras en Charly Home. Ideal para tu hogar o tu empresa, contamos con el mejor stock de la ciudad."}
+                  {product.description || settings.defaultProductDescription}
                 </p>
               )}
             </div>

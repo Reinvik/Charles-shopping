@@ -184,7 +184,7 @@ export const AdminDelivery = () => {
               type="text" 
               inputMode="numeric"
               name="freeDeliveryThreshold" 
-              value={formData.freeDeliveryThreshold || ''} 
+              value={formData.freeDeliveryThreshold ? formData.freeDeliveryThreshold.toLocaleString('es-CL') : ''} 
               onChange={handleInputChange}
               className="settings-input"
               style={{ padding: '12px', fontSize: '15px' }}
@@ -201,7 +201,7 @@ export const AdminDelivery = () => {
               type="text" 
               inputMode="numeric"
               name="deliveryCost" 
-              value={formData.deliveryCost || ''} 
+              value={formData.deliveryCost ? formData.deliveryCost.toLocaleString('es-CL') : ''} 
               onChange={handleInputChange}
               className="settings-input"
               style={{ padding: '12px', fontSize: '15px' }}
@@ -264,7 +264,7 @@ export const AdminDelivery = () => {
               <input 
                 type="text" 
                 inputMode="numeric"
-                value={newZone.cost || ''}
+                value={newZone.cost ? newZone.cost.toLocaleString('es-CL') : ''}
                 onChange={e => {
                   const cleanVal = e.target.value.replace(/\D/g, '');
                   setNewZone({...newZone, cost: cleanVal ? Number(cleanVal) : 0});
@@ -278,7 +278,7 @@ export const AdminDelivery = () => {
               <input 
                 type="text" 
                 inputMode="numeric"
-                value={newZone.free_shipping_threshold || ''}
+                value={newZone.free_shipping_threshold ? newZone.free_shipping_threshold.toLocaleString('es-CL') : ''}
                 onChange={e => {
                   const cleanVal = e.target.value.replace(/\D/g, '');
                   setNewZone({...newZone, free_shipping_threshold: cleanVal ? Number(cleanVal) : 0});
