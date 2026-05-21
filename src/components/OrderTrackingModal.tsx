@@ -77,6 +77,7 @@ export const OrderTrackingModal = ({ isOpen, onClose }: OrderTrackingModalProps)
 
   const getStatusDisplay = (deliveryStatus: string) => {
     switch (deliveryStatus) {
+      case 'Sin Preparar':
       case 'Por preparar':
         return { icon: <Clock size={24} className="text-slate-400" />, text: 'Tu pedido está siendo procesado.', color: 'text-slate-600', bg: 'bg-slate-100' };
       case 'Preparado':
@@ -160,14 +161,15 @@ export const OrderTrackingModal = ({ isOpen, onClose }: OrderTrackingModalProps)
             </div>
             
             {(() => {
-              const statusData = getStatusDisplay(order.delivery_status || 'Por preparar');
+              const statusData = getStatusDisplay(order.delivery_status || 'Sin Preparar');
+              const displayStatus = order.delivery_status === 'Por preparar' ? 'Sin Preparar' : (order.delivery_status || 'Sin Preparar');
               return (
                 <div style={{ padding: '25px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', backgroundColor: 'white' }}>
                   <div style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '15px' }} className={statusData.bg}>
                     {statusData.icon}
                   </div>
                   <h3 style={{ margin: '0 0 10px 0', fontSize: '18px', fontWeight: 'bold' }} className={statusData.color}>
-                    {order.delivery_status || 'Por preparar'}
+                    {displayStatus}
                   </h3>
                   <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
                     {statusData.text}

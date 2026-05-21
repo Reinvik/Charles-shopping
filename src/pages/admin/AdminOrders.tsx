@@ -67,18 +67,20 @@ export const AdminOrders = () => {
     }
   };
 
-  const cycleDeliveryStatus = async (orderId: string, currentDeliveryStatus: string = 'Por preparar', isDelivered: boolean) => {
+  const cycleDeliveryStatus = async (orderId: string, currentDeliveryStatus: string = 'Sin Preparar', isDelivered: boolean) => {
     if (!tenant) return;
     
-    if (currentDeliveryStatus === 'Entregado' || isDelivered) {
-       if (!confirm('Este pedido ya fue entregado mediante el QR. ¿Deseas resetear el estado a "Por preparar"?')) return;
+    let nextStatus = 'Sin Preparar';
+    if (currentDeliveryStatus === 'Por preparar' || currentDeliveryStatus === 'Sin Preparar') {
+      nextStatus = 'Preparado';
+    } else if (currentDeliveryStatus === 'Preparado') {
+      nextStatus = 'Despachado';
+    } else if (currentDeliveryStatus === 'Despachado') {
+      nextStatus = 'Entregado';
+    } else if (currentDeliveryStatus === 'Entregado' || isDelivered) {
+      if (!confirm('Este pedido ya figura como entregado. ¿Deseas reiniciar el estado a "Sin Preparar"?')) return;
+      nextStatus = 'Sin Preparar';
     }
-    
-    let nextStatus = 'Por preparar';
-    if (currentDeliveryStatus === 'Por preparar') nextStatus = 'Preparado';
-    else if (currentDeliveryStatus === 'Preparado') nextStatus = 'Despachado';
-    else if (currentDeliveryStatus === 'Despachado') nextStatus = 'Por preparar';
-    else if (currentDeliveryStatus === 'Entregado') nextStatus = 'Por preparar';
 
     try {
       const { error, count } = await supabase
@@ -224,38 +226,73 @@ export const AdminOrders = () => {
   const getDeliveryBadge = (order: Order, isDark: boolean = false) => {
     const deliveryStatus = order.delivery_status || 'Por preparar';
     const isDelivered = order.is_delivered || false;
-    const baseClasses = "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all whitespace-nowrap cursor-pointer";
     
-    let stateClasses = "";
-    if (deliveryStatus === 'Por preparar') {
-      stateClasses = isDark 
-        ? 'bg-slate-100/10 text-slate-300 border-slate-100/20 hover:text-white hover:bg-slate-100/20' 
-        : 'bg-slate-50 text-slate-400 border-slate-100 hover:text-slate-600 hover:bg-slate-100';
-    } else if (deliveryStatus === 'Preparado') {
-      stateClasses = isDark 
-        ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/40' 
-        : 'bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100';
-    } else if (deliveryStatus === 'Despachado') {
-      stateClasses = isDark 
-        ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/40' 
-        : 'bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100';
-    } else if (deliveryStatus === 'Entregado' || isDelivered) {
-      stateClasses = isDark 
-        ? 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/40' 
-        : 'bg-green-50 text-green-700 border-green-100 hover:bg-green-100';
-    }
+    // Normalizar estado
+    let statusKey = deliveryStatus;
+    if (deliveryStatus === 'Por preparar') statusKey = 'Sin Preparar';
+    if (isDelivered) statusKey = 'Entregado';
 
-    const deliveryText = (isDelivered && order.status.startsWith('Entregado a')) 
-      ? order.status 
-      : deliveryStatus;
+    let stepLabel = '1/4';
+    let statusText = 'Sin Preparar';
+    let badgeStyles = '';
+    let numberStyles = '';
+    
+    switch (statusKey) {
+      case 'Sin Preparar':
+        stepLabel = '1/4';
+        statusText = 'Sin Preparar';
+        badgeStyles = isDark 
+          ? 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white shadow-sm'
+          : 'bg-slate-50 text-slate-600 border-slate-200/80 hover:bg-slate-100 hover:text-slate-800 hover:border-slate-300 shadow-sm';
+        numberStyles = isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200/80 text-slate-600';
+        break;
+      case 'Preparado':
+        stepLabel = '2/4';
+        statusText = 'Preparado';
+        badgeStyles = isDark
+          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
+          : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100/80 hover:text-amber-800 hover:border-amber-300 shadow-sm';
+        numberStyles = isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-200/80 text-amber-800';
+        break;
+      case 'Despachado':
+        stepLabel = '3/4';
+        statusText = 'Despachado';
+        badgeStyles = isDark
+          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:text-blue-300'
+          : 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100/80 hover:text-blue-800 hover:border-blue-300 shadow-sm';
+        numberStyles = isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-200/80 text-blue-800';
+        break;
+      case 'Entregado':
+        stepLabel = '4/4';
+        statusText = 'Entregado';
+        badgeStyles = isDark
+          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
+          : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 hover:text-emerald-800 hover:border-emerald-300 shadow-sm';
+        numberStyles = isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-200/80 text-emerald-800';
+        break;
+      default:
+        stepLabel = '1/4';
+        statusText = statusKey;
+        badgeStyles = isDark 
+          ? 'bg-slate-800 text-slate-300 border-slate-700'
+          : 'bg-slate-50 text-slate-600 border-slate-200';
+        numberStyles = 'bg-slate-200 text-slate-700';
+    }
 
     return (
       <button 
-        onClick={(e) => { e.stopPropagation(); cycleDeliveryStatus(order.id, deliveryStatus, isDelivered); }}
-        className={`${baseClasses} ${stateClasses}`}
-        style={{ whiteSpace: 'normal', textAlign: 'left', minWidth: '100px' }}
+        onClick={(e) => { e.stopPropagation(); cycleDeliveryStatus(order.id, statusKey, isDelivered); }}
+        className={`inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full text-xs font-bold border transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer select-none ${badgeStyles}`}
+        title="Haz clic para avanzar el estado de entrega"
+        style={{ minWidth: '125px' }}
       >
-        <Truck size={12} className="flex-shrink-0" /> {deliveryText}
+        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black tracking-tight ${numberStyles}`}>
+          {stepLabel}
+        </span>
+        <div className="flex items-center gap-1">
+          <Truck size={12} className="opacity-80 shrink-0" />
+          <span className="tracking-wide whitespace-nowrap">{statusText}</span>
+        </div>
       </button>
     );
   };
@@ -736,7 +773,10 @@ export const AdminOrders = () => {
                   // Update database status
                   const { error, count } = await supabase
                     .from('orders')
-                    .update({ is_delivered: true }, { count: 'exact' })
+                    .update({ 
+                      is_delivered: true,
+                      delivery_status: 'Entregado'
+                    }, { count: 'exact' })
                     .eq('id', deliveryReceiptOrder.id)
                     .eq('tenant_id', tenant?.id);
                   
@@ -750,7 +790,7 @@ export const AdminOrders = () => {
                   
                   window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
                   setDeliveryReceiptOrder(null);
-                  setOrders(prev => prev.map(o => o.id === deliveryReceiptOrder.id ? { ...o, is_delivered: true } : o));
+                  setOrders(prev => prev.map(o => o.id === deliveryReceiptOrder.id ? { ...o, is_delivered: true, delivery_status: 'Entregado' } : o));
                   toast.success('Estado actualizado y abriendo WhatsApp...');
                 }}
                 style={{ width: '100%', background: '#25D366', color: '#fff', border: 'none', borderRadius: '1rem', padding: '1rem', fontWeight: 900, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
