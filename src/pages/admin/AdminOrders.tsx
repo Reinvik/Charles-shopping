@@ -7,7 +7,7 @@ import {
   ShoppingBag, Calendar, Mail, 
   XCircle,
   Users, Eye, Package, Printer, Phone, MapPin,
-  MessageCircle, Truck, CreditCard, ExternalLink
+  MessageCircle, CreditCard, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTenant } from '../../context/TenantContext';
@@ -194,39 +194,33 @@ export const AdminOrders = () => {
   }, [location.search, orders]);
 
   const getStatusBadge = (status: string, isDark: boolean = false) => {
-    const baseClasses = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border whitespace-nowrap shadow-sm transition-all duration-200";
+    const baseClasses = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold border whitespace-nowrap shadow-sm transition-all duration-200 hover:scale-105 select-none";
     switch (status) {
       case 'paid':
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/80'}`}>
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-            </span>
-            Pagado
+          <span className={`${baseClasses} ${isDark ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60' : 'bg-emerald-50 text-emerald-700 border-emerald-300'}`}>
+            <span className="text-[13px] leading-none shrink-0" role="img" aria-label="paid">{"\u{2705}"}</span>
+            <span>Pagado</span>
           </span>
         );
       case 'pending':
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200/80'}`}>
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
-            </span>
-            Pendiente
+          <span className={`${baseClasses} ${isDark ? 'bg-amber-950/40 text-amber-400 border-amber-800/60' : 'bg-amber-50 text-amber-700 border-amber-300'}`}>
+            <span className="text-[13px] leading-none shrink-0 animate-pulse" role="img" aria-label="pending">{"\u{23F3}"}</span>
+            <span>Pendiente</span>
           </span>
         );
       case 'rejected':
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-red-50 text-red-700 border-red-200/80'}`}>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-            Fallido
+          <span className={`${baseClasses} ${isDark ? 'bg-rose-950/40 text-rose-400 border-rose-800/60' : 'bg-rose-50 text-rose-700 border-rose-300'}`}>
+            <span className="text-[13px] leading-none shrink-0" role="img" aria-label="rejected">{"\u{274C}"}</span>
+            <span>Fallido</span>
           </span>
         );
       default:
         return (
-          <span className={`${baseClasses} ${isDark ? 'bg-slate-500/10 text-slate-400 border-slate-500/20' : 'bg-slate-50 text-slate-700 border-slate-200/80'}`}>
-            {status}
+          <span className={`${baseClasses} ${isDark ? 'bg-slate-800/40 text-slate-400 border-slate-700/60' : 'bg-slate-50 text-slate-700 border-slate-300'}`}>
+            <span>{status}</span>
           </span>
         );
     }
@@ -245,47 +239,53 @@ export const AdminOrders = () => {
     let statusText = 'Sin Preparar';
     let badgeStyles = '';
     let numberStyles = '';
+    let deliveryEmoji = '\u{23F3}'; // Default a reloj de arena
     
     switch (statusKey) {
       case 'Sin Preparar':
         stepLabel = '1/4';
         statusText = 'Sin Preparar';
         badgeStyles = isDark 
-          ? 'bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white shadow-sm hover:border-slate-600'
-          : 'bg-slate-100 text-slate-600 border-slate-200/80 hover:bg-slate-200/70 hover:text-slate-800 hover:border-slate-300 shadow-sm';
-        numberStyles = isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200/80 text-slate-700 font-extrabold';
+          ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white shadow-sm hover:border-slate-600'
+          : 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200/70 hover:text-slate-900 hover:border-slate-400 shadow-sm';
+        numberStyles = isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-250 text-slate-700 font-extrabold border border-slate-300/40';
+        deliveryEmoji = '\u{23F3}'; // ⌛ Reloj de arena
         break;
       case 'Preparado':
         stepLabel = '2/4';
         statusText = 'Preparado';
         badgeStyles = isDark
-          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20 hover:text-amber-300'
-          : 'bg-amber-50/80 text-amber-700 border-amber-200/80 hover:bg-amber-100/80 hover:text-amber-800 hover:border-amber-300 shadow-sm';
-        numberStyles = isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-200/70 text-amber-800 font-extrabold';
+          ? 'bg-amber-950/40 text-amber-400 border-amber-800/60 hover:bg-amber-900/40 hover:text-amber-300'
+          : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 hover:text-amber-900 hover:border-amber-400 shadow-sm';
+        numberStyles = isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-200 text-amber-800 font-extrabold border border-amber-300/40';
+        deliveryEmoji = '\u{1F4E6}'; // 📦 Caja/Paquete
         break;
       case 'Despachado':
         stepLabel = '3/4';
         statusText = 'Despachado';
         badgeStyles = isDark
-          ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:text-blue-300'
-          : 'bg-blue-50/80 text-blue-700 border-blue-200/80 hover:bg-blue-100/80 hover:text-blue-800 hover:border-blue-300 shadow-sm';
-        numberStyles = isDark ? 'bg-blue-500/20 text-blue-300' : 'bg-blue-200/70 text-blue-800 font-extrabold';
+          ? 'bg-sky-950/40 text-sky-400 border-sky-800/60 hover:bg-sky-900/40 hover:text-sky-300'
+          : 'bg-sky-50 text-sky-800 border-sky-300 hover:bg-sky-100 hover:text-sky-900 hover:border-sky-400 shadow-sm';
+        numberStyles = isDark ? 'bg-sky-500/20 text-sky-300' : 'bg-sky-200 text-sky-800 font-extrabold border border-sky-300/40';
+        deliveryEmoji = '\u{1F69A}'; // 🚚 Camión
         break;
       case 'Entregado':
         stepLabel = '4/4';
         statusText = 'Entregado';
         badgeStyles = isDark
-          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300'
-          : 'bg-emerald-50/80 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100/80 hover:text-emerald-800 hover:border-emerald-300 shadow-sm';
-        numberStyles = isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-200/70 text-emerald-800 font-extrabold';
+          ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60 hover:bg-emerald-900/40 hover:text-emerald-300'
+          : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 hover:text-emerald-900 hover:border-emerald-400 shadow-sm';
+        numberStyles = isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-200 text-emerald-800 font-extrabold border border-emerald-300/40';
+        deliveryEmoji = '\u{2705}'; // ✅ Check
         break;
       default:
         stepLabel = '1/4';
         statusText = statusKey;
         badgeStyles = isDark 
           ? 'bg-slate-800 text-slate-300 border-slate-700'
-          : 'bg-slate-50 text-slate-600 border-slate-200';
+          : 'bg-slate-50 text-slate-700 border-slate-300';
         numberStyles = 'bg-slate-200 text-slate-700';
+        deliveryEmoji = '\u{23F3}';
     }
 
     return (
@@ -293,13 +293,15 @@ export const AdminOrders = () => {
         onClick={(e) => { e.stopPropagation(); cycleDeliveryStatus(order.id, statusKey, isDelivered); }}
         className={`inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full text-xs font-bold border transition-all duration-200 transform hover:-translate-y-0.5 hover:shadow-md cursor-pointer select-none group ${badgeStyles}`}
         title="Haz clic para avanzar el estado de entrega"
-        style={{ minWidth: '135px' }}
+        style={{ minWidth: '140px' }}
       >
         <span className={`px-2 py-0.5 rounded-full text-[10px] tracking-tight ${numberStyles}`}>
           {stepLabel}
         </span>
         <div className="flex items-center gap-1.5">
-          <Truck size={13} className="opacity-80 shrink-0 transform group-hover:translate-x-0.5 transition-transform duration-200" />
+          <span className="text-[13px] leading-none shrink-0 transform group-hover:scale-110 transition-transform duration-200" role="img" aria-label={statusText}>
+            {deliveryEmoji}
+          </span>
           <span className="tracking-wide whitespace-nowrap">{statusText}</span>
         </div>
       </button>
