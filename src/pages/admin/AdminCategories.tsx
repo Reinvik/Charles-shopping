@@ -109,7 +109,12 @@ export const AdminCategories = () => {
       fetchCategories();
     } catch (error: any) {
       console.error('Supabase Error:', error);
-      toast.error(`Error al crear categoría: ${error.message}${error.details ? ` (${error.details})` : ''}`);
+      const isDuplicate = error.code === '23505' || error.message?.includes('unique constraint') || error.message?.includes('duplicate key value');
+      if (isDuplicate) {
+        toast.warning('Esta categoría ya se encuentra ingresada.');
+      } else {
+        toast.error(`Error al crear categoría: ${error.message}`);
+      }
     }
   };
 
@@ -135,7 +140,12 @@ export const AdminCategories = () => {
       fetchCategories();
     } catch (error: any) {
       console.error('Supabase Error:', error);
-      toast.error(`Error al actualizar: ${error.message}${error.details ? ` (${error.details})` : ''}`);
+      const isDuplicate = error.code === '23505' || error.message?.includes('unique constraint') || error.message?.includes('duplicate key value');
+      if (isDuplicate) {
+        toast.warning('Esta categoría ya se encuentra ingresada.');
+      } else {
+        toast.error(`Error al actualizar: ${error.message}`);
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { useEffect, useState } from 'react';
 import { useTenant } from '../context/TenantContext';
+import { toast } from 'sonner';
 
 import logoImg from '../assets/logo.png';
 import { useTheme } from '../context/ThemeContext';
@@ -100,11 +101,17 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
         tenant_id: tenant.id
       }]);
       if (error) throw error;
+      toast.success('Categoría agregada correctamente');
       setNewCatName('');
       setIsAddingCat(false);
       fetchCategories();
     } catch (err: any) {
-      alert('Error al agregar categoría: ' + err.message);
+      const isDuplicate = err.code === '23505' || err.message?.includes('unique constraint') || err.message?.includes('duplicate key value');
+      if (isDuplicate) {
+        toast.warning('Esta categoría ya se encuentra ingresada.');
+      } else {
+        toast.error('Error al agregar categoría: ' + err.message);
+      }
     }
   };
 
@@ -118,10 +125,16 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
         .eq('id', id)
         .eq('tenant_id', tenant.id);
       if (error) throw error;
+      toast.success('Categoría actualizada');
       setEditingCatId(null);
       fetchCategories();
     } catch (err: any) {
-      alert('Error al actualizar categoría: ' + err.message);
+      const isDuplicate = err.code === '23505' || err.message?.includes('unique constraint') || err.message?.includes('duplicate key value');
+      if (isDuplicate) {
+        toast.warning('Esta categoría ya se encuentra ingresada.');
+      } else {
+        toast.error('Error al actualizar categoría: ' + err.message);
+      }
     }
   };
 
@@ -130,9 +143,10 @@ const Header = ({ selectedCategoryId, onCategorySelect }: HeaderProps) => {
     try {
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) throw error;
+      toast.success('Categoría eliminada');
       fetchCategories();
     } catch (err: any) {
-      alert('Error al eliminar categoría: ' + err.message);
+      toast.error('Error al eliminar categoría: ' + err.message);
     }
   };
 
