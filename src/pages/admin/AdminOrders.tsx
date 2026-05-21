@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { 
   Loader2, Search, Filter, 
   ShoppingBag, Calendar, Mail, 
-  CheckCircle2, Clock, XCircle,
+  XCircle,
   Users, Eye, Package, Printer, Phone, MapPin,
   MessageCircle, Truck, CreditCard, ExternalLink
 } from 'lucide-react';
@@ -537,16 +537,16 @@ export const AdminOrders = () => {
                           const isDespachado = order.delivery_status === 'Despachado';
                           const isEntregado = order.delivery_status === 'Entregado' || order.is_delivered;
                           
-                          let notifyStatusText = `está siendo procesado. Te avisaremos cuando haya novedades. ⏳`;
+                          let notifyStatusText = `está siendo procesado. Te avisaremos cuando haya novedades. \u{23F3}`;
                           if (isPreparado) {
-                            notifyStatusText = `ha sido preparado y está listo para ser despachado. ¡Atento a nuestras novedades! 📦`;
+                            notifyStatusText = `ha sido preparado y está listo para ser despachado. ¡Atento a nuestras novedades! \u{1F4E6}`;
                           } else if (isDespachado) {
-                            notifyStatusText = `ya ha sido despachado y va en camino. ¡Pronto estará en tus manos! 🚚`;
+                            notifyStatusText = `ya ha sido despachado y va en camino. ¡Pronto estará en tus manos! \u{1F69A}`;
                           } else if (isEntregado) {
-                            notifyStatusText = `ha sido entregado con éxito. ¡Esperamos que lo disfrutes! 🎉`;
+                            notifyStatusText = `ha sido entregado con éxito. ¡Esperamos que lo disfrutes! \u{1F389}`;
                           }
                           
-                          const message = encodeURIComponent(`¡Hola ${clientName}! Te escribo de ${storeName}. 🏠 Te informamos que tu pedido #${order.id.slice(0, 8)} ${notifyStatusText}${reviewText}`);
+                          const message = encodeURIComponent(`¡Hola ${clientName}! Te escribo de ${storeName}. \u{1F3E0} Te informamos que tu pedido #${order.id.slice(0, 8)} ${notifyStatusText}${reviewText}`);
                           window.open(`https://wa.me/${phone.startsWith('56') ? phone : '56' + phone}?text=${message}`, '_blank');
                         }}
                         className="p-2.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 border border-slate-100 hover:border-emerald-100 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm hover:shadow bg-slate-50/50 flex items-center justify-center"
