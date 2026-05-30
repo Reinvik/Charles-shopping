@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { items, email, total, userId, tenantId, shippingDetails } = await req.json()
+    const { items, email, total, userId, tenantId, shippingDetails, couponCode, discountAmount } = await req.json()
 
     if (!tenantId) {
       throw new Error('No se proporcionó tenantId en la solicitud.')
@@ -73,6 +73,8 @@ serve(async (req) => {
         customer_email: email,
         shipping_details: shippingDetails,
         delivery_status: 'Por preparar',
+        coupon_code: couponCode || null,
+        discount_amount: discountAmount ? Math.round(discountAmount) : 0,
       })
       .select()
       .single()
@@ -174,6 +176,9 @@ serve(async (req) => {
         const comuna = shippingDetails?.comuna || ''
         const phone = shippingDetails?.phone || 'Sin teléfono'
         const shippingCost = shippingDetails?.shippingCost || 0
+        const discountText = discountAmount && discountAmount > 0 
+          ? `🎟️ Descuento (${couponCode}): -$${Math.round(discountAmount).toLocaleString('es-CL')} CLP\n` 
+          : ''
 
         const telegramMsg = `🛒 *NUEVO PEDIDO INICIADO — ${siteName}*\n\n` +
           `👤 Cliente: ${fullName}\n` +
@@ -181,6 +186,7 @@ serve(async (req) => {
           `📞 Teléfono: ${phone}\n` +
           `📍 Dirección: ${address}, ${comuna}\n\n` +
           `🛍️ *Productos:*\n${productList}\n\n` +
+          discountText +
           `🚚 Despacho: $${shippingCost.toLocaleString('es-CL')}\n` +
           `💰 *TOTAL: $${Math.round(total).toLocaleString('es-CL')} CLP*\n\n` +
           `⏳ Estado: Esperando confirmación de pago...\n` +

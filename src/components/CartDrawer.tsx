@@ -30,6 +30,14 @@ const CartDrawer: React.FC = () => {
   const [deliveryZones, setDeliveryZones] = useState<any[]>([]);
   const [fetchingZones, setFetchingZones] = useState(true);
 
+  // Coupon state
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
   // Fetch delivery zones
   useEffect(() => {
     const fetchZones = async () => {
@@ -73,6 +81,174 @@ const CartDrawer: React.FC = () => {
   const remaining = freeShippingThreshold - totalPrice;
   const isFreeShipping = remaining <= 0;
 
+  const handleApplyCoupon = async () => {
+    if (!couponCodeInput.trim()) return;
+    if (!tenant) return;
+    
+    setValidatingCoupon(true);
+    setCouponError(null);
+    setCouponSuccess(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .eq('code', couponCodeInput.trim().toUpperCase())
+        .single();
+        
+      if (error || !data) {
+        setCouponError('Código de cupón inválido');
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        return;
+      }
+      
+      const now = new Date();
+      if (!data.is_active || (data.expires_at && new Date(data.expires_at) < now)) {
+        setCouponError('El cupón ha expirado o está inactivo');
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        return;
+      }
+      
+      if (data.min_purchase_amount > 0 && totalPrice < data.min_purchase_amount) {
+        setCouponError(`La compra mínima es de $${data.min_purchase_amount.toLocaleString('es-CL')}`);
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        return;
+      }
+      
+      let calculatedDiscount = 0;
+      
+      if (data.applies_to === 'all') {
+        if (data.discount_type === 'percentage') {
+          calculatedDiscount = totalPrice * (data.discount_value / 100);
+        } else {
+          calculatedDiscount = data.discount_value;
+        }
+      } else if (data.applies_to === 'product') {
+        const cartItem = cart.find(item => item.id === data.product_id);
+        if (!cartItem) {
+          setCouponError('Este cupón aplica a un producto específico que no está en el carrito');
+          setAppliedCoupon(null);
+          setDiscountAmount(0);
+          return;
+        }
+        const productSubtotal = cartItem.price * cartItem.quantity;
+        if (data.discount_type === 'percentage') {
+          calculatedDiscount = productSubtotal * (data.discount_value / 100);
+        } else {
+          calculatedDiscount = Math.min(data.discount_value, productSubtotal);
+        }
+      } else if (data.applies_to === 'category') {
+        const cartProductIds = cart.map(item => item.id);
+        const { data: dbProducts } = await supabase
+          .from('products')
+          .select('id, category_id')
+          .in('id', cartProductIds);
+          
+        const matchingCartItems = cart.filter(item => {
+          const dbProd = dbProducts?.find(dp => dp.id === item.id);
+          return dbProd && dbProd.category_id === data.category_id;
+        });
+        
+        if (matchingCartItems.length === 0) {
+          setCouponError('Este cupón aplica a una categoría específica de productos que no está en el carrito');
+          setAppliedCoupon(null);
+          setDiscountAmount(0);
+          return;
+        }
+        
+        const categorySubtotal = matchingCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        if (data.discount_type === 'percentage') {
+          calculatedDiscount = categorySubtotal * (data.discount_value / 100);
+        } else {
+          calculatedDiscount = Math.min(data.discount_value, categorySubtotal);
+        }
+      }
+      
+      calculatedDiscount = Math.min(calculatedDiscount, totalPrice);
+      setDiscountAmount(Math.round(calculatedDiscount));
+      setAppliedCoupon(data);
+      setCouponSuccess('¡Cupón aplicado con éxito!');
+    } catch (err) {
+      console.error('Error validating coupon:', err);
+      setCouponError('Error al validar el cupón');
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!appliedCoupon) return;
+    
+    const recalculate = async () => {
+      const data = appliedCoupon;
+      
+      if (data.min_purchase_amount > 0 && totalPrice < data.min_purchase_amount) {
+        setCouponError(`La compra mínima no se cumple. Cupón removido.`);
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+        return;
+      }
+      
+      let calculatedDiscount = 0;
+      
+      if (data.applies_to === 'all') {
+        if (data.discount_type === 'percentage') {
+          calculatedDiscount = totalPrice * (data.discount_value / 100);
+        } else {
+          calculatedDiscount = data.discount_value;
+        }
+      } else if (data.applies_to === 'product') {
+        const cartItem = cart.find(item => item.id === data.product_id);
+        if (!cartItem) {
+          setCouponError('Producto del cupón removido del carrito. Cupón removido.');
+          setAppliedCoupon(null);
+          setDiscountAmount(0);
+          return;
+        }
+        const productSubtotal = cartItem.price * cartItem.quantity;
+        if (data.discount_type === 'percentage') {
+          calculatedDiscount = productSubtotal * (data.discount_value / 100);
+        } else {
+          calculatedDiscount = Math.min(data.discount_value, productSubtotal);
+        }
+      } else if (data.applies_to === 'category') {
+        const cartProductIds = cart.map(item => item.id);
+        const { data: dbProducts } = await supabase
+          .from('products')
+          .select('id, category_id')
+          .in('id', cartProductIds);
+          
+        const matchingCartItems = cart.filter(item => {
+          const dbProd = dbProducts?.find(dp => dp.id === item.id);
+          return dbProd && dbProd.category_id === data.category_id;
+        });
+        
+        if (matchingCartItems.length === 0) {
+          setCouponError('Productos de la categoría del cupón removidos. Cupón removido.');
+          setAppliedCoupon(null);
+          setDiscountAmount(0);
+          return;
+        }
+        
+        const categorySubtotal = matchingCartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        if (data.discount_type === 'percentage') {
+          calculatedDiscount = categorySubtotal * (data.discount_value / 100);
+        } else {
+          calculatedDiscount = Math.min(data.discount_value, categorySubtotal);
+        }
+      }
+      
+      calculatedDiscount = Math.min(calculatedDiscount, totalPrice);
+      setDiscountAmount(Math.round(calculatedDiscount));
+    };
+    
+    recalculate();
+  }, [totalPrice, cart, appliedCoupon]);
+
   const handleCheckout = async () => {
     if (!email || !email.includes('@')) {
       setError('Por favor ingresa un correo electrónico válido');
@@ -88,7 +264,7 @@ const CartDrawer: React.FC = () => {
     setError(null);
 
     const finalShippingCost = isFreeShipping ? 0 : currentDeliveryCost;
-    const finalTotal = totalPrice + finalShippingCost;
+    const finalTotal = totalPrice - discountAmount + finalShippingCost;
 
     try {
       const { data, error: functionError } = await supabase.functions.invoke('flow-create-payment', {
@@ -98,6 +274,8 @@ const CartDrawer: React.FC = () => {
           total: finalTotal,
           userId: user?.id,
           tenantId: tenant?.id,
+          couponCode: appliedCoupon ? appliedCoupon.code : null,
+          discountAmount: discountAmount,
           shippingDetails: {
             ...shippingDetails,
             shippingCost: finalShippingCost
@@ -442,10 +620,67 @@ const CartDrawer: React.FC = () => {
                     {error && <p style={{ color: '#ef4444', fontSize: '12px', fontWeight: '600' }}>{error}</p>}
                   </div>
 
+                  {/* Sección de Cupón de Descuento */}
+                  <div style={{ 
+                    marginBottom: '20px', 
+                    padding: '16px', 
+                    backgroundColor: '#f8fafc', 
+                    borderRadius: '12px', 
+                    border: '1px solid #e2e8f0' 
+                  }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '800', marginBottom: '6px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      ¿Tienes un código de descuento?
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type="text" 
+                        placeholder="CÓDIGO"
+                        value={couponCodeInput}
+                        onChange={(e) => setCouponCodeInput(e.target.value)}
+                        disabled={loading || validatingCoupon}
+                        style={{
+                          flex: 1,
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          fontSize: '13px',
+                          textTransform: 'uppercase',
+                          fontWeight: '800',
+                          outline: 'none',
+                          backgroundColor: '#fff'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        disabled={loading || validatingCoupon || !couponCodeInput.trim()}
+                        className="btn-primary"
+                        style={{ 
+                          padding: '0 16px', 
+                          height: '38px', 
+                          borderRadius: '8px', 
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: (loading || validatingCoupon || !couponCodeInput.trim()) ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {validatingCoupon ? <Loader2 size={16} className="animate-spin" /> : 'Aplicar'}
+                      </button>
+                    </div>
+                    {couponError && <p style={{ color: '#ef4444', fontSize: '11px', fontWeight: '600', marginTop: '6px', marginBottom: 0 }}>{couponError}</p>}
+                    {couponSuccess && <p style={{ color: '#16a34a', fontSize: '11px', fontWeight: '600', marginTop: '6px', marginBottom: 0 }}>{couponSuccess}</p>}
+                  </div>
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ color: '#666', fontSize: '14px' }}>Subtotal</span>
                     <span style={{ fontWeight: '600' }}>${totalPrice.toLocaleString('es-CL')} CLP</span>
                   </div>
+                  {appliedCoupon && discountAmount > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#ef4444' }}>
+                      <span style={{ fontSize: '14px', fontWeight: '600' }}>Descuento ({appliedCoupon.code})</span>
+                      <span style={{ fontWeight: '600' }}>-${discountAmount.toLocaleString('es-CL')} CLP</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <span style={{ color: '#666', fontSize: '14px' }}>Despacho</span>
                     <span style={{ color: isFreeShipping ? '#059669' : '#000', fontSize: '14px', fontWeight: '600' }}>
@@ -456,7 +691,7 @@ const CartDrawer: React.FC = () => {
                     <span style={{ fontSize: '18px', fontWeight: '800' }}>Total</span>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '24px', fontWeight: '800', color: 'var(--primary)' }}>
-                        ${(totalPrice + (isFreeShipping ? 0 : currentDeliveryCost)).toLocaleString('es-CL')} CLP
+                        ${(totalPrice - discountAmount + (isFreeShipping ? 0 : currentDeliveryCost)).toLocaleString('es-CL')} CLP
                       </div>
                       <div style={{ fontSize: '11px', color: '#999' }}>IVA incluido</div>
                     </div>

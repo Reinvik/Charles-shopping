@@ -20,7 +20,8 @@ import {
   ShoppingBag,
   Store,
   Users,
-  CreditCard
+  CreditCard,
+  Ticket
 } from 'lucide-react';
 
 export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,6 +42,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
     { label: 'Pedidos', icon: ShoppingBag, path: '/admin/orders' },
     { label: 'Productos', icon: Package, path: '/admin/products' },
     { label: 'Categorías', icon: Tags, path: '/admin/categories' },
+    { label: 'Cupones', icon: Ticket, path: '/admin/coupons' },
     { label: 'Banners', icon: Palette, path: '/admin/banners' },
     { label: 'Newsletter', icon: Mail, path: '/admin/newsletter' },
     { label: 'Configuración', icon: Sliders, path: '/admin/settings' },

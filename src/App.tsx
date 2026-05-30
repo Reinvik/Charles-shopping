@@ -100,7 +100,9 @@ const HomePage: React.FC = () => {
         }
       }
 
-      query = query.order('order_index', { ascending: true });
+      query = query
+        .order('is_on_offer', { ascending: false })
+        .order('order_index', { ascending: true });
 
       const { data, error } = await query;
       
@@ -354,6 +356,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminProducts } from './pages/admin/AdminProducts';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminCategories } from './pages/admin/AdminCategories';
+import { AdminCoupons } from './pages/admin/AdminCoupons';
 import { AdminBanners } from './pages/admin/AdminBanners';
 import { AdminNewsletter } from './pages/admin/AdminNewsletter';
 import { AdminDelivery } from './pages/admin/AdminDelivery';
@@ -426,6 +429,7 @@ function App() {
                   <Route path="/products" element={<AdminLayout><AdminProducts /></AdminLayout>} />
                   <Route path="/orders" element={<AdminLayout><AdminOrders /></AdminLayout>} />
                   <Route path="/categories" element={<AdminLayout><AdminCategories /></AdminLayout>} />
+                  <Route path="/coupons" element={<AdminLayout><AdminCoupons /></AdminLayout>} />
                   <Route path="/banners" element={<AdminLayout><AdminBanners /></AdminLayout>} />
                   <Route path="/newsletter" element={<AdminLayout><AdminNewsletter /></AdminLayout>} />
                   <Route path="/delivery" element={<AdminLayout><AdminDelivery /></AdminLayout>} />

@@ -351,25 +351,41 @@ export const AdminProducts = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Tip de orden */}
+        {products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 1 && (
+          <div className="col-span-full flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-xs font-semibold text-blue-600 mb-1">
+            <MoveUp size={14} />
+            <span>Usa las flechas ↑↓ en cada tarjeta para cambiar el orden de aparición en la tienda.</span>
+          </div>
+        )}
         {products
           .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
           .map((product, index, filteredArr) => (
           <div key={product.id} className={`bg-white rounded-2xl border ${product.is_active ? 'border-slate-100' : 'border-slate-200 opacity-75'} shadow-sm overflow-hidden group hover:shadow-md transition-all relative`}>
-            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {/* Botones de orden — siempre visibles */}
+            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
               <button 
                 onClick={() => moveProduct(index, 'up')}
                 disabled={index === 0}
-                className="p-1.5 bg-white/90 backdrop-blur shadow rounded-lg text-slate-600 hover:text-primary disabled:opacity-30"
+                title="Subir posición"
+                className="p-1.5 bg-white shadow-md rounded-lg text-slate-600 hover:text-primary hover:bg-blue-50 disabled:opacity-25 disabled:cursor-not-allowed transition-all border border-slate-100"
               >
                 <MoveUp size={14} />
               </button>
               <button 
                 onClick={() => moveProduct(index, 'down')}
                 disabled={index === filteredArr.length - 1}
-                className="p-1.5 bg-white/90 backdrop-blur shadow rounded-lg text-slate-600 hover:text-primary disabled:opacity-30"
+                title="Bajar posición"
+                className="p-1.5 bg-white shadow-md rounded-lg text-slate-600 hover:text-primary hover:bg-blue-50 disabled:opacity-25 disabled:cursor-not-allowed transition-all border border-slate-100"
               >
                 <MoveDown size={14} />
               </button>
+            </div>
+            {/* Número de posición */}
+            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-[9px] font-black text-slate-400 bg-white/90 px-1.5 py-0.5 rounded border border-slate-100">
+                #{index + 1}
+              </span>
             </div>
             <div className="relative aspect-square bg-slate-50 overflow-hidden">
               <CroppedProductImage 
