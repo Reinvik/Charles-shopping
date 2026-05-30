@@ -217,8 +217,8 @@ export const AdminCoupons = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <Loader2 className="animate-spin text-primary" size={40} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%' }}>
+        <Loader2 className="animate-spin" size={40} style={{ color: '#ff4d4d' }} />
       </div>
     );
   }
@@ -229,17 +229,17 @@ export const AdminCoupons = () => {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Gestión Comercial</p>
-          <h2 className="text-2xl font-black text-slate-800 tracking-tight">Códigos de Descuento</h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 4px 0' }}>Gestión Comercial</p>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#1e293b', margin: 0, letterSpacing: '-0.02em', lineHeight: 1.1 }}>Códigos de Descuento</h2>
+          <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '6px 0 0 0', fontWeight: 500 }}>
             {activeCoupons.length} activos · {inactiveCoupons.length} inactivos
           </p>
         </div>
         <button
           onClick={openModal}
-          className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-xl font-bold hover:bg-opacity-90 transition-all shadow-lg shadow-primary/25 hover:scale-[1.02] active:scale-[0.98]"
+          className="c-btn-primary"
         >
           <Plus size={18} />
           <span>Nuevo Cupón</span>
@@ -250,7 +250,7 @@ export const AdminCoupons = () => {
       {coupons.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Total Cupones', value: coupons.length, icon: Ticket, color: '#6366f1', bg: '#eef2ff' },
+            { label: 'Total Cupones', value: coupons.length, icon: Ticket, color: '#e60000', bg: '#fff5f5' },
             { label: 'Activos', value: activeCoupons.length, icon: CheckCircle2, color: '#10b981', bg: '#f0fdf4' },
             { label: 'Inactivos / Expirados', value: inactiveCoupons.length, icon: XCircle, color: '#f43f5e', bg: '#fff1f2' },
           ].map((stat, i) => (
@@ -275,7 +275,7 @@ export const AdminCoupons = () => {
           </div>
           <p style={{ fontSize: '1.1rem', fontWeight: 800, color: '#334155', margin: '0 0 0.5rem' }}>Sin cupones todavía</p>
           <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: '0 0 1.5rem' }}>Crea tu primer código de descuento para impulsar las ventas.</p>
-          <button onClick={openModal} style={{ background: 'var(--color-primary, #6366f1)', color: '#fff', border: 'none', borderRadius: '0.75rem', padding: '0.75rem 1.75rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
+          <button onClick={openModal} style={{ background: '#e60000', color: '#fff', border: 'none', borderRadius: '0.75rem', padding: '0.75rem 1.75rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(230, 0, 0, 0.2)' }}>
             Crear mi primer cupón
           </button>
         </div>
@@ -331,64 +331,65 @@ export const AdminCoupons = () => {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="px-6 py-5 flex justify-between items-center border-b border-slate-100" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}>
+        <div className="c-modal-overlay">
+          <div className="c-modal-container">
+            <div className="c-modal-header">
               <div>
-                <h3 className="text-xl font-black text-white">Nuevo Cupón</h3>
-                <p className="text-xs text-indigo-200 mt-0.5">Define las reglas del descuento</p>
+                <h3 className="c-modal-title">Nuevo Cupón</h3>
+                <p className="c-modal-subtitle">Define las reglas del descuento</p>
               </div>
               <button 
                 onClick={closeModal} 
-                className="text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-full transition-all"
+                className="c-close-btn"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
+            <form onSubmit={handleSave} className="c-modal-form">
               {/* Código */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Código del Cupón</label>
-                <div className="flex gap-2">
+              <div className="c-form-group">
+                <label className="c-label">Código del Cupón</label>
+                <div className="c-input-wrapper">
                   <input
                     required
                     type="text"
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                     placeholder="Ej: VERANO25"
-                    className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm font-black uppercase text-slate-800"
+                    className="c-input"
+                    style={{ textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}
                   />
                   <button
                     type="button"
                     onClick={generateCode}
                     title="Generar código aleatorio"
-                    className="px-3 py-2.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-500 rounded-xl transition-all border border-slate-200 font-bold text-xs flex items-center gap-1.5"
+                    className="c-btn-auto"
                   >
-                    <Zap size={14} />
+                    <Zap size={13} />
                     <span>Auto</span>
                   </button>
                 </div>
               </div>
 
               {/* Tipo y Valor de Descuento */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Tipo Descuento</label>
+              <div className="c-grid-2">
+                <div className="c-form-group">
+                  <label className="c-label">Tipo Descuento</label>
                   <select
                     value={formData.discount_type}
                     onChange={(e) => setFormData({ ...formData, discount_type: e.target.value as 'percentage' | 'fixed' })}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm appearance-none cursor-pointer text-slate-700 font-semibold"
+                    className="c-select"
                   >
                     <option value="percentage">Porcentaje (%)</option>
                     <option value="fixed">Monto Fijo ($)</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Valor Descuento</label>
-                  <div className="relative group">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
-                      {formData.discount_type === 'percentage' ? <Percent size={14} /> : <DollarSign size={14} />}
+                <div className="c-form-group">
+                  <label className="c-label">Valor Descuento</label>
+                  <div className="c-relative-input">
+                    <span className="c-input-icon">
+                      {formData.discount_type === 'percentage' ? <Percent size={13} /> : <DollarSign size={13} />}
                     </span>
                     <input
                       required
@@ -397,16 +398,17 @@ export const AdminCoupons = () => {
                       value={formData.discount_value || ''}
                       onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
                       placeholder={formData.discount_type === 'percentage' ? 'Ej: 15' : 'Ej: 5000'}
-                      className="w-full pl-8 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm font-bold text-slate-700"
+                      className="c-input c-input-with-icon"
+                      style={{ fontWeight: 800 }}
                     />
                   </div>
                 </div>
               </div>
 
               {/* Alcance */}
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">¿A qué aplica?</label>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="c-form-group">
+                <label className="c-label">¿A qué aplica?</label>
+                <div className="c-scope-selector">
                   {[
                     { value: 'all', label: 'Toda la Tienda', icon: Store },
                     { value: 'category', label: 'Categoría', icon: FolderOpen },
@@ -416,14 +418,10 @@ export const AdminCoupons = () => {
                       key={opt.value}
                       type="button"
                       onClick={() => setFormData({ ...formData, applies_to: opt.value as any, product_id: '', category_id: '' })}
-                      className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-xs font-bold ${
-                        formData.applies_to === opt.value
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50'
-                      }`}
+                      className={`c-scope-btn ${formData.applies_to === opt.value ? 'active' : ''}`}
                     >
-                      <opt.icon size={16} />
-                      {opt.label}
+                      <opt.icon size={15} />
+                      <span>{opt.label}</span>
                     </button>
                   ))}
                 </div>
@@ -431,13 +429,13 @@ export const AdminCoupons = () => {
 
               {/* Selector condicional: Categoría */}
               {formData.applies_to === 'category' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Seleccionar Categoría</label>
+                <div className="c-form-group">
+                  <label className="c-label">Seleccionar Categoría</label>
                   <select
                     required
                     value={formData.category_id}
                     onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm appearance-none cursor-pointer text-slate-700"
+                    className="c-select"
                   >
                     <option value="" disabled>Seleccione una categoría...</option>
                     {categories.map(c => (
@@ -449,13 +447,13 @@ export const AdminCoupons = () => {
 
               {/* Selector condicional: Producto */}
               {formData.applies_to === 'product' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Seleccionar Producto</label>
+                <div className="c-form-group">
+                  <label className="c-label">Seleccionar Producto</label>
                   <select
                     required
                     value={formData.product_id}
                     onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm appearance-none cursor-pointer text-slate-700"
+                    className="c-select"
                   >
                     <option value="" disabled>Seleccione un producto...</option>
                     {products.map(p => (
@@ -466,59 +464,59 @@ export const AdminCoupons = () => {
               )}
 
               {/* Compra Mínima y Fecha de Expiración */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Compra Mínima ($)</label>
+              <div className="c-grid-2">
+                <div className="c-form-group">
+                  <label className="c-label">Compra Mínima ($)</label>
                   <input
                     type="number"
                     min="0"
                     value={formData.min_purchase_amount || ''}
                     onChange={(e) => setFormData({ ...formData, min_purchase_amount: Number(e.target.value) })}
                     placeholder="Sin mínimo"
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm font-semibold text-slate-700"
+                    className="c-input"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Fecha Expiración</label>
+                <div className="c-form-group">
+                  <label className="c-label">Fecha Expiración</label>
                   <input
                     type="date"
                     min={new Date().toISOString().split('T')[0]}
                     value={formData.expires_at}
                     onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-400 transition-all shadow-sm text-slate-700 font-medium"
+                    className="c-input"
+                    style={{ fontWeight: 500 }}
                   />
                 </div>
               </div>
 
               {/* Toggle activo */}
-              <div className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all ${formData.is_active ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-100'}`}>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-700">Activar inmediatamente</h4>
-                  <p className="text-[10px] text-slate-400">El cupón estará disponible al crearlo.</p>
+              <div className="c-toggle-card">
+                <div className="c-toggle-info">
+                  <h4 className="c-toggle-title">Activar inmediatamente</h4>
+                  <p className="c-toggle-desc">El cupón estará disponible al crearlo.</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.is_active ? 'bg-green-500' : 'bg-slate-300'}`}
+                  className={`c-switch ${formData.is_active ? 'active' : ''}`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                  <span className="c-switch-handle" />
                 </button>
               </div>
 
               {/* Acciones */}
-              <div className="pt-4 flex gap-3 border-t border-slate-100">
+              <div className="c-actions">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all border border-slate-100"
+                  className="c-btn c-btn-cancel"
                 >
                   Cancelar
                 </button>
                 <button
                   disabled={saving}
                   type="submit"
-                  className="flex-1 py-3 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' }}
+                  className="c-btn c-btn-submit"
                 >
                   {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                   <span>Crear Cupón</span>
@@ -528,6 +526,383 @@ export const AdminCoupons = () => {
           </div>
         </div>
       )}
+
+      {/* Estilos locales para corregir la falta de Tailwind y mejorar el diseño */}
+      <style>{`
+        .c-btn-primary {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: linear-gradient(135deg, #ff4d4d 0%, #b30000 100%);
+          color: white;
+          padding: 0.75rem 1.5rem;
+          border-radius: 0.85rem;
+          font-weight: 800;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 4px 15px rgba(230, 0, 0, 0.25);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+          font-family: 'Inter', system-ui, sans-serif;
+          font-size: 0.85rem;
+        }
+
+        .c-btn-primary:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 6px 20px rgba(230, 0, 0, 0.35);
+          filter: brightness(1.05);
+        }
+
+        .c-btn-primary:active {
+          transform: translateY(0) scale(0.98);
+        }
+
+        /* Modal Estilos Premium */
+        .c-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(10, 10, 10, 0.7);
+          backdrop-filter: blur(6px);
+          z-index: 1500; /* Queda siempre por encima del menú de administración (1000) */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1.5rem;
+          animation: c-fadeIn 0.22s ease-out;
+        }
+
+        .c-modal-container {
+          background: #ffffff;
+          border-radius: 1.5rem;
+          width: 100%;
+          max-width: 480px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          max-height: 90vh;
+          border: 1px solid rgba(0, 0, 0, 0.05);
+          animation: c-scaleUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .c-modal-header {
+          padding: 1.25rem 1.5rem;
+          background: linear-gradient(135deg, #ff4d4d 0%, #b30000 100%);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: #fff;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .c-modal-title {
+          margin: 0;
+          font-size: 1.25rem;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: white;
+        }
+
+        .c-modal-subtitle {
+          margin: 2px 0 0 0;
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        .c-close-btn {
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.8);
+          cursor: pointer;
+          padding: 0.4rem;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .c-close-btn:hover {
+          background: rgba(255, 255, 255, 0.15);
+          color: #fff;
+        }
+
+        .c-modal-form {
+          padding: 1.5rem;
+          overflow-y: auto;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 1.25rem;
+        }
+
+        .c-form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+
+        .c-label {
+          font-size: 0.7rem;
+          font-weight: 800;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          margin-left: 2px;
+        }
+
+        .c-input-wrapper {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .c-input {
+          flex: 1;
+          padding: 0.65rem 1rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.75rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #1e293b;
+          background: #f8fafc;
+          transition: all 0.2s;
+        }
+
+        .c-input:focus {
+          outline: none;
+          border-color: #ff4d4d;
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.15);
+        }
+
+        .c-select {
+          padding: 0.65rem 1rem;
+          border: 1px solid #e2e8f0;
+          border-radius: 0.75rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #1e293b;
+          background: #f8fafc;
+          cursor: pointer;
+          transition: all 0.2s;
+          width: 100%;
+        }
+
+        .c-select:focus {
+          outline: none;
+          border-color: #ff4d4d;
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.15);
+        }
+
+        .c-btn-auto {
+          background: #f1f5f9;
+          border: 1px solid #cbd5e1;
+          border-radius: 0.75rem;
+          padding: 0 1rem;
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #475569;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          transition: all 0.2s;
+        }
+
+        .c-btn-auto:hover {
+          background: #ffeded;
+          color: #e60000;
+          border-color: #ffcccc;
+        }
+
+        .c-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+        }
+
+        .c-relative-input {
+          position: relative;
+        }
+
+        .c-input-icon {
+          position: absolute;
+          left: 0.85rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          pointer-events: none;
+        }
+
+        .c-input-with-icon {
+          padding-left: 2rem;
+        }
+
+        .c-scope-selector {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.5rem;
+        }
+
+        .c-scope-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0.4rem;
+          padding: 0.75rem;
+          border-radius: 0.75rem;
+          border: 2px solid #e2e8f0;
+          background: #f8fafc;
+          color: #64748b;
+          font-size: 0.7rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .c-scope-btn:hover {
+          border-color: #cbd5e1;
+          background: #f1f5f9;
+        }
+
+        .c-scope-btn.active {
+          border-color: #ff4d4d;
+          background: #fff5f5;
+          color: #e60000;
+        }
+
+        .c-toggle-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.85rem 1rem;
+          border-radius: 0.85rem;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+        }
+
+        .c-toggle-info {
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+
+        .c-toggle-title {
+          font-size: 0.75rem;
+          font-weight: 800;
+          color: #334155;
+          margin: 0;
+        }
+
+        .c-toggle-desc {
+          font-size: 0.65rem;
+          color: #94a3b8;
+          margin: 0;
+        }
+
+        .c-switch {
+          position: relative;
+          display: inline-block;
+          width: 44px;
+          height: 24px;
+          border-radius: 9999px;
+          background-color: #cbd5e1;
+          border: none;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          padding: 0;
+        }
+
+        .c-switch.active {
+          background-color: #10b981;
+        }
+
+        .c-switch-handle {
+          display: block;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: white;
+          transition: transform 0.2s;
+          transform: translateX(3px);
+        }
+
+        .c-switch.active .c-switch-handle {
+          transform: translateX(23px);
+        }
+
+        .c-actions {
+          display: flex;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+        }
+
+        .c-btn {
+          flex: 1;
+          padding: 0.75rem;
+          border-radius: 0.75rem;
+          font-size: 0.85rem;
+          font-weight: 800;
+          cursor: pointer;
+          transition: all 0.2s;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.4rem;
+        }
+
+        .c-btn-cancel {
+          background: #f1f5f9;
+          color: #475569;
+          border: 1px solid #cbd5e1;
+        }
+
+        .c-btn-cancel:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+        }
+
+        .c-btn-submit {
+          background: linear-gradient(135deg, #ff4d4d 0%, #b30000 100%);
+          color: #fff;
+          box-shadow: 0 4px 12px rgba(230, 0, 0, 0.2);
+        }
+
+        .c-btn-submit:hover {
+          filter: brightness(1.05);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(230, 0, 0, 0.3);
+        }
+
+        .c-btn-submit:active {
+          transform: translateY(0);
+        }
+
+        .c-btn-submit:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
+
+        /* Animaciones */
+        @keyframes c-fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes c-scaleUp {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 };
@@ -562,7 +937,7 @@ const CouponCard = ({
     coupon.applies_to === 'category' ? <FolderOpen size={11} /> :
     <ShoppingBag size={11} />;
 
-  const accentColor = isExpired ? '#94a3b8' : isActive ? '#6366f1' : '#94a3b8';
+  const accentColor = isExpired ? '#94a3b8' : isActive ? '#e60000' : '#94a3b8';
 
   const daysLeft = coupon.expires_at
     ? Math.ceil((new Date(coupon.expires_at).getTime() - Date.now()) / 86400000)
@@ -572,30 +947,30 @@ const CouponCard = ({
     <div style={{
       background: '#fff',
       borderRadius: '1.25rem',
-      border: `1px solid ${isActive ? '#e0e7ff' : '#e2e8f0'}`,
-      boxShadow: isActive ? '0 2px 12px rgba(99,102,241,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
+      border: `1px solid ${isActive ? '#ffe5e5' : '#e2e8f0'}`,
+      boxShadow: isActive ? '0 2px 12px rgba(230,0,0,0.04)' : '0 1px 4px rgba(0,0,0,0.04)',
       overflow: 'hidden',
       transition: 'transform 0.15s, box-shadow 0.15s',
       position: 'relative'
     }}
       onMouseEnter={e => {
         (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
-        (e.currentTarget as HTMLElement).style.boxShadow = isActive ? '0 8px 24px rgba(99,102,241,0.15)' : '0 4px 16px rgba(0,0,0,0.08)';
+        (e.currentTarget as HTMLElement).style.boxShadow = isActive ? '0 8px 24px rgba(230,0,0,0.1)' : '0 4px 16px rgba(0,0,0,0.08)';
       }}
       onMouseLeave={e => {
         (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-        (e.currentTarget as HTMLElement).style.boxShadow = isActive ? '0 2px 12px rgba(99,102,241,0.08)' : '0 1px 4px rgba(0,0,0,0.04)';
+        (e.currentTarget as HTMLElement).style.boxShadow = isActive ? '0 2px 12px rgba(230,0,0,0.04)' : '0 1px 4px rgba(0,0,0,0.04)';
       }}
     >
       {/* Top stripe */}
-      <div style={{ height: 4, background: isActive ? 'linear-gradient(90deg, #6366f1, #8b5cf6)' : '#e2e8f0' }} />
+      <div style={{ height: 4, background: isActive ? 'linear-gradient(90deg, #ff4d4d, #b30000)' : '#e2e8f0' }} />
 
       <div style={{ padding: '1.1rem 1.25rem' }}>
         {/* Code + copy */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span style={{
-              background: isActive ? '#eef2ff' : '#f8fafc',
+              background: isActive ? '#fff5f5' : '#f8fafc',
               color: accentColor,
               fontFamily: "'Courier New', Courier, monospace",
               fontWeight: 900,
@@ -603,7 +978,7 @@ const CouponCard = ({
               letterSpacing: '0.08em',
               padding: '0.35rem 0.75rem',
               borderRadius: '0.5rem',
-              border: `1.5px dashed ${isActive ? '#c7d2fe' : '#e2e8f0'}`,
+              border: `1.5px dashed ${isActive ? '#ffcccc' : '#e2e8f0'}`,
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem'
@@ -617,7 +992,7 @@ const CouponCard = ({
               onClick={() => onCopy(coupon.code)}
               title="Copiar código"
               style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', background: '#f8fafc', cursor: 'pointer', color: '#94a3b8', transition: 'all 0.15s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#eef2ff'; (e.currentTarget as HTMLElement).style.color = '#6366f1'; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#fff5f5'; (e.currentTarget as HTMLElement).style.color = '#e60000'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#f8fafc'; (e.currentTarget as HTMLElement).style.color = '#94a3b8'; }}
             >
               <Copy size={14} />
@@ -636,7 +1011,7 @@ const CouponCard = ({
 
         {/* Discount value — big hero number */}
         <div style={{ marginBottom: '0.75rem' }}>
-          <span style={{ fontSize: '2rem', fontWeight: 900, color: isActive ? (coupon.discount_type === 'percentage' ? '#6366f1' : '#10b981') : '#94a3b8', lineHeight: 1 }}>
+          <span style={{ fontSize: '2rem', fontWeight: 900, color: isActive ? '#e60000' : '#94a3b8', lineHeight: 1 }}>
             {coupon.discount_type === 'percentage'
               ? `${coupon.discount_value}% OFF`
               : `$${coupon.discount_value.toLocaleString('es-CL')} OFF`
@@ -712,3 +1087,4 @@ const CouponCard = ({
     </div>
   );
 };
+
