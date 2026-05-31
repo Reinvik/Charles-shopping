@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import {
   ShoppingBag, Users, Loader2, Truck, MousePointer2, TrendingUp,
   Printer, Package, CheckCircle2, Clock, XCircle, Zap, BarChart3,
-  ArrowUpRight, ChevronRight, Calendar, QrCode, Percent
+  ChevronRight, Calendar, QrCode, Percent
 } from 'lucide-react';
 import QRScanner from '../../components/admin/QRScanner';
 import {
