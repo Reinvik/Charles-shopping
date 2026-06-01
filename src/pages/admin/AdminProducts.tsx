@@ -89,99 +89,72 @@ export const AdminProducts = () => {
     stock: 0
   });
 
-  const moveProduct = async (product: Product, direction: 'up' | 'down') => {
+  const moveProduct = (product: Product, direction: 'up' | 'down') => {
     if (!tenant) return;
 
-    // Obtener los productos visibles (con los filtros actuales)
-    const visibleProducts = products.filter(p => 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    setProducts(currentProducts => {
+      // Filtrar visibles DENTRO del setter para evitar stale closure
+      const visibleProducts = currentProducts.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-    const visibleIndex = visibleProducts.findIndex(p => p.id === product.id);
-    if (visibleIndex === -1) return;
+      const visibleIndex = visibleProducts.findIndex(p => p.id === product.id);
+      if (visibleIndex === -1) return currentProducts;
+      if (direction === 'up' && visibleIndex === 0) return currentProducts;
+      if (direction === 'down' && visibleIndex === visibleProducts.length - 1) return currentProducts;
 
-    if (direction === 'up' && visibleIndex === 0) return;
-    if (direction === 'down' && visibleIndex === visibleProducts.length - 1) return;
+      const targetVisibleIndex = direction === 'up' ? visibleIndex - 1 : visibleIndex + 1;
+      const targetProduct = visibleProducts[targetVisibleIndex];
 
-    const targetVisibleIndex = direction === 'up' ? visibleIndex - 1 : visibleIndex + 1;
-    const targetProduct = visibleProducts[targetVisibleIndex];
+      // Detectar si hay order_index nulos o duplicados
+      const needsNormalization = currentProducts.some((p, i) =>
+        p.order_index == null ||
+        currentProducts.findIndex(o => o.order_index === p.order_index) !== i
+      );
 
-    // --- OPTIMISTIC UPDATE (Actualización local instantánea) ---
-    const backupProducts = [...products]; // Backup por si falla la red
-    
-    setProducts(prevProducts => {
-      const newProducts = [...prevProducts];
-      const idxA = newProducts.findIndex(p => p.id === product.id);
-      const idxB = newProducts.findIndex(p => p.id === targetProduct.id);
-      if (idxA !== -1 && idxB !== -1) {
-        const temp = newProducts[idxA];
-        newProducts[idxA] = newProducts[idxB];
-        newProducts[idxB] = temp;
-        
-        // Intercambiar temporalmente sus order_index locales
-        const tempIdxVal = newProducts[idxA].order_index;
-        newProducts[idxA].order_index = newProducts[idxB].order_index;
-        newProducts[idxB].order_index = tempIdxVal;
+      // Construir el nuevo array optimista
+      let newProducts: Product[];
+      if (needsNormalization) {
+        // Normalizar asignando índices 0,1,2... y luego intercambiar
+        newProducts = currentProducts.map((p, i) => ({ ...p, order_index: i }));
+        const idxA = newProducts.findIndex(p => p.id === product.id);
+        const idxB = newProducts.findIndex(p => p.id === targetProduct.id);
+        if (idxA !== -1 && idxB !== -1) {
+          [newProducts[idxA], newProducts[idxB]] = [newProducts[idxB], newProducts[idxA]];
+          newProducts[idxA] = { ...newProducts[idxA], order_index: idxA };
+          newProducts[idxB] = { ...newProducts[idxB], order_index: idxB };
+        }
+        // Persistir todos los índices normalizados
+        Promise.all(
+          newProducts.map((p, idx) =>
+            supabase.from('products').update({ order_index: idx }).eq('id', p.id).eq('tenant_id', tenant!.id)
+          )
+        ).catch(() => {
+          toast.error('Error al guardar el orden. Recargando...');
+          fetchData();
+        });
+      } else {
+        // Solo intercambiar los order_index de los dos productos
+        newProducts = currentProducts.map(p => {
+          if (p.id === product.id) return { ...p, order_index: targetProduct.order_index };
+          if (p.id === targetProduct.id) return { ...p, order_index: product.order_index };
+          return p;
+        });
+        // Persistir solo los dos cambios
+        Promise.all([
+          supabase.from('products').update({ order_index: targetProduct.order_index }).eq('id', product.id).eq('tenant_id', tenant!.id),
+          supabase.from('products').update({ order_index: product.order_index }).eq('id', targetProduct.id).eq('tenant_id', tenant!.id),
+        ]).then(([r1, r2]) => {
+          if (r1.error || r2.error) throw new Error('DB error');
+        }).catch(() => {
+          toast.error('Error al guardar el orden. Recargando...');
+          fetchData();
+        });
       }
-      return newProducts;
+
+      // Ordenar el array local para reflejar el nuevo orden
+      return [...newProducts].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
     });
-
-    // Verificar si existen índices nulos o duplicados
-    const hasSameOrZeroIndex = products.some((p, idx) => 
-      p.order_index === undefined || 
-      p.order_index === null || 
-      products.findIndex(other => other.order_index === p.order_index) !== idx
-    );
-
-    if (hasSameOrZeroIndex) {
-      const updatedProducts = [...backupProducts];
-      const globalIdx = updatedProducts.findIndex(p => p.id === product.id);
-      const globalTargetIdx = updatedProducts.findIndex(p => p.id === targetProduct.id);
-
-      if (globalIdx !== -1 && globalTargetIdx !== -1) {
-        const temp = updatedProducts[globalIdx];
-        updatedProducts[globalIdx] = updatedProducts[globalTargetIdx];
-        updatedProducts[globalTargetIdx] = temp;
-      }
-
-      try {
-        const promises = updatedProducts.map((p, idx) => 
-          supabase
-            .from('products')
-            .update({ order_index: idx })
-            .eq('id', p.id)
-            .eq('tenant_id', tenant.id)
-        );
-        await Promise.all(promises);
-        fetchData(); // Sincronizar datos reales
-      } catch (error) {
-        setProducts(backupProducts); // Revertir cambios locales
-        toast.error('Error al guardar el nuevo orden de los productos');
-      }
-      return;
-    }
-
-    // Intercambiar en la base de datos de forma asíncrona
-    try {
-      const { error: err1 } = await supabase
-        .from('products')
-        .update({ order_index: targetProduct.order_index })
-        .eq('id', product.id)
-        .eq('tenant_id', tenant.id);
-
-      const { error: err2 } = await supabase
-        .from('products')
-        .update({ order_index: product.order_index })
-        .eq('id', targetProduct.id)
-        .eq('tenant_id', tenant.id);
-
-      if (err1 || err2) {
-        throw new Error('Database update failed');
-      }
-    } catch (err) {
-      setProducts(backupProducts); // Revertir cambios locales si falla
-      toast.error('Error al guardar el nuevo orden en el servidor');
-    }
   };
 
   const fetchData = async () => {
