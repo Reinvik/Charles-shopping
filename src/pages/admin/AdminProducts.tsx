@@ -74,6 +74,8 @@ export const AdminProducts = () => {
   const [imageSourceMode, setImageSourceMode] = useState<'link' | 'upload'>('link');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all');
+  const [positionEditId, setPositionEditId] = useState<string | null>(null);
+  const [positionInputValue, setPositionInputValue] = useState('');
 
   // Form state
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -89,72 +91,72 @@ export const AdminProducts = () => {
     stock: 0
   });
 
-  const moveProduct = (product: Product, direction: 'up' | 'down') => {
+  /**
+   * Mueve un producto a una posición específica (1-based) en la lista visible.
+   * SIEMPRE renumera todos los productos secuencialmente para garantizar persistencia.
+   */
+  const setProductPosition = (product: Product, newPosition: number) => {
     if (!tenant) return;
+    setPositionEditId(null);
 
     setProducts(currentProducts => {
-      // Filtrar visibles DENTRO del setter para evitar stale closure
+      const n = currentProducts.length;
+      const clampedPos = Math.max(1, Math.min(n, Math.round(newPosition)));
+      const oldIndex = currentProducts.findIndex(p => p.id === product.id);
+      if (oldIndex === -1) return currentProducts;
+      const zeroBasedTarget = clampedPos - 1;
+
+      // Splice: sacar de posición actual e insertar en destino
+      const arr = [...currentProducts];
+      const [moved] = arr.splice(oldIndex, 1);
+      arr.splice(zeroBasedTarget, 0, moved);
+
+      // Renumerar TODOS secuencialmente (garantiza persistencia sin duplicados)
+      const renumbered = arr.map((p, i) => ({ ...p, order_index: i }));
+
+      // Persistir todos a Supabase en paralelo
+      Promise.all(
+        renumbered.map((p, i) =>
+          supabase.from('products')
+            .update({ order_index: i })
+            .eq('id', p.id)
+            .eq('tenant_id', tenant!.id)
+        )
+      ).then(results => {
+        if (results.some(r => r.error)) throw new Error('partial error');
+        toast.success(`"${product.name}" → posición #${clampedPos}`);
+      }).catch(() => {
+        toast.error('Error al guardar la posición. Recargando...');
+        fetchData();
+      });
+
+      return renumbered;
+    });
+  };
+
+  /** Atajo: mover ±1 usando la misma lógica de setProductPosition */
+  const moveProduct = (product: Product, direction: 'up' | 'down') => {
+    setProducts(currentProducts => {
       const visibleProducts = currentProducts.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-
       const visibleIndex = visibleProducts.findIndex(p => p.id === product.id);
       if (visibleIndex === -1) return currentProducts;
       if (direction === 'up' && visibleIndex === 0) return currentProducts;
       if (direction === 'down' && visibleIndex === visibleProducts.length - 1) return currentProducts;
-
-      const targetVisibleIndex = direction === 'up' ? visibleIndex - 1 : visibleIndex + 1;
-      const targetProduct = visibleProducts[targetVisibleIndex];
-
-      // Detectar si hay order_index nulos o duplicados
-      const needsNormalization = currentProducts.some((p, i) =>
-        p.order_index == null ||
-        currentProducts.findIndex(o => o.order_index === p.order_index) !== i
-      );
-
-      // Construir el nuevo array optimista
-      let newProducts: Product[];
-      if (needsNormalization) {
-        // Normalizar asignando índices 0,1,2... y luego intercambiar
-        newProducts = currentProducts.map((p, i) => ({ ...p, order_index: i }));
-        const idxA = newProducts.findIndex(p => p.id === product.id);
-        const idxB = newProducts.findIndex(p => p.id === targetProduct.id);
-        if (idxA !== -1 && idxB !== -1) {
-          [newProducts[idxA], newProducts[idxB]] = [newProducts[idxB], newProducts[idxA]];
-          newProducts[idxA] = { ...newProducts[idxA], order_index: idxA };
-          newProducts[idxB] = { ...newProducts[idxB], order_index: idxB };
-        }
-        // Persistir todos los índices normalizados
-        Promise.all(
-          newProducts.map((p, idx) =>
-            supabase.from('products').update({ order_index: idx }).eq('id', p.id).eq('tenant_id', tenant!.id)
-          )
-        ).catch(() => {
-          toast.error('Error al guardar el orden. Recargando...');
-          fetchData();
-        });
-      } else {
-        // Solo intercambiar los order_index de los dos productos
-        newProducts = currentProducts.map(p => {
-          if (p.id === product.id) return { ...p, order_index: targetProduct.order_index };
-          if (p.id === targetProduct.id) return { ...p, order_index: product.order_index };
-          return p;
-        });
-        // Persistir solo los dos cambios
-        Promise.all([
-          supabase.from('products').update({ order_index: targetProduct.order_index }).eq('id', product.id).eq('tenant_id', tenant!.id),
-          supabase.from('products').update({ order_index: product.order_index }).eq('id', targetProduct.id).eq('tenant_id', tenant!.id),
-        ]).then(([r1, r2]) => {
-          if (r1.error || r2.error) throw new Error('DB error');
-        }).catch(() => {
-          toast.error('Error al guardar el orden. Recargando...');
-          fetchData();
-        });
-      }
-
-      // Ordenar el array local para reflejar el nuevo orden
-      return [...newProducts].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+      return currentProducts; // defer to setProductPosition below
     });
+    // Calcular nueva posición global
+    const visibleProducts = products.filter(p =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    const visibleIndex = visibleProducts.findIndex(p => p.id === product.id);
+    if (visibleIndex === -1) return;
+    if (direction === 'up' && visibleIndex === 0) return;
+    if (direction === 'down' && visibleIndex === visibleProducts.length - 1) return;
+    const globalIndex = products.findIndex(p => p.id === product.id);
+    const newGlobal = direction === 'up' ? globalIndex : globalIndex + 2;
+    setProductPosition(product, newGlobal);
   };
 
   const fetchData = async () => {
@@ -402,16 +404,16 @@ export const AdminProducts = () => {
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.75rem 1rem',
-            background: '#eff6ff',
-            border: '1px solid #bfdbfe',
+            background: '#fff7ed',
+            border: '1px solid #fed7aa',
             borderRadius: '0.75rem',
             fontSize: '0.75rem',
             fontWeight: 600,
-            color: '#1d4ed8',
+            color: '#c2410c',
             marginBottom: '0.5rem'
           }}>
             <MoveUp size={14} />
-            <span>Usa las flechas ↑↓ en cada tarjeta para cambiar el orden de aparición en la tienda.</span>
+            <span>Haz clic en el badge <strong>#N</strong> de cualquier tarjeta para asignarle una posición directa. También puedes usar las flechas ↑↓ para mover de a uno.</span>
           </div>
         )}
         {products
@@ -471,23 +473,74 @@ export const AdminProducts = () => {
                 <MoveDown size={14} />
               </button>
             </div>
-            {/* Número de posición */}
+
+            {/* Badge de posición — clic para editar directamente */}
             <div className="admin-product-card-pos">
-              <span style={{
-                fontSize: '11px',
-                fontWeight: 900,
-                color: '#ffffff',
-                background: '#e60000',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                boxShadow: '0 2px 6px rgba(230, 0, 0, 0.3)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                minWidth: '28px'
-              }}>
-                #{index + 1}
-              </span>
+              {positionEditId === product.id ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                  <input
+                    autoFocus
+                    type="number"
+                    min={1}
+                    max={filteredArr.length}
+                    value={positionInputValue}
+                    onChange={e => setPositionInputValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        const n = parseInt(positionInputValue);
+                        if (!isNaN(n)) setProductPosition(product, n);
+                        else setPositionEditId(null);
+                      }
+                      if (e.key === 'Escape') setPositionEditId(null);
+                    }}
+                    onBlur={() => {
+                      const n = parseInt(positionInputValue);
+                      if (!isNaN(n)) setProductPosition(product, n);
+                      else setPositionEditId(null);
+                    }}
+                    style={{
+                      width: '44px',
+                      padding: '2px 4px',
+                      fontSize: '12px',
+                      fontWeight: 900,
+                      textAlign: 'center',
+                      border: '2px solid #e60000',
+                      borderRadius: '8px',
+                      outline: 'none',
+                      background: '#fff',
+                      color: '#e60000',
+                      boxShadow: '0 2px 8px rgba(230,0,0,0.25)'
+                    }}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setPositionEditId(product.id);
+                    setPositionInputValue(String(index + 1));
+                  }}
+                  title="Clic para cambiar posición"
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 900,
+                    color: '#ffffff',
+                    background: '#e60000',
+                    padding: '4px 8px',
+                    borderRadius: '12px',
+                    boxShadow: '0 2px 6px rgba(230, 0, 0, 0.3)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: '28px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                  className="pos-badge-btn"
+                >
+                  #{index + 1}
+                </button>
+              )}
             </div>
             <div className="relative aspect-square bg-slate-50 overflow-hidden">
               <CroppedProductImage 
@@ -997,6 +1050,16 @@ export const AdminProducts = () => {
 
         .btn-activate-hover:hover {
           background: #dcfce7 !important;
+        }
+
+        .pos-badge-btn:hover {
+          transform: scale(1.12);
+          box-shadow: 0 4px 12px rgba(230, 0, 0, 0.4) !important;
+          background: #cc0000 !important;
+        }
+
+        .pos-badge-btn:active {
+          transform: scale(0.96);
         }
       `}</style>
     </div>
