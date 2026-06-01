@@ -353,7 +353,20 @@ export const AdminProducts = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Tip de orden */}
         {products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 1 && (
-          <div className="col-span-full flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-xs font-semibold text-blue-600 mb-1">
+          <div style={{
+            gridColumn: '1 / -1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.75rem 1rem',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderRadius: '0.75rem',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: '#1d4ed8',
+            marginBottom: '0.5rem'
+          }}>
             <MoveUp size={14} />
             <span>Usa las flechas ↑↓ en cada tarjeta para cambiar el orden de aparición en la tienda.</span>
           </div>
@@ -361,14 +374,35 @@ export const AdminProducts = () => {
         {products
           .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
           .map((product, index, filteredArr) => (
-          <div key={product.id} className={`bg-white rounded-2xl border ${product.is_active ? 'border-slate-100' : 'border-slate-200 opacity-75'} shadow-sm overflow-hidden group hover:shadow-md transition-all relative`}>
+          <div key={product.id} className={`admin-product-card ${product.is_active ? '' : 'inactive'}`}>
             {/* Botones de orden — siempre visibles */}
-            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
+            <div style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              zIndex: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}>
               <button 
                 onClick={() => moveProduct(index, 'up')}
                 disabled={index === 0}
                 title="Subir posición"
-                className="p-1.5 bg-white shadow-md rounded-lg text-slate-600 hover:text-primary hover:bg-blue-50 disabled:opacity-25 disabled:cursor-not-allowed transition-all border border-slate-100"
+                className="order-btn"
+                style={{
+                  padding: '6px',
+                  background: '#ffffff',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  borderRadius: '0.5rem',
+                  color: '#475569',
+                  border: '1px solid #f1f5f9',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: index === 0 ? 0.3 : 1
+                }}
               >
                 <MoveUp size={14} />
               </button>
@@ -376,14 +410,35 @@ export const AdminProducts = () => {
                 onClick={() => moveProduct(index, 'down')}
                 disabled={index === filteredArr.length - 1}
                 title="Bajar posición"
-                className="p-1.5 bg-white shadow-md rounded-lg text-slate-600 hover:text-primary hover:bg-blue-50 disabled:opacity-25 disabled:cursor-not-allowed transition-all border border-slate-100"
+                className="order-btn"
+                style={{
+                  padding: '6px',
+                  background: '#ffffff',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                  borderRadius: '0.5rem',
+                  color: '#475569',
+                  border: '1px solid #f1f5f9',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: index === filteredArr.length - 1 ? 0.3 : 1
+                }}
               >
                 <MoveDown size={14} />
               </button>
             </div>
             {/* Número de posición */}
-            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-[9px] font-black text-slate-400 bg-white/90 px-1.5 py-0.5 rounded border border-slate-100">
+            <div className="admin-product-card-pos">
+              <span style={{
+                fontSize: '9px',
+                fontWeight: 900,
+                color: '#64748b',
+                background: 'rgba(255, 255, 255, 0.95)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                border: '1px solid #e2e8f0'
+              }}>
                 #{index + 1}
               </span>
             </div>
@@ -402,7 +457,16 @@ export const AdminProducts = () => {
             
             <div className="p-4 space-y-3">
               <div className="flex justify-between items-start gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/5 px-2 py-0.5 rounded">
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.10em',
+                  color: '#e60000',
+                  background: 'rgba(230, 0, 0, 0.05)',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}>
                   {product.categories?.name || 'Sin Categoría'}
                 </span>
                 <div className="flex gap-1">
@@ -441,11 +505,19 @@ export const AdminProducts = () => {
 
               <button
                 onClick={() => toggleStatus(product)}
-                className={`w-full py-2 rounded-lg text-xs font-bold transition-all ${
-                  product.is_active 
-                    ? 'bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-red-500' 
-                    : 'bg-green-50 text-green-600 hover:bg-green-100'
-                }`}
+                style={{
+                  width: '100%',
+                  padding: '8px 0',
+                  borderRadius: '8px',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  background: product.is_active ? '#f8fafc' : '#f0fdf4',
+                  color: product.is_active ? '#475569' : '#16a34a'
+                }}
+                className={product.is_active ? 'btn-pause-hover' : 'btn-activate-hover'}
               >
                 {product.is_active ? 'Pausar Venta' : 'Activar Venta'}
               </button>
@@ -814,6 +886,76 @@ export const AdminProducts = () => {
           </div>
         </div>
       )}
+      <style>{`
+        .admin-product-card {
+          position: relative;
+          background: #ffffff;
+          border-radius: 1rem;
+          border: 1px solid #e2e8f0;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          overflow: hidden;
+          transition: all 0.2s ease-in-out;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .admin-product-card.inactive {
+          border-color: #cbd5e1;
+          opacity: 0.75;
+        }
+
+        .admin-product-card:hover {
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          transform: translateY(-2px);
+        }
+
+        .admin-product-card-pos {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          z-index: 20;
+          opacity: 0;
+          transition: opacity 0.2s ease-in-out;
+        }
+
+        .admin-product-card:hover .admin-product-card-pos {
+          opacity: 1;
+        }
+
+        .order-btn {
+          transition: all 0.2s ease;
+        }
+
+        .order-btn:hover {
+          background: #ffeded !important;
+          color: #e60000 !important;
+          border-color: #ffcccc !important;
+          transform: scale(1.08);
+        }
+
+        .order-btn:active {
+          transform: scale(0.95);
+        }
+
+        .btn-pause-hover {
+          background: #f8fafc;
+          color: #475569;
+        }
+
+        .btn-pause-hover:hover {
+          background: #fff1f2 !important;
+          color: #f43f5e !important;
+        }
+
+        .btn-activate-hover {
+          background: #f0fdf4;
+          color: #16a34a;
+        }
+
+        .btn-activate-hover:hover {
+          background: #dcfce7 !important;
+        }
+      `}</style>
     </div>
   );
 };
