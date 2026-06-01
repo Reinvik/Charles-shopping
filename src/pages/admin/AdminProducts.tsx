@@ -89,29 +89,77 @@ export const AdminProducts = () => {
     stock: 0
   });
 
-  const moveProduct = async (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === products.length - 1) return;
+  const moveProduct = async (product: Product, direction: 'up' | 'down') => {
     if (!tenant) return;
 
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    const currentProd = products[index];
-    const targetProd = products[newIndex];
+    // Obtener los productos visibles (con los filtros actuales)
+    const visibleProducts = products.filter(p => 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
+    const visibleIndex = visibleProducts.findIndex(p => p.id === product.id);
+    if (visibleIndex === -1) return;
+
+    if (direction === 'up' && visibleIndex === 0) return;
+    if (direction === 'down' && visibleIndex === visibleProducts.length - 1) return;
+
+    const targetVisibleIndex = direction === 'up' ? visibleIndex - 1 : visibleIndex + 1;
+    const targetProduct = visibleProducts[targetVisibleIndex];
+
+    // Verificar si existen índices nulos, ceros repetidos o duplicados en el listado completo
+    const hasSameOrZeroIndex = products.some((p, idx) => 
+      p.order_index === undefined || 
+      p.order_index === null || 
+      products.findIndex(other => other.order_index === p.order_index) !== idx
+    );
+
+    if (hasSameOrZeroIndex) {
+      // Reasignamos índices consecutivos (0, 1, 2...) a toda la lista según el orden actual
+      const updatedProducts = [...products];
+      // Buscamos el elemento actual y el objetivo en el arreglo global y los intercambiamos
+      const globalIdx = updatedProducts.findIndex(p => p.id === product.id);
+      const globalTargetIdx = updatedProducts.findIndex(p => p.id === targetProduct.id);
+
+      if (globalIdx !== -1 && globalTargetIdx !== -1) {
+        const temp = updatedProducts[globalIdx];
+        updatedProducts[globalIdx] = updatedProducts[globalTargetIdx];
+        updatedProducts[globalTargetIdx] = temp;
+      }
+
+      try {
+        const promises = updatedProducts.map((p, idx) => 
+          supabase
+            .from('products')
+            .update({ order_index: idx })
+            .eq('id', p.id)
+            .eq('tenant_id', tenant.id)
+        );
+        await Promise.all(promises);
+        fetchData();
+      } catch (error) {
+        toast.error('Error al inicializar orden de productos');
+      }
+      return;
+    }
+
+    // Si los índices ya son válidos y distintos, simplemente los intercambiamos en la base de datos
     const { error: err1 } = await supabase
       .from('products')
-      .update({ order_index: targetProd.order_index })
-      .eq('id', currentProd.id)
+      .update({ order_index: targetProduct.order_index })
+      .eq('id', product.id)
       .eq('tenant_id', tenant.id);
 
     const { error: err2 } = await supabase
       .from('products')
-      .update({ order_index: currentProd.order_index })
-      .eq('id', targetProd.id)
+      .update({ order_index: product.order_index })
+      .eq('id', targetProduct.id)
       .eq('tenant_id', tenant.id);
 
-    if (err1 || err2) toast.error('Error al reordenar');
-    else fetchData();
+    if (err1 || err2) {
+      toast.error('Error al reordenar');
+    } else {
+      fetchData();
+    }
   };
 
   const fetchData = async () => {
@@ -386,7 +434,7 @@ export const AdminProducts = () => {
               gap: '4px'
             }}>
               <button 
-                onClick={() => moveProduct(index, 'up')}
+                onClick={() => moveProduct(product, 'up')}
                 disabled={index === 0}
                 title="Subir posición"
                 className="order-btn"
@@ -407,7 +455,7 @@ export const AdminProducts = () => {
                 <MoveUp size={14} />
               </button>
               <button 
-                onClick={() => moveProduct(index, 'down')}
+                onClick={() => moveProduct(product, 'down')}
                 disabled={index === filteredArr.length - 1}
                 title="Bajar posición"
                 className="order-btn"
