@@ -106,7 +106,27 @@ export const AdminProducts = () => {
     const targetVisibleIndex = direction === 'up' ? visibleIndex - 1 : visibleIndex + 1;
     const targetProduct = visibleProducts[targetVisibleIndex];
 
-    // Verificar si existen índices nulos, ceros repetidos o duplicados en el listado completo
+    // --- OPTIMISTIC UPDATE (Actualización local instantánea) ---
+    const backupProducts = [...products]; // Backup por si falla la red
+    
+    setProducts(prevProducts => {
+      const newProducts = [...prevProducts];
+      const idxA = newProducts.findIndex(p => p.id === product.id);
+      const idxB = newProducts.findIndex(p => p.id === targetProduct.id);
+      if (idxA !== -1 && idxB !== -1) {
+        const temp = newProducts[idxA];
+        newProducts[idxA] = newProducts[idxB];
+        newProducts[idxB] = temp;
+        
+        // Intercambiar temporalmente sus order_index locales
+        const tempIdxVal = newProducts[idxA].order_index;
+        newProducts[idxA].order_index = newProducts[idxB].order_index;
+        newProducts[idxB].order_index = tempIdxVal;
+      }
+      return newProducts;
+    });
+
+    // Verificar si existen índices nulos o duplicados
     const hasSameOrZeroIndex = products.some((p, idx) => 
       p.order_index === undefined || 
       p.order_index === null || 
@@ -114,9 +134,7 @@ export const AdminProducts = () => {
     );
 
     if (hasSameOrZeroIndex) {
-      // Reasignamos índices consecutivos (0, 1, 2...) a toda la lista según el orden actual
-      const updatedProducts = [...products];
-      // Buscamos el elemento actual y el objetivo en el arreglo global y los intercambiamos
+      const updatedProducts = [...backupProducts];
       const globalIdx = updatedProducts.findIndex(p => p.id === product.id);
       const globalTargetIdx = updatedProducts.findIndex(p => p.id === targetProduct.id);
 
@@ -135,30 +153,34 @@ export const AdminProducts = () => {
             .eq('tenant_id', tenant.id)
         );
         await Promise.all(promises);
-        fetchData();
+        fetchData(); // Sincronizar datos reales
       } catch (error) {
-        toast.error('Error al inicializar orden de productos');
+        setProducts(backupProducts); // Revertir cambios locales
+        toast.error('Error al guardar el nuevo orden de los productos');
       }
       return;
     }
 
-    // Si los índices ya son válidos y distintos, simplemente los intercambiamos en la base de datos
-    const { error: err1 } = await supabase
-      .from('products')
-      .update({ order_index: targetProduct.order_index })
-      .eq('id', product.id)
-      .eq('tenant_id', tenant.id);
+    // Intercambiar en la base de datos de forma asíncrona
+    try {
+      const { error: err1 } = await supabase
+        .from('products')
+        .update({ order_index: targetProduct.order_index })
+        .eq('id', product.id)
+        .eq('tenant_id', tenant.id);
 
-    const { error: err2 } = await supabase
-      .from('products')
-      .update({ order_index: product.order_index })
-      .eq('id', targetProduct.id)
-      .eq('tenant_id', tenant.id);
+      const { error: err2 } = await supabase
+        .from('products')
+        .update({ order_index: product.order_index })
+        .eq('id', targetProduct.id)
+        .eq('tenant_id', tenant.id);
 
-    if (err1 || err2) {
-      toast.error('Error al reordenar');
-    } else {
-      fetchData();
+      if (err1 || err2) {
+        throw new Error('Database update failed');
+      }
+    } catch (err) {
+      setProducts(backupProducts); // Revertir cambios locales si falla
+      toast.error('Error al guardar el nuevo orden en el servidor');
     }
   };
 
@@ -479,13 +501,17 @@ export const AdminProducts = () => {
             {/* Número de posición */}
             <div className="admin-product-card-pos">
               <span style={{
-                fontSize: '9px',
+                fontSize: '11px',
                 fontWeight: 900,
-                color: '#64748b',
-                background: 'rgba(255, 255, 255, 0.95)',
-                padding: '2px 6px',
-                borderRadius: '4px',
-                border: '1px solid #e2e8f0'
+                color: '#ffffff',
+                background: '#e60000',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                boxShadow: '0 2px 6px rgba(230, 0, 0, 0.3)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: '28px'
               }}>
                 #{index + 1}
               </span>
@@ -962,12 +988,8 @@ export const AdminProducts = () => {
           top: 8px;
           right: 8px;
           z-index: 20;
-          opacity: 0;
-          transition: opacity 0.2s ease-in-out;
-        }
-
-        .admin-product-card:hover .admin-product-card-pos {
           opacity: 1;
+          transition: all 0.2s ease-in-out;
         }
 
         .order-btn {

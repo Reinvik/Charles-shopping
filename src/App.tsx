@@ -21,6 +21,7 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<any>(null);
+  const [sortBy, setSortBy] = React.useState<string>('destacados');
   const { isAdmin } = useAuth();
   const { tenant } = useTenant();
   const { settings, refreshTheme } = useTheme();
@@ -100,9 +101,15 @@ const HomePage: React.FC = () => {
         }
       }
 
-      query = query
-        .order('is_on_offer', { ascending: false })
-        .order('order_index', { ascending: true });
+      if (sortBy === 'destacados') {
+        query = query.order('order_index', { ascending: true });
+      } else if (sortBy === 'price-asc') {
+        query = query.order('price', { ascending: true });
+      } else if (sortBy === 'price-desc') {
+        query = query.order('price', { ascending: false });
+      } else if (sortBy === 'alpha') {
+        query = query.order('name', { ascending: true });
+      }
 
       const { data, error } = await query;
       
@@ -113,7 +120,7 @@ const HomePage: React.FC = () => {
     };
 
     fetchProducts();
-  }, [selectedCategoryId, tenant]);
+  }, [selectedCategoryId, tenant, sortBy]);
 
   React.useEffect(() => {
     if (selectedCategoryId && tenant) {
@@ -251,19 +258,23 @@ const HomePage: React.FC = () => {
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <span className="desktop-only" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Ordenar por:</span>
-            <select style={{
-              padding: '6px 10px',
-              borderRadius: '8px',
-              border: '1px solid var(--border)',
-              fontSize: '12px',
-              outline: 'none',
-              cursor: 'pointer',
-              backgroundColor: '#fff'
-            }}>
-              <option>Destacados</option>
-              <option>Precio: Menor a Mayor</option>
-              <option>Precio: Mayor a Menor</option>
-              <option>A-Z</option>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: '1px solid var(--border)',
+                fontSize: '12px',
+                outline: 'none',
+                cursor: 'pointer',
+                backgroundColor: '#fff'
+              }}
+            >
+              <option value="destacados">Destacados</option>
+              <option value="price-asc">Precio: Menor a Mayor</option>
+              <option value="price-desc">Precio: Mayor a Menor</option>
+              <option value="alpha">A-Z</option>
             </select>
           </div>
         </div>
