@@ -18,11 +18,29 @@ import {
   Hash,
   Star,
   Mail,
-  Instagram,
   MessageCircle
 } from 'lucide-react';
 
 import { useTenant } from '../../context/TenantContext';
+
+const InstagramIcon = ({ size = 24, ...props }: any) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
 
 const AdminSettings = () => {
   const { tenant } = useTenant();
@@ -631,7 +649,7 @@ const AdminSettings = () => {
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label>Instagram (usuario sin @)</label>
                   <div className="input-with-icon">
-                    <Instagram size={18} style={{ color: '#E1306C' }} />
+                    <InstagramIcon size={18} style={{ color: '#E1306C' }} />
                     <input 
                       type="text" 
                       name="contactInstagram" 

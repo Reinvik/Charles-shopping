@@ -54,7 +54,7 @@ export const useCroppedImage = (imageUrl: string) => {
     }
 
     let isMounted = true;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: any;
 
     const img = new Image();
     img.crossOrigin = 'anonymous'; // Necesario para evitar problemas de CORS al leer pixeles en canvas
