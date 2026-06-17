@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Instagram, MessageCircle } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useTenant } from '../context/TenantContext';
 
@@ -68,6 +68,103 @@ const Footer = ({ onCategorySelect }: FooterProps) => {
           <p style={{ fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
             {settings.siteDescription}
           </p>
+          {(settings.contactWhatsapp || settings.contactEmail || settings.contactInstagram) && (
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+              {settings.contactWhatsapp && (
+                <a 
+                  href={`https://wa.me/${settings.contactWhatsapp.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#fff',
+                    backgroundColor: '#25D366',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(37, 211, 102, 0.15)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#128C7E';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#25D366';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <MessageCircle size={14} /> WhatsApp
+                </a>
+              )}
+
+              {settings.contactInstagram && (
+                <a 
+                  href={`https://instagram.com/${settings.contactInstagram.trim().replace(/^@/, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#fff',
+                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(220, 39, 67, 0.15)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.filter = 'brightness(0.9)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.filter = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <Instagram size={14} /> Instagram
+                </a>
+              )}
+
+              {settings.contactEmail && (
+                <a 
+                  href={`mailto:${settings.contactEmail.trim()}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#fff',
+                    backgroundColor: 'var(--primary)',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.filter = 'brightness(0.9)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.filter = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
+                  <Mail size={14} /> Correo
+                </a>
+              )}
+            </div>
+          )}
         </div>
         
         <div>

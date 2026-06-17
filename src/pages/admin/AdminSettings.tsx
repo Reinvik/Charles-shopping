@@ -16,7 +16,10 @@ import {
   Trash2,
   Send,
   Hash,
-  Star
+  Star,
+  Mail,
+  Instagram,
+  MessageCircle
 } from 'lucide-react';
 
 import { useTenant } from '../../context/TenantContext';
@@ -43,7 +46,10 @@ const AdminSettings = () => {
     notificationPhone: '',
     telegramToken: '',
     telegramChatId: '',
-    defaultProductDescription: settings.defaultProductDescription || ''
+    defaultProductDescription: settings.defaultProductDescription || '',
+    contactWhatsapp: settings.contactWhatsapp || '',
+    contactEmail: settings.contactEmail || '',
+    contactInstagram: settings.contactInstagram || ''
   });
 
   const [googleReviewLink, setGoogleReviewLink] = useState('');
@@ -115,7 +121,10 @@ const AdminSettings = () => {
       notificationPhone: settings.notificationPhone || '',
       telegramToken: settings.telegramToken || '',
       telegramChatId: settings.telegramChatId || '',
-      defaultProductDescription: settings.defaultProductDescription || ''
+      defaultProductDescription: settings.defaultProductDescription || '',
+      contactWhatsapp: settings.contactWhatsapp || '',
+      contactEmail: settings.contactEmail || '',
+      contactInstagram: settings.contactInstagram || ''
     });
 
     fetchFlowSettings();
@@ -182,7 +191,10 @@ const AdminSettings = () => {
         notificationPhone: formData.notificationPhone,
         telegramToken: formData.telegramToken,
         telegramChatId: formData.telegramChatId,
-        defaultProductDescription: formData.defaultProductDescription
+        defaultProductDescription: formData.defaultProductDescription,
+        contactWhatsapp: formData.contactWhatsapp,
+        contactEmail: formData.contactEmail,
+        contactInstagram: formData.contactInstagram
       };
 
       const { error: themeError } = await supabase
@@ -578,7 +590,61 @@ const AdminSettings = () => {
 
              </section>
 
-            <section className="settings-card">
+            <section className="settings-card" style={{ marginTop: '20px' }}>
+              <div className="card-header">
+                <MessageCircle size={20} />
+                <h3>Canales de Contacto</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
+                Configura los accesos directos de atención y redes sociales que se mostrarán en el pie de página.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>WhatsApp (con código, ej: +56912345678)</label>
+                  <div className="input-with-icon">
+                    <MessageCircle size={18} style={{ color: '#25D366' }} />
+                    <input 
+                      type="text" 
+                      name="contactWhatsapp" 
+                      value={formData.contactWhatsapp} 
+                      onChange={handleInputChange}
+                      placeholder="Ej: +56912345678"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>Correo de Contacto</label>
+                  <div className="input-with-icon">
+                    <Mail size={18} style={{ color: '#ea4335' }} />
+                    <input 
+                      type="email" 
+                      name="contactEmail" 
+                      value={formData.contactEmail} 
+                      onChange={handleInputChange}
+                      placeholder="Ej: contacto@tienda.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label>Instagram (usuario sin @)</label>
+                  <div className="input-with-icon">
+                    <Instagram size={18} style={{ color: '#E1306C' }} />
+                    <input 
+                      type="text" 
+                      name="contactInstagram" 
+                      value={formData.contactInstagram} 
+                      onChange={handleInputChange}
+                      placeholder="Ej: mi_tienda"
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+             <section className="settings-card">
               <div className="section-header">
                 <div style={{ backgroundColor: '#0088cc', padding: '6px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', width: '32px', height: '32px' }}>
                   <Send size={20} />

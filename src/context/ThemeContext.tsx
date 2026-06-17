@@ -17,6 +17,9 @@ interface ThemeSettings {
   telegramToken?: string;
   telegramChatId?: string;
   defaultProductDescription: string;
+  contactWhatsapp?: string;
+  contactEmail?: string;
+  contactInstagram?: string;
 }
 
 interface ThemeContextType {
@@ -35,7 +38,10 @@ const defaultSettings: ThemeSettings = {
   announcementText: 'DESPACHOS GRATIS POR COMPRAS SOBRE $30.000 EN SANTIAGO',
   freeDeliveryThreshold: 30000,
   deliveryCost: 3500,
-  defaultProductDescription: 'Este producto te garantiza la mejor calidad para tus compras en Charly Home. Ideal para tu hogar o tu empresa, contamos con el mejor stock de la ciudad.'
+  defaultProductDescription: 'Este producto te garantiza la mejor calidad para tus compras en Charly Home. Ideal para tu hogar o tu empresa, contamos con el mejor stock de la ciudad.',
+  contactWhatsapp: '',
+  contactEmail: '',
+  contactInstagram: ''
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
