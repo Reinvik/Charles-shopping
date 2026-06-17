@@ -110,8 +110,10 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
             height: '100%',
             position: 'absolute',
             top: 0,
-            left: 0
+            left: 0,
+            cursor: 'pointer'
           }}
+          onClick={() => handleAction(currentBanner.button_link)}
         >
           <div style={{
             width: '100%',
@@ -171,33 +173,36 @@ const HeroBanner: React.FC<HeroBannerProps> = ({ onCategorySelect }) => {
                   {currentBanner.subtitle}
                 </p>
                 
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <button 
-                    onClick={() => handleAction(currentBanner.button_link)}
-                    style={{
-                      backgroundColor: 'var(--primary)',
-                      color: '#fff',
-                      padding: '12px 24px',
-                      borderRadius: '12px',
-                      fontWeight: '800',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      boxShadow: '0 10px 25px rgba(var(--primary-rgb), 0.25)',
-                      transition: 'all 0.3s',
-                      fontSize: 'clamp(12px, 3vw, 15px)'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                  >
-                    {currentBanner.button_text}
-                    <ShoppingBag size={18} />
-                  </button>
+                <div style={{ display: 'flex', gap: '16px' }} onClick={(e) => e.stopPropagation()}>
+                  {currentBanner.button_text && (
+                    <button 
+                      onClick={() => handleAction(currentBanner.button_link)}
+                      style={{
+                        backgroundColor: 'var(--primary)',
+                        color: '#fff',
+                        padding: '12px 24px',
+                        borderRadius: '12px',
+                        fontWeight: '800',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 10px 25px rgba(var(--primary-rgb), 0.25)',
+                        transition: 'all 0.3s',
+                        fontSize: 'clamp(12px, 3vw, 15px)'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-3px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                      {currentBanner.button_text}
+                      <ShoppingBag size={18} />
+                    </button>
+                  )}
 
                   <button 
-                    onClick={async () => {
+                    onClick={async (e) => {
+                      e.stopPropagation();
                       if (!tenant) return;
                       const { data } = await supabase
                         .from('categories')
