@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import Footer from './components/Footer';
+import { ContactBubble } from './components/ContactBubble';
 import { Login } from './pages/Login';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { useAuth } from './context/AuthContext';
@@ -423,6 +424,7 @@ function App() {
     <CartProvider>
       <Router>
         <CartDrawer />
+        <ContactBubble />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
