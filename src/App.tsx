@@ -4,6 +4,7 @@ import Header from './components/Header';
 import ProductCard from './components/ProductCard';
 import Footer from './components/Footer';
 import { ContactBubble } from './components/ContactBubble';
+import { PromoModal } from './components/PromoModal';
 import { Login } from './pages/Login';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { useAuth } from './context/AuthContext';
@@ -425,6 +426,7 @@ function App() {
       <Router>
         <CartDrawer />
         <ContactBubble />
+        <PromoModal />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />

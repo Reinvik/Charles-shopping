@@ -79,9 +79,12 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       else {
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
           query = query.eq('slug', 'charlyhome'); // Default para desarrollo
+        } else if (hostname.endsWith('.charlyhome.cl')) {
+          query = query.eq('slug', 'charlyhome');
         } else {
           query = query.eq('custom_domain', hostname);
         }
+
       }
 
       const { data, error: fetchError } = await query.maybeSingle();
