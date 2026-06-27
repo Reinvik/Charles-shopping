@@ -20,6 +20,33 @@ const slugify = (text: string) => {
     .replace(/-+$/, ''); // trim trailing hyphens
 };
 
+const isVideoUrl = (url: string) => {
+  if (!url) return false;
+  return url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.webm');
+};
+
+const isYouTubeUrl = (url: string) => {
+  if (!url) return false;
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
+
+const getYouTubeEmbedUrl = (url: string) => {
+  let videoId = '';
+  try {
+    if (url.includes('youtube.com/watch')) {
+      const u = new URL(url);
+      videoId = u.searchParams.get('v') || '';
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0] || '';
+    } else if (url.includes('youtube.com/embed/')) {
+      videoId = url.split('youtube.com/embed/')[1]?.split('?')[0] || '';
+    }
+  } catch (e) {
+    console.error('Error parsing YouTube URL:', e);
+  }
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+};
+
 interface Product {
   id: string;
   name: string;
@@ -150,22 +177,52 @@ export const PromoModal: React.FC = () => {
           {/* Left Column: Image Gallery */}
           <div className="promo-gallery-section">
             <div className="promo-main-image-wrapper">
-              <img src={selectedImage} alt={product.name} className="promo-main-image" />
+              {isVideoUrl(selectedImage) ? (
+                <video 
+                  src={selectedImage} 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline 
+                  className="promo-main-video" 
+                />
+              ) : isYouTubeUrl(selectedImage) ? (
+                <iframe
+                  src={getYouTubeEmbedUrl(selectedImage)}
+                  title="Product Video"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="promo-main-iframe"
+                />
+              ) : (
+                <img src={selectedImage} alt={product.name} className="promo-main-image" />
+              )}
               {product.discount_badge && (
                 <span className="promo-discount-badge">{product.discount_badge}</span>
               )}
             </div>
             {product.images && product.images.length > 1 && (
               <div className="promo-thumbnails-wrapper">
-                {product.images.map((img, i) => (
-                  <button 
-                    key={i} 
-                    className={`promo-thumb-btn ${selectedImage === img ? 'active' : ''}`}
-                    onClick={() => setSelectedImage(img)}
-                  >
-                    <img src={img} alt={`Thumbnail ${i}`} />
-                  </button>
-                ))}
+                {product.images.map((img, i) => {
+                  const isVideo = isVideoUrl(img);
+                  const isYT = isYouTubeUrl(img);
+                  return (
+                    <button 
+                      key={i} 
+                      className={`promo-thumb-btn ${selectedImage === img ? 'active' : ''}`}
+                      onClick={() => setSelectedImage(img)}
+                    >
+                      {isVideo ? (
+                        <div className="promo-thumb-placeholder">🎥 Video</div>
+                      ) : isYT ? (
+                        <div className="promo-thumb-placeholder">▶️ YouTube</div>
+                      ) : (
+                        <img src={img} alt={`Thumbnail ${i}`} />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -343,6 +400,34 @@ export const PromoModal: React.FC = () => {
           width: 100%;
           height: 100%;
           object-fit: contain;
+        }
+
+        .promo-main-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .promo-main-iframe {
+          width: 100%;
+          height: 100%;
+          border: none;
+          aspect-ratio: 1;
+        }
+
+        .promo-thumb-placeholder {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #e2e8f0;
+          color: #475569;
+          font-size: 9px;
+          font-weight: bold;
+          text-align: center;
+          padding: 2px;
+          line-height: 1.1;
         }
 
         .promo-discount-badge {
