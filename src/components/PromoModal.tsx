@@ -5,6 +5,7 @@ import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { MessageCircle, ShoppingBag, Star, Check, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import logoImg from '../assets/logo.png';
 
 // Helper to convert any text to slug
 const slugify = (text: string) => {
@@ -188,7 +189,14 @@ export const PromoModal: React.FC = () => {
         {/* Fullscreen Navbar Header */}
         <header className="promo-landing-header">
           <div className="promo-header-container">
-            <span className="promo-header-logo">🏪 {settings.siteName}</span>
+            <span className="promo-header-logo">
+              <img 
+                src={settings.logoUrl || logoImg} 
+                alt={settings.siteName} 
+                style={{ height: '50px', width: 'auto', display: 'block', cursor: 'pointer' }}
+                onClick={() => setIsVisible(false)}
+              />
+            </span>
             <button className="promo-header-close-btn" onClick={() => setIsVisible(false)}>
               Ver tienda completa
               <ArrowRight size={16} />
