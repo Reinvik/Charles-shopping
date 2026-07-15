@@ -3,7 +3,7 @@ import { useTenant } from '../context/TenantContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { supabase } from '../lib/supabase';
-import { X, MessageCircle, ShoppingBag, Star, Check } from 'lucide-react';
+import { MessageCircle, ShoppingBag, Star, Check, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Helper to convert any text to slug
@@ -167,12 +167,20 @@ export const PromoModal: React.FC = () => {
     <div className="promo-overlay">
       <div className="promo-modal-card">
         
-        {/* Close Button */}
-        <button className="promo-close-btn" onClick={() => setIsVisible(false)} aria-label="Cerrar">
-          <X size={20} />
-        </button>
+        {/* Fullscreen Navbar Header */}
+        <header className="promo-landing-header">
+          <div className="promo-header-container">
+            <span className="promo-header-logo">🏪 {settings.siteName}</span>
+            <button className="promo-header-close-btn" onClick={() => setIsVisible(false)}>
+              Ver tienda completa
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </header>
 
-        <div className="promo-modal-grid">
+        {/* Content Container */}
+        <div className="promo-landing-content">
+          <div className="promo-modal-grid">
           
           {/* Left Column: Image Gallery */}
           <div className="promo-gallery-section">
@@ -313,6 +321,8 @@ export const PromoModal: React.FC = () => {
 
       </div>
 
+    </div>
+
       <style>{`
         .promo-overlay {
           position: fixed;
@@ -320,55 +330,85 @@ export const PromoModal: React.FC = () => {
           left: 0;
           right: 0;
           bottom: 0;
-          background-color: rgba(15, 23, 42, 0.7);
-          backdrop-filter: blur(8px);
+          background-color: #fafafa;
           z-index: 99999;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
+          flex-direction: column;
+          overflow-y: auto;
           animation: promo-fade-in 0.3s ease;
         }
 
         .promo-modal-card {
           background: white;
           width: 100%;
-          max-width: 1050px;
-          border-radius: 24px;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
           position: relative;
-          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          overflow: hidden;
-          animation: promo-scale-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: promo-fade-in 0.35s ease;
         }
 
-        .promo-close-btn {
-          position: absolute;
-          top: 16px;
-          right: 16px;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: #f1f5f9;
-          border: none;
-          color: #64748b;
-          cursor: pointer;
+        .promo-landing-header {
+          background: white;
+          border-bottom: 1px solid #e2e8f0;
+          padding: 16px 24px;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          width: 100%;
+        }
+
+        .promo-header-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          width: 100%;
+        }
+
+        .promo-header-logo {
+          font-family: 'Outfit', sans-serif;
+          font-size: 20px;
+          font-weight: 800;
+          color: #0f172a;
+        }
+
+        .promo-header-close-btn {
           display: flex;
           align-items: center;
-          justify-content: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 8px;
+          background: #f1f5f9;
+          color: #475569;
+          font-weight: 700;
+          font-size: 14px;
+          border: none;
+          cursor: pointer;
           transition: all 0.2s;
-          z-index: 10;
         }
 
-        .promo-close-btn:hover {
+        .promo-header-close-btn:hover {
           background: #e2e8f0;
           color: #0f172a;
-          transform: rotate(90deg);
+        }
+
+        .promo-landing-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
+          padding: 40px 24px;
+          flex: 1;
+          display: flex;
+          align-items: center;
         }
 
         .promo-modal-grid {
           display: grid;
           grid-template-columns: 1.25fr 1fr;
           min-height: 550px;
+          width: 100%;
         }
 
         /* Gallery */
@@ -696,8 +736,9 @@ export const PromoModal: React.FC = () => {
 
         /* Responsive */
         @media (max-width: 768px) {
-          .promo-modal-card {
-            border-radius: 20px;
+          .promo-landing-content {
+            padding: 20px 16px;
+            align-items: start;
           }
           .promo-modal-grid {
             grid-template-columns: 1fr;
