@@ -47,6 +47,24 @@ const getYouTubeEmbedUrl = (url: string) => {
   return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
 };
 
+const matchProductSlug = (productName: string, promoSlug: string) => {
+  const pSlug = slugify(productName);
+  const targetSlug = slugify(promoSlug);
+  
+  if (pSlug === targetSlug) return true;
+  
+  // Mapeo de alias para productos con nombres ligeramente distintos en base de datos
+  const aliases: Record<string, string[]> = {
+    'guante-atrapa-pelo': ['guante-quita-pelos-perros-y-gatos', 'guante-quita-pelos-perro-gato', 'guante-atrapa-pelo']
+  };
+  
+  if (aliases[targetSlug]?.includes(pSlug)) {
+    return true;
+  }
+  
+  return false;
+};
+
 interface Product {
   id: string;
   name: string;
@@ -110,8 +128,8 @@ export const PromoModal: React.FC = () => {
         if (error) throw error;
 
         if (data) {
-          // Find product matching slugified name
-          const matchedProduct = data.find(p => slugify(p.name) === slugify(promoSlug)) as Product;
+          // Find product matching slugified name or alias
+          const matchedProduct = data.find(p => matchProductSlug(p.name, promoSlug)) as Product;
           
           if (matchedProduct) {
             setProduct(matchedProduct);
