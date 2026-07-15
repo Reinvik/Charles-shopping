@@ -333,7 +333,7 @@ export const PromoModal: React.FC = () => {
         .promo-modal-card {
           background: white;
           width: 100%;
-          max-width: 800px;
+          max-width: 1050px;
           border-radius: 24px;
           position: relative;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -367,8 +367,8 @@ export const PromoModal: React.FC = () => {
 
         .promo-modal-grid {
           display: grid;
-          grid-template-columns: 1.1fr 1.2fr;
-          min-height: 500px;
+          grid-template-columns: 1.25fr 1fr;
+          min-height: 550px;
         }
 
         /* Gallery */
@@ -385,7 +385,7 @@ export const PromoModal: React.FC = () => {
         .promo-main-image-wrapper {
           position: relative;
           width: 100%;
-          max-width: 320px;
+          max-width: 480px;
           aspect-ratio: 1;
           border-radius: 16px;
           overflow: hidden;
@@ -399,7 +399,7 @@ export const PromoModal: React.FC = () => {
         .promo-main-image {
           width: 100%;
           height: 100%;
-          object-fit: contain;
+          object-fit: cover;
         }
 
         .promo-main-video {
@@ -448,7 +448,7 @@ export const PromoModal: React.FC = () => {
           gap: 8px;
           margin-top: 16px;
           width: 100%;
-          max-width: 320px;
+          max-width: 480px;
           justify-content: center;
         }
 

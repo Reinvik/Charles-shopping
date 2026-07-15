@@ -904,7 +904,7 @@ export const ProductDetail = () => {
         .thumbnail-btn img {
           width: 100%;
           height: 100%;
-          object-fit: contain;
+          object-fit: cover;
         }
 
         .thumbnail-btn:hover {
@@ -934,7 +934,7 @@ export const ProductDetail = () => {
           flex: 1;
           background: #fff;
           border-radius: 24px;
-          padding: 40px;
+          padding: 0px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -944,10 +944,11 @@ export const ProductDetail = () => {
         }
 
         .main-display-image {
-          max-width: 100%;
-          max-height: 100%;
-          object-fit: contain;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
+
 
         .product-image-viewer.editable {
           cursor: pointer;
